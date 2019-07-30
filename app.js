@@ -109,29 +109,29 @@ app.use("/fakenblock", fakenblockRoutes);
 var eventSocket = io.of('/events');
 var onlineUsers = [];
 // on connection event
-eventSocket.on('connection', function (socket) {
-	if (socket.request.user && socket.request.user.logged_in) {
-		onlineUsers.push(socket.request.user);
-		console.log(socket.request.user.username + " connected");
-	}	
-	eventSocket.emit('broadcast', onlineUsers);
+// eventSocket.on('connection', function (socket) {
+// 	if (socket.request.user && socket.request.user.logged_in) {
+// 		onlineUsers.push(socket.request.user);
+// 		console.log(socket.request.user.username + " connected");
+// 	}	
+// 	eventSocket.emit('broadcast', onlineUsers);
 
-	socket.on('disconnect', function () {
-		for (var i = 0; i < onlineUsers.length; i++) {
-			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
-				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
-					if (err) {
-						console.log(err);
-					} else {
-						console.log(socket.request.user.username + " disconnected");
-					}
-				});
-				onlineUsers.splice(i, 1);
-			}
-		}
-		eventSocket.emit('broadcast', onlineUsers);
-	});
-});
+// 	socket.on('disconnect', function () {
+// 		for (var i = 0; i < onlineUsers.length; i++) {
+// 			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
+// 				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
+// 					if (err) {
+// 						console.log(err);
+// 					} else {
+// 						console.log(socket.request.user.username + " disconnected");
+// 					}
+// 				});
+// 				onlineUsers.splice(i, 1);
+// 			}
+// 		}
+// 		eventSocket.emit('broadcast', onlineUsers);
+// 	});
+// });
 
 
 let port = process.env.PORT;
