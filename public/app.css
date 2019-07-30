@@ -1,0 +1,181 @@
+#newcamp {
+	margin: 10% 10% 0 10%;
+	padding: 0;
+	text-align: center;
+}
+
+.show {
+	display: block;
+}
+
+.newuser {
+	text-align: center;
+	margin: auto 35% auto 35%;
+}
+
+.inputto {
+	width: 30%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.thumbnail {
+	padding: 0;
+}
+
+.thumbnail .caption {
+	padding: 0;
+}
+
+.thumbnail .caption img {
+	width: 100%;
+}
+
+.inputtocom {
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.body {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+}
+
+.description h4 {
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-bottom: 1rem;
+}
+
+.description #more {
+	margin-bottom: 1rem;
+}
+
+.showdescription h4, .showdescription p {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.editdelete {
+	margin-top: 0.8rem;
+	display: flex;
+}
+
+.editdelete a {
+	margin: auto 1rem;
+	margin-bottom: 1rem;
+}
+
+.editdeletecomments {
+	margin-top: 0.2rem;
+	display: flex;
+}
+
+.editdeletecomments a {
+	margin: 0 1rem 0 1rem;
+}
+
+.pull-right {
+	margin-top: 0;
+}
+.comments {
+	border: 1px solid lightgrey;
+	margin-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	background: lightgray;
+	border-radius: 5px;
+}
+
+.btn-group-vertical {
+	width: 100%;
+}
+
+.btn-group-vertical button {
+	text-align: left;
+}
+
+.review a {
+	float: right;
+}
+
+.review {
+	padding: 1.5rem;
+	border-bottom: 1px solid grey;
+	margin-bottom: 1rem;
+}
+
+.commento p {
+	padding-left: 1rem;
+	padding-right: 1rem;
+	margin-top: 0%;
+	margin-bottom: 0%;
+}
+
+.commento {
+	margin: 0 0 1rem 0;
+}
+
+
+.caption img {
+	width: 100%;
+	margin: 0%;
+}
+
+#map {
+	height: 400px;
+	width: 100%;
+}
+
+
+/* RANGE SELECTOR WITH 2 HADLES */
+section.range-slider {
+    position: relative;
+    width: 300px;
+    height: 35px;
+    text-align: center;
+}
+
+section.range-slider input {
+    pointer-events: none;
+    position: absolute;
+    overflow: hidden;
+    left: 0;
+    top: 15px;
+    width: 300px;
+    outline: none;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+}
+
+section.range-slider input::-webkit-slider-thumb {
+    pointer-events: all;
+    position: relative;
+    z-index: 1;
+    outline: 0;
+}
+
+section.range-slider input::-moz-range-thumb {
+    pointer-events: all;
+    position: relative;
+    z-index: 10;
+    -moz-appearance: none;
+    width: 9px;
+}
+
+section.range-slider input::-moz-range-track {
+    position: relative;
+    z-index: -1;
+    background-color: rgba(0, 0, 0, 1);
+    border: 0;
+}
+section.range-slider input:last-of-type::-moz-range-track {
+    -moz-appearance: none;
+    background: none transparent;
+    border: 0;
+}
+section.range-slider input[type=range]::-moz-focus-outer {
+  border: 0;
+}

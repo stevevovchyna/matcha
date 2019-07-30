@@ -1,0 +1,113 @@
+<%include ../partials/header%>
+<div class="modal fade" id="myModal" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+<div class="container">
+
+	<div id="online"></div>
+	<script>
+		// var socket = io('/events');
+		socket.on('broadcast',function(data) {
+			var online = document.getElementById("online");
+			var curUserId = "<%=user._id%>";
+			var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+			if (newArr.length > 0) {
+				online.innerHTML = " <i class=\"fas fa-circle\"></i> Online";
+				online.style.color = "green";
+			} else {
+				online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+				online.style.color = "grey";
+			}
+		});
+	</script>
+	<div class="row">
+			<div class="col-sm-4">
+		<div class="caption">
+			<%	var url = "";
+					user.pictures.forEach((pic) => {
+						if (pic.isProfile) {
+							url = pic.url;
+						}});
+						if (url == "") { %>
+			<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
+			<% } else { %>
+			<img width="150" src="<%= url %>" alt="">
+			<% } %>
+		</div>
+			</div>
+			<div class="col-sm-8">
+		<div class="caption" id="<%=user._id%>">
+			<h3><%= user.username %></h3>
+			<h3><span class="likes"><%= user.likes.length %></span> <i class="far fa-heart"></i></h3>
+			<h3 class="fame">Fame points: <%= user.visits.length + user.likes.length %></h3>
+			<% if (currentUser._id.toString() == user._id.toString()) { %>
+			<p>Visits <%= user.visits.length %></p>
+			<p>Email <%= user.email %></p>
+			<%}%>
+					<p><%= user.gender %></p>
+			<p><%= user.sexPreferences %></p>
+			<% if (user.location) { %>
+			<p><%= user.locationname %></p>
+			<% } %>
+			<p><%= user.bio %></p>
+			<% user.interests.forEach((tags) => { %>
+			<button class="btn btn-primary">#<%= tags.text %></button>
+			<% }); %>
+			<% if(user._id.toString() !== currentUser._id.toString()) { %>
+				<% if (currentUser.pictures.length > 0) { %>
+					<div id="possibility">
+						<%
+							var likeStatus = user.likes.filter(like => like.id.toString() !== currentUser._id.toString());
+							if (likeStatus.length > 0) {
+							%> This person already knows about your sympathy <%
+							} else {
+							%> You can like this profile!!! <%
+							}
+						%>
+					</div>
+					<div id="disability">
+						<%
+							var idArr = currentUser.blockedUsers.map(userid => userid.id.toString());
+							var blockButtonText = "";
+							if (idArr.includes(user._id.toString())) {
+								%>You've blocked this user<%
+								blockButtonText = "Unblock this user";
+							} else {
+								blockButtonText = "Block this user";
+							}
+						%>
+					</div>
+					<button class="btn btn-danger inputto" onclick="likeUser('<%=user._id.toString()%>', 'yes')">Like</button>
+					<button class="btn btn-danger inputto" onclick="dislikeUser('<%=user._id.toString()%>', 'yes')">Dislike</button>
+					<button class="btn btn-default" onclick="fake('<%=user._id.toString()%>')">Report as Fake</button>
+					<button id="block-button" class="btn btn-default" onclick="block('<%=user._id.toString()%>')"><%=blockButtonText%></button>
+				<% } %>
+			<% } %>
+		</div>
+			<div style="display: inline-flex;">
+				<% user.pictures.forEach((pic_url) => { %>
+					<img width="100px" height="auto" src="<%= pic_url.url %>">
+					<% if (currentUser._id.toString() == user._id.toString()) { %>
+						<% if (!pic_url.isProfile) { %>
+						<form action="/profile/<%= user._id %>/<%= pic_url._id %>/setprofile?_method=put" method="post">
+							<button class="btn btn-default">Set as Profile</button>
+						</form>
+						<% } %>
+					<% } %>
+				<% }) %>
+			</div>
+	
+	</div>
+	</div>
+	</div>
+</div>
+<%include ../partials/footer%>

@@ -1,0 +1,123 @@
+<%include partials/header%>
+<div class="modal fade" id="myModal" role="dialog">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-body">
+				<p></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container">
+<div>
+	<p>Filter by distance</p>
+	<button class="btn btn-success" onclick="filterBy(0, 20000, 'distance')"> All </button>
+	<button class="btn btn-success" onclick="filterBy(0, 10, 'distance')"> 0 - 10 km </button>
+	<button class="btn btn-success" onclick="filterBy(11, 50, 'distance')"> 11 - 50 km </button>
+	<button class="btn btn-success" onclick="filterBy(51, 100, 'distance')"> 50 - 100 km </button>
+	<button class="btn btn-success" onclick="filterBy(101, 1000, 'distance')"> 101 - 1000 km </button>
+	<button class="btn btn-success" onclick="filterBy(1001, 5000, 'distance')"> 1000 - 5000 km </button>
+	<button class="btn btn-success" onclick="filterBy(5001, 8000, 'distance')"> 5001 - 8000 km </button>
+	<button class="btn btn-success" onclick="filterBy(8001, 15000, 'distance')"> 8000 - 15000 km </button>
+	<button class="btn btn-success" onclick="filterBy(15001, 20000, 'distance')"> 15001 - 20000 km </button>
+</div>
+<div>
+	<p>Filter by the Fame rate</p>
+	<button class="btn btn-success" onclick="filterBy(0, 100, 'famerate')"> All </button>
+	<button class="btn btn-success" onclick="filterBy(0, 0, 'famerate')"> 0 </button>
+	<button class="btn btn-success" onclick="filterBy(1, 5, 'famerate')"> 1 - 5 </button>
+	<button class="btn btn-success" onclick="filterBy(6, 10, 'famerate')"> 6 - 10 </button>
+	<button class="btn btn-success" onclick="filterBy(11, 20, 'famerate')"> 11 - 20 </button>
+	<button class="btn btn-success" onclick="filterBy(21, 50, 'famerate')"> 21 - 50 </button>
+	<button class="btn btn-success" onclick="filterBy(51, 80, 'famerate')"> 51 - 80 </button>
+	<button class="btn btn-success" onclick="filterBy(81, 100, 'famerate')"> 81 - 100 </button>
+</div>
+<div>
+	<p>Filter by the common tags</p>
+	<button class="btn btn-success" onclick="filterBy(0, 100, 'commontags')"> All </button>
+	<button class="btn btn-success" onclick="filterBy(0, 0, 'commontags')"> 0 </button>
+	<button class="btn btn-success" onclick="filterBy(1, 5, 'commontags')"> 1 - 5 </button>
+	<button class="btn btn-success" onclick="filterBy(6, 10, 'commontags')"> 6 - 10 </button>
+	<button class="btn btn-success" onclick="filterBy(11, 20, 'commontags')"> 11 - 20 </button>
+	<button class="btn btn-success" onclick="filterBy(21, 50, 'commontags')"> 21 - 50 </button>
+</div>
+	
+<select name="sorting" id="sorting">
+	<option <% if (order.toString() === 'default.asc') { %> selected <% } %> value="default.asc">By Default Ascending</option>
+	<option <% if (order.toString() === 'default.desc') { %> selected <% } %> value="default.desc">By Default Descending</option>
+	<option <% if (order.toString() === 'location.asc') { %> selected <% } %> value="location.asc">By Location Ascending</option>
+	<option <% if (order.toString() === 'location.desc') { %> selected <% } %> value="location.desc">By Location Descending</option>
+	<option <% if (order.toString() === 'famerate.asc') { %> selected <% } %> value="famerate.asc">By Fame Rate Ascending</option>
+	<option <% if (order.toString() === 'famerate.desc') { %> selected <% } %> value="famerate.desc">By Fame Rate Descending</option>
+	<option <% if (order.toString() === 'tags.asc') { %> selected <% } %> value="tags.asc">By Tags Ascending</option>
+	<option <% if (order.toString() === 'tags.desc') { %> selected <% } %> value="tags.desc">By Tags Descending</option>
+</select>
+<button type="submit" class="btn btn-default" onclick="location.href = 'http:\/\/localhost:3000/feed/browse/' + document.getElementById('sorting').value;">Sort</button>
+		<div class="row row-eq-height" style="display: flex; flex-wrap: wrap;">
+		<% user.forEach((user) => { %>
+		<%	if (user.isVerified) { %>
+		<div class="col-sm-6 col-md-4">
+			<div class="thumbnail">
+				<div class="caption">
+					<%	var url = "";
+					user.pictures.forEach((pic) => {
+						if (pic.isProfile) {
+							url = pic.url;
+						}});
+						if (url == "") { %>
+					<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
+					<% } else { %>
+					<img width="150" src="<%= url %>" alt="">
+					<% } %>
+				</div>
+				<div class="caption" id="<%=user._id%>">
+					<div id="online-<%=user._id%>"></div>
+					<script>
+						socket.on('broadcast',function(data) {
+							var online = document.getElementById("online-<%=user._id%>");
+							var curUserId = "<%=user._id%>";
+							var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+							if (newArr.length > 0) {
+								online.innerHTML = " <i class=\"fas fa-circle\"></i> Online";
+								online.style.color = "green";
+							} else {
+								online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+								online.style.color = "grey";
+							}
+							// console.log(data);
+						});
+					</script>
+					<h3><%= user.username %></h3>
+					<h3><span class="likes"><%= user.likes.length %></span> <i class="far fa-heart"></i></h3>
+					<h3 class="fame">Fame points: <%= user.famerate %></h3>
+					<p><%= user.gender %></p>
+					<p><%= user.sexPreferences %></p>
+					<p><%= user.locationname %></p>
+					<p><%=user.username%> is <%=Math.round(user.dist.calculated/1000)%> kilometers from you!</p>
+					<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
+					<p class="hidden commontags"><%=user.commontags%></p>
+					<p class="hidden famerate"><%=user.famerate%></p>
+					<p><%= user.bio %></p>
+					<% user.interests.forEach((tags) => { %>
+					<button class="btn btn-primary">#<%= tags.text %></button>
+					<% }); %>
+						<div>
+							<a href="/profile/<%= user._id %>" class="btn btn-primary" role="button">Profile</a>
+						</div>
+					<% if(user._id.toString() !== currentUser._id.toString()) { %>
+					<% if (currentUser.pictures.length > 0) { %>
+					<button class="btn btn-danger inputto" onclick="likeUser('<%=user._id.toString()%>')" >Like</button>
+					<button class="btn btn-danger inputto" onclick="dislikeUser('<%=user._id.toString()%>')" >Dislike</button>
+					<% } %>
+					<% } %>
+				</div>
+			</div>
+		</div>
+
+		<% }}) %>
+	</div>
+</div>
+<%include partials/footer%>

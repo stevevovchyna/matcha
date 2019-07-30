@@ -1,0 +1,87 @@
+<%include ../partials/header%>
+<script type="text/javascript" src="/suggestion.js"></script>
+<div id="newcamp">
+<h1>
+	Edit Profile
+</h1>
+	<form action="/profile/<%=user._id%>/editinfo?_method=PUT" method="POST">
+		<div class="form-group">
+			<input class="form-control inputto" type="text" value="<%=user.username%>" name="user[username]" placeholder="username">
+		</div>
+		<div class="form-group">
+			<input class="form-control inputto" type="text" name="user[firstname]" value="<%=user.firstname%>" placeholder="firstname">
+		</div>
+		<div class="form-group">
+			<input class="form-control inputto" type="text" value="<%=user.lastname%>" name="user[lastname]" placeholder="lastname">
+		</div>
+		<div class="form-group">
+			<input class="form-control inputto" type="text" name="user[email]" value="<%= user.email %>" placeholder="location">
+		</div>
+		<div class="form-group">
+			<input class="form-control inputto" type="text" name="location" value="<%= user.locationname %>" placeholder="location">
+		</div>
+		<div class="form-group">
+			<select class="form-control inputto" name="user[gender]">
+				<option <% if (user.gender == "Female") { %> selected <% } %> value="Female">Female</option>
+				<option <% if (user.gender == "Male") { %> selected <% } %> value="Male">Male</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<select class="form-control inputto" name="user[sexPreferences]">
+				<option <% if (user.sexPreferences == "Female") { %> selected <% } %> value="Female">Female</option>
+				<option <% if (user.sexPreferences == "Male") { %> selected <% } %> value="Male">Male</option>
+				<option <% if (user.sexPreferences == "Bi-Sexual") { %> selected <% } %> value="Bi-Sexual">Bi-Sexual</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<textarea class="form-control inputto" type="text" name="user[bio]" placeholder="Your Bio"><%= user.bio %></textarea>
+		</div>
+		<div class="form-group">
+			<button class="btn btn-primary btn-block inputto">Submit</button>
+		</div>
+	</form>
+
+<div style="display: flex">
+	<% user.interests.forEach((tags) => { %>
+		<form action="/profile/<%= user._id %>/<%= tags._id %>/tagdel?_method=delete" method="post">
+			<button class="btn btn-danger">#<%= tags.text %></button>
+		</form>
+	<% }); %>
+</div>
+<form action="/profile/<%=user._id%>/edittag?_method=PUT" method="POST">
+	<div class="form-group">
+		<input class="form-control inputto" id="tags" type="text" name="interests" placeholder="My interests">
+	</div>
+	<div class="form-group">
+		<button class="btn btn-primary btn-block inputto">Submit</button>
+	</div>
+</form>
+
+	<div style="display: inline-flex;">
+	<% user.pictures.forEach((pic_url) => { %>
+		<div class="thumbnail">
+			<img width="100px" height="auto" src="<%= pic_url.url %>">
+			<form action="/profile/<%= user._id %>/<%= pic_url._id %>/picdel?_method=delete" method="post">
+				<button class="btn btn-danger">Delete</button>
+			</form>
+			<% if (!pic_url.isProfile) { %>
+			<form action="/profile/<%= user._id %>/<%= pic_url._id %>/setprofile?_method=put" method="post">
+				<button class="btn btn-default">Set as Profile</button>
+			</form>
+			<% } %>
+		</div>
+		<% }); %>
+	</div>
+	<form action="/profile/<%=user._id%>/editpic?_method=PUT" method="POST" enctype="multipart/form-data">
+		<div class="form-group">
+				<input class="inputto" type="file" id="image" name="image" accept="image/*">
+			</div>
+			<div class="form-group">
+				<button class="btn btn-primary btn-block inputto">Submit</button>
+			</div>
+	</form>
+	<a href="/profile/<%=user._id%>">Back</a>
+</div>
+</div>
+
+<%include ../partials/footer%>
