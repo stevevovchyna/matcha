@@ -6,6 +6,7 @@ const Visits = require("../models/visits");
 const Tags = require("../models/tags");
 const middleware = require("../middleware");
 const NodeGeocoder = require("node-geocoder");
+const async = require("async");
 
 var options = {
 	provider: 'google',

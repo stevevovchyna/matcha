@@ -1,20 +1,21 @@
 const mongoose = require("mongoose");
 
 var messagesSchema = new mongoose.Schema({
-	createdAt: { type: Date, default: Date.now },
+	conversationId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: true
+	},
+	body: {
+		type: String,
+		required: true
+	},
 	sentBy: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: "User"
-	},
-	// sentTo: {
-	// 	type: mongoose.Schema.Types.ObjectId,
-	// 	ref: "User"
-	// },
-	body: String,
-	// room: {
-	// 	type: mongoose.Schema.Types.ObjectId,
-	// 	ref: "Rooms"
-	// }
+		ref: 'User'
+	}
+},
+{
+	timestamps: true // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
 });
 
 //exporting model to the db

@@ -13,63 +13,73 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 
-router.put("/:id/ajaxlike", middleware.isLoggedIn, (req, res) => {
+router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req, res) => {
 	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
-		if (err) {
-			console.log(err);
-			res.send({status: 'error', error: err});
+		if (req.user.pictures.length === 0) {
+			res.send({status: 'error', error: "Please add a picture to your profile first!"});
 		} else {
-			if (req.user._id.toString() === user._id.toString()) {
-				res.send({status: 'error', error: "You can't 'like' your own profile"});
+			if (err) {
+				console.log(err);
+				res.send({status: 'error', error: err});
 			} else {
-				var match = 0;
+				if (req.user._id.toString() === user._id.toString()) {
+					res.send({status: 'error', error: "You can't 'like' your own profile"});
+				} else {
+					var match = 0;
 
-				User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
-					if (err) {
-						res.send({status: 'error', error: err});
-						console.log(err);
-					} else {
-						userlikes.likes.forEach((like) => {
-							if (like.id.toString() === req.user._id.toString()) {
-								match = 1;
-							}
-						});
-						if (match) {
-							res.send({status: 'error', error: "This person already knows about your sympathy", user: userlikes});
+					User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
+						if (err) {
+							res.send({status: 'error', error: err});
+							console.log(err);
 						} else {
-							Likes.create({}, (err, like) => {
-								if (err) {
-									console.log(err);
-									res.send({status: 'error', error: err});
-								} else {
-									like.id = req.user._id;
-									like.save();
-
-									Likeslog.create({}, (err, likelog) => {
-										if (err) {
-											console.log(err);
-											res.send({status: 'error', error: err});
-										} else {
-											likelog.id = req.user._id;
-											likelog.save();
-										}
-										user.likeslog.push(likelog);
-										user.likes.push(like);
-										user.save(() => {
-											res.send({status: 'success', user: user});
-										});
-									});
+							userlikes.likes.forEach((like) => {
+								if (like.id.toString() === req.user._id.toString()) {
+									match = 1;
 								}
 							});
+							if (match) {
+								res.send({status: 'error', error: "This person already knows about your sympathy", user: userlikes});
+							} else {
+								Likes.create({}, (err, like) => {
+									if (err) {
+										console.log(err);
+										res.send({status: 'error', error: err});
+									} else {
+										like.id = req.user._id;
+										like.save();
+
+										Likeslog.create({}, (err, likelog) => {
+											if (err) {
+												console.log(err);
+												res.send({status: 'error', error: err});
+											} else {
+												likelog.id = req.user._id;
+												likelog.save();
+											}
+											user.likeslog.push(likelog);
+											user.likes.push(like);
+											user.save(() => {
+												if (res.locals.message !== "") {
+													var message = res.locals.message;
+													res.locals.message = "";
+												} else {
+													var message = "That's a like!";
+												}
+												res.send({status: 'success', user: user, message: message});
+											});
+										});
+									}
+								});
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	});
 });
 
-router.delete("/:id/ajaxdislike", middleware.isLoggedIn, (req, res) => {
+router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected, (req, res) => {
 	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
 		if (err) {
 			console.log(err);

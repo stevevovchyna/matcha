@@ -6,6 +6,7 @@ bodyParser = 			require("body-parser"),
 mongoose = 				require("mongoose"),
 User = 					require("./models/user"),
 Likes = 				require("./models/likes"),
+Messages = 				require("./models/message"),
 Dislikeslog = 			require("./models/dislikeslog"),
 Token = 				require("./models/token"),
 passport = 				require("passport"),
@@ -44,6 +45,7 @@ feedRoutes = require("./routes/feed"),
 likesRoutes = require("./routes/likes"),
 profileRoutes = require("./routes/profile");
 fakenblockRoutes = require("./routes/fakenblock");
+chatRoutes = require("./routes/chat");
 
 // databse connection
 mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true});
@@ -87,6 +89,7 @@ passport.deserializeUser(function (id, done) {
 
 // allows using current user data across all the views
 app.use((req, res, next) => {
+	res.locals.message = "";
 	res.locals.currentUser = req.user;
 	res.locals.error = req.flash("error");
 	res.locals.success = req.flash("success");
@@ -101,6 +104,7 @@ app.use("/profile", profileRoutes);
 app.use("/likes", likesRoutes);
 app.use("/feed", feedRoutes);
 app.use("/fakenblock", fakenblockRoutes);
+app.use(chatRoutes);
 
 // seed("Male");
 // seed("Female");
@@ -109,29 +113,73 @@ app.use("/fakenblock", fakenblockRoutes);
 var eventSocket = io.of('/events');
 var onlineUsers = [];
 // on connection event
-// eventSocket.on('connection', function (socket) {
-// 	if (socket.request.user && socket.request.user.logged_in) {
-// 		onlineUsers.push(socket.request.user);
-// 		console.log(socket.request.user.username + " connected");
-// 	}	
-// 	eventSocket.emit('broadcast', onlineUsers);
+eventSocket.on('connection', function (socket) {
+	if (socket.request.user && socket.request.user.logged_in) {
+		onlineUsers.push(socket.request.user);
+		console.log(socket.request.user.username + " connected");
+	}	
+	eventSocket.emit('broadcast', onlineUsers);
 
-// 	socket.on('disconnect', function () {
-// 		for (var i = 0; i < onlineUsers.length; i++) {
-// 			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
-// 				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
-// 					if (err) {
-// 						console.log(err);
-// 					} else {
-// 						console.log(socket.request.user.username + " disconnected");
-// 					}
-// 				});
-// 				onlineUsers.splice(i, 1);
-// 			}
-// 		}
-// 		eventSocket.emit('broadcast', onlineUsers);
-// 	});
-// });
+	socket.on('disconnect', function () {
+		for (var i = 0; i < onlineUsers.length; i++) {
+			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
+				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
+					if (err) {
+						console.log(err);
+					} else {
+						console.log(socket.request.user.username + " disconnected");
+					}
+				});
+				onlineUsers.splice(i, 1);
+			}
+		}
+		eventSocket.emit('broadcast', onlineUsers);
+	});
+});
+
+//
+
+var socket = io;
+
+socket.on("connection", socket => {
+	console.log("user connected to the chat");
+
+	socket.on("disconnect", function () {
+		console.log("user disconnected from the chat");
+	});
+
+	//Someone is typing
+	socket.on("typing", data => {
+		socket.broadcast.emit("notifyTyping", {
+			user: data.user,
+			message: data.message
+		});
+	});
+
+	//when soemone stops typing
+	socket.on("stopTyping", () => {
+		socket.broadcast.emit("notifyStopTyping");
+	});
+
+	socket.on("chat message", function (msg) {
+		console.log("message: " + msg);
+
+		//broadcast message to everyone in port:5000 except yourself.
+		socket.broadcast.emit("received", {
+			message: msg,
+			user: socket.request.user.username
+		});
+
+		//save chat to the database
+		Messages.create({}, (err, message) => {
+			message.body = msg;
+			message.sentBy = socket.request.user._id;
+			message.save();
+		});
+		
+	});
+});
+
 
 
 let port = process.env.PORT;

@@ -57,7 +57,7 @@ function likeUser(id, profile = "no") {
 				}
 				card.querySelector('.fame').innerText = "Fame points: " + (resp.user.likes.length + resp.user.visits.length);
 				card.querySelector('span,.likes').innerText = resp.user.likes.length;
-				$('div.modal-body > p').text("That's a like!!!");
+				$('div.modal-body > p').text(resp.message);
 				$('#myModal').modal('show');
 			} else {
 				$('div.modal-body > p').text(resp.error);

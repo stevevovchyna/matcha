@@ -1,6 +1,7 @@
 const flash = require("connect-flash");
 const expressSanitizer = require("express-sanitizer");
 const User = require("../models/user");
+const Conversations = require("../models/conversations");
 const iplocate = require('node-iplocate');
 
 var middlewareObject = {};
@@ -8,10 +9,7 @@ var middlewareObject = {};
 middlewareObject.location = (req, res, next) => {
 	let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 	iplocate(ip).then((results) => {
-		User.findOneAndUpdate(
-		{
-			username: req.sanitize(req.body.username) 
-		},
+		User.findOneAndUpdate({username: req.sanitize(req.body.username)},
 		{	
 			reallocationname: results.city,
 			reallocation: {
@@ -28,7 +26,64 @@ middlewareObject.location = (req, res, next) => {
 			}
 		})
 	});
-	// next();
+}
+
+middlewareObject.isConnected = (req, res, next) => {
+	Conversations.find({}, (err, conversations) => {
+		var result = conversations.filter(
+			conversation => conversation.participants.includes(req.params.id.toString()) && 
+			conversation.participants.includes(req.user._id.toString()));
+		if (result.length > 0) {
+			Conversations.findByIdAndUpdate(result[0]._id, {isActive: "false"}, (err) => {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log("It's inactive, SIr!!!");
+					next();
+				}
+			})
+		} else {
+			next();
+		}
+	});
+}
+
+middlewareObject.haveLikedMe = (req, res, next) => {
+	User.findById(req.sanitize(req.user._id)).populate('likes').exec((err, user) => {
+		var result = user.likes.filter(like => like.id.toString() === req.params.id.toString());
+		if (result.length > 0) {
+			Conversations.find({}, (err, conversations) => {
+				var conversationFound = conversations.filter(
+					conversation => conversation.participants.includes(req.params.id.toString()) && 
+					conversation.participants.includes(req.user._id.toString()));
+				if (conversationFound.length === 1) {
+					Conversations.findByIdAndUpdate(conversationFound[0]._id, {isActive: "true"}, (err) => {
+						if (err) {
+							console.log(err);
+						} else {
+							console.log("It's active again, Sir!!!");
+							res.locals.message = "That's a match! You can check the conversations list again!";
+							next();
+						}
+					});
+				} else {
+					Conversations.create({}, (err, conversation) => {
+						conversation.participants.push(req.params.id);
+						conversation.participants.push(req.user._id);
+						conversation.lastMessage = "Hi there!";
+						conversation.lastMessageAuthor = req.user._id;
+						conversation.save(() => {
+							console.log("New conversation was created!!!");
+							res.locals.message = "That's a match! You can check the conversations list!";
+							next();
+						});
+					});
+				}
+			});
+		} else {
+			next();
+		}
+	});
 }
 
 middlewareObject.haveFilled = (req, res, next) => {
