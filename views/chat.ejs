@@ -1,19 +1,23 @@
 <%include partials/header%>
-<div class="chat_window">
-	<div class="top_menu">
-		<div class="buttons">
-			<div class="button close"></div>
-			<div class="button minimize"></div>
-			<div class="button maximize"></div>
-		</div>
-		<div class="title">Chat</div>
-	</div>
-	<ul id="messages" class="messages">
-
+<%
+	var userno = 0;
+	if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }
+%>
+<div class="container">
+		<a href="/conversations">Back</a>
+		Conversation with <%=conversation.participants[userno].username%>
+	<ul id="messages" class="list-group">
+		<%messages.forEach(message => {%>
+			<div class="well well-sm">
+				  <b><%=message.sentBy.username%></b>: <%=message.body%> <small class="pull-right"><%=moment(message.createdAt).fromNow()%></small>
+				<% if(!message.isRead) {%>
+					<i class="fas fa-circle"></i>
+				<%}%>
+			</div>
+		<%})%>
 	</ul>
 
 	<div class="bottom_wrapper clearfix">
-		<i id="typing"></i>
 		<form id="form">
 			<div class="message_input_wrapper">
 				<input id="message" class="message_input" placeholder="Type your message here..." />
@@ -27,73 +31,125 @@
 <script src="https://cdn.jsdelivr.net/gh/rexeze/formatTimeStamp/src/index-cdn.js"></script>
 
 <script>
-var socket = io();
+var socket = io('/chat');
+var room = "<%=conversation._id%>";
 var messages = document.getElementById("messages");
 
-(function() {
-  $("form").submit(function(e) {
-    let li = document.createElement("li");
-    e.preventDefault(); // prevents page reloading
-    socket.emit("chat message", $("#message").val());
+socket.on('connect', () => {
+   // Connected, let's sign-up for to receive messages for this room
+   socket.emit('connectToRoom', room);
+});
 
-    messages.appendChild(li).append($("#message").val());
-    let span = document.createElement("span");
-	messages.appendChild(span).append("by " + "<%=currentUser.username%>" + ": " + "just now");
-
-    $("#message").val("");
-
-    return false;
-  });
-
-  socket.on("received", data => {
-    let li = document.createElement("li");
-    let span = document.createElement("span");
-    var messages = document.getElementById("messages");
-    messages.appendChild(li).append(data.message);
-    messages.appendChild(span).append("by " + data.user + ": " + "just now");
-  });
+(() => {
+	$("form").submit(e => {
+		e.preventDefault(); // prevents page reloading
+		socket.emit("chat message", room, {
+			message: $("#message").val(),
+			authorName: "<%=currentUser.username%>",
+			authorId: "<%=currentUser._id%>"
+		});
+		var div = document.createElement("div");
+		div.setAttribute('class', 'well well-sm');
+		div.innerHTML = '<b><%=currentUser.username%></b>: ' + $("#message").val() + '<small class="pull-right">a moment ago</small><i class="fas fa-circle"></i>';
+		messages.appendChild(div);
+		$("#message").val("");
+		return false;
+	});
+	// is it private??!!!!
+	socket.on("received", data => {
+		var div = document.createElement("div");
+		var messages = document.getElementById("messages");
+		div.setAttribute('class', 'well well-sm');
+		div.innerHTML = '<b>' + data.user + '</b>: ' + data.message + '<small class="pull-right">a moment ago</small><i class="fas fa-circle"></i>';
+		messages.appendChild(div);
+	});
 })();
 
 // fetching initial chat messages from the database
-(function() {
-  fetch("/chat")
-    .then(data => {
-      return data.json();
-    })
-    .then(json => {
-      json.map(data => {
-        let li = document.createElement("li");
-        let span = document.createElement("span");
-        messages.appendChild(li).append(data.body);
-        messages
-          .appendChild(span)
-          .append("by " + data.sentBy.username + ": " + formatTimeAgo(data.createdAt));
-      });
-    });
-})();
+// (() => {
+// 	fetch("/conversations/" + "<%=conversation._id%>")
+// 	.then(data => {
+// 		return data.json();
+//     })
+//     .then(json => {
+// 		json.map(data => {
+// 			let li = document.createElement("li");
+// 			let span = document.createElement("span");
+// 			messages.appendChild(li).
+// 			append(data.body);
+// 			messages.appendChild(span).
+// 			append("by " + data.sentBy.username + ": " + formatTimeAgo(data.createdAt));
+// 		});
+// 	});
+// })();
 
-//is typing...
+// var socket = io();
+// var messages = document.getElementById("messages");
 
-let messageInput = document.getElementById("message");
-let typing = document.getElementById("typing");
+// (function() {
+//   $("form").submit(function(e) {
+//     let li = document.createElement("li");
+//     e.preventDefault(); // prevents page reloading
+//     socket.emit("chat message", $("#message").val());
 
-//isTyping event
-messageInput.addEventListener("keypress", () => {
-  socket.emit("typing", { user: "Someone", message: "is typing..." });
-});
+//     messages.appendChild(li).append($("#message").val());
+//     let span = document.createElement("span");
+// 	messages.appendChild(span).append("by " + "<%=currentUser.username%>" + ": " + "just now");
 
-socket.on("notifyTyping", data => {
-  typing.innerText = data.user + " " + data.message;
-  console.log(data.user + data.message);
-});
+//     $("#message").val("");
 
-//stop typing
-messageInput.addEventListener("keyup", () => {
-  socket.emit("stopTyping", "");
-});
+//     return false;
+//   });
 
-socket.on("notifyStopTyping", () => {
-  typing.innerText = "";
-});
+//   socket.on("received", data => {
+//     let li = document.createElement("li");
+//     let span = document.createElement("span");
+//     var messages = document.getElementById("messages");
+//     messages.appendChild(li).append(data.message);
+//     messages.appendChild(span).append("by " + data.user + ": " + "just now");
+//   });
+// })();
+
+// // fetching initial chat messages from the database
+// (function() {
+//   fetch("/chat")
+//     .then(data => {
+//       return data.json();
+//     })
+//     .then(json => {
+//       json.map(data => {
+//         let li = document.createElement("li");
+//         let span = document.createElement("span");
+//         messages.appendChild(li).append(data.body);
+//         messages
+//           .appendChild(span)
+//           .append("by " + data.sentBy.username + ": " + formatTimeAgo(data.createdAt));
+//       });
+//     });
+// })();
+
+// //is typing...
+
+// let messageInput = document.getElementById("message");
+// let typing = document.getElementById("typing");
+
+// //isTyping event
+// messageInput.addEventListener("keypress", () => {
+//   socket.emit("typing", { user: "Someone", message: "is typing..." });
+// });
+
+// socket.on("notifyTyping", data => {
+//   typing.innerText = data.user + " " + data.message;
+//   console.log(data.user + data.message);
+// });
+
+// //stop typing
+// messageInput.addEventListener("keyup", () => {
+//   socket.emit("stopTyping", "");
+// });
+
+// socket.on("notifyStopTyping", () => {
+//   typing.innerText = "";
+// });
 </script>
 <%include partials/footer%>

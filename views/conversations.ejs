@@ -1,5 +1,26 @@
 <%include partials/header%>
+<div class="container">
+	<div class="list-group">
+		<% conversations.forEach(conversation => { %>
+		<% var userno = 0; if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }%>
+		<a href="/conversations/<%=conversation._id%>" id="<%=conversation._id%>" class="list-group-item">
+			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%></h4>
+			<p class="list-group-item-text"><%=conversation.lastMessageAuthor.username%>: <%=conversation.lastMessage%></p>
+		</a>
+		<% });%>
+	</div>
+</div>
 
-<%=conversations%>
+<script>
+
+var socket = io('/chat');
+
+socket.on('connect', () => {
+	socket.on("newMessage", data => {
+		var conversation = document.getElementById(data.conversationId);
+		$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
+	});
+})
+</script>
 
 <%include partials/footer%>

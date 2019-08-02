@@ -9,14 +9,6 @@ router.get("/chatik", (req, res) => {
 	res.render('chatik');
 })
 
-router.get("/chat", (req, res, next) => {
-	res.setHeader("Content-Type", "application/json");
-	res.statusCode = 200;
-	Messages.find({}).populate('sentBy').exec((err, messages) => {
-		res.json(messages);
-	});
-});
-
 router.get("/conversations", middleware.isLoggedIn, (req, res) => {
 	Conversations.find({participants: req.user._id})
 		.populate('participants')
@@ -32,14 +24,30 @@ router.get("/conversations", middleware.isLoggedIn, (req, res) => {
 });
 
 router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) => {
-	Message.find({ conversationId: req.params.conversation_id })
-		.sort('-createdAt')
+	Messages.find({ conversationId: req.params.conversation_id })
+		.sort('createdAt')
 		.populate('sentBy')
+		.populate('conversationId')
 		.exec((err, messages) => {
 			if (err) {
 				console.log(err);
 			} else {
-				res.render('chat', {messages: messages});
+				Conversations.findById(req.params.conversation_id)
+				.populate('participants')
+				.exec((err, conversation) => {
+					if (err) {
+						console.log(err);
+					} else {
+						Messages.update({"isRead": false}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log(mess);
+							}
+						});
+						res.render('chat', {messages: messages, conversation: conversation});
+					}
+				})
 			}
 		});
 });

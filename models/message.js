@@ -12,6 +12,10 @@ var messagesSchema = new mongoose.Schema({
 	sentBy: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User'
+	},
+	isRead: {
+		type: Boolean,
+		default: false
 	}
 },
 {

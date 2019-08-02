@@ -7,6 +7,7 @@ mongoose = 				require("mongoose"),
 User = 					require("./models/user"),
 Likes = 				require("./models/likes"),
 Messages = 				require("./models/message"),
+Conversations = 				require("./models/conversations"),
 Dislikeslog = 			require("./models/dislikeslog"),
 Token = 				require("./models/token"),
 passport = 				require("passport"),
@@ -31,7 +32,8 @@ redis = 				require('redis'),
 redisStore = 			require('connect-redis')(session),
 server = 				http.Server(app),
 io = 					socketio(server),
-redisClient = 			redis.createClient();
+redisClient = 			redis.createClient(),
+xss = 					require("xss");
 
 const sessionStore = new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 });
 
@@ -139,46 +141,103 @@ eventSocket.on('connection', function (socket) {
 
 //
 
-var socket = io;
+var chatSocket = io.of('/chat');
+var currentRoom = "";
 
-socket.on("connection", socket => {
-	console.log("user connected to the chat");
-
-	socket.on("disconnect", function () {
-		console.log("user disconnected from the chat");
+chatSocket.on('connection', socket => {
+	console.log("User connected to the chat");
+	socket.on('disconnect', () => {
+		console.log("User disconnected from the chat");
 	});
+	socket.on('connectToRoom', room => {
+		console.log("User connected to the conversation " + room);
+		currentRoom = xss(room);
+		socket.join(room);
+	})
+	socket.on("chat message", (room, msg) => {
+		var message = xss(msg.message);
+		var authorName = xss(msg.authorName);
+		var authorId = xss(msg.authorId);
+		console.log("message: " + message);
 
-	//Someone is typing
-	socket.on("typing", data => {
-		socket.broadcast.emit("notifyTyping", {
-			user: data.user,
-			message: data.message
+		//broadcast message to everyone the room
+		socket.broadcast.to(room).emit("received", {
+
+			// APPARENTLY, HERE YOU HAVE TO MAKE THE MESSAGE ISREAD AS SOON AS THE CLIENT ECEIVES IN IN THE CHAT WHEN HE IS IN THE CHAT HIMSELF
+			
+			message: message,
+			user: authorName,
+			conversationId: currentRoom
 		});
-	});
-
-	//when soemone stops typing
-	socket.on("stopTyping", () => {
-		socket.broadcast.emit("notifyStopTyping");
-	});
-
-	socket.on("chat message", function (msg) {
-		console.log("message: " + msg);
-
-		//broadcast message to everyone in port:5000 except yourself.
-		socket.broadcast.emit("received", {
-			message: msg,
-			user: socket.request.user.username
+		socket.broadcast.emit('newMessage', {
+			message: message,
+			user: authorName,
+			conversationId: currentRoom
 		});
 
 		//save chat to the database
-		Messages.create({}, (err, message) => {
-			message.body = msg;
-			message.sentBy = socket.request.user._id;
-			message.save();
+		Messages.create({
+			conversationId: currentRoom,
+			body: message,
+			sentBy: authorId
+		}, (err) => {
+			if (err) {
+				console.log(err);
+			}
 		});
-		
+		Conversations
+		.findByIdAndUpdate(
+			currentRoom,
+			{
+				lastMessage: message,
+				lastMessageAuthor: authorId
+			},
+			err => {
+				if (err) {
+					console.log(err);
+				}
+		});
 	});
 });
+
+// socket.on("connection", socket => {
+// 	console.log("user connected to the chat");
+
+// 	socket.on("disconnect", function () {
+// 		console.log("user disconnected from the chat");
+// 	});
+
+// 	//Someone is typing
+// 	socket.on("typing", data => {
+// 		socket.broadcast.emit("notifyTyping", {
+// 			user: data.user,
+// 			message: data.message
+// 		});
+// 	});
+
+// 	//when someone stops typing
+// 	socket.on("stopTyping", () => {
+// 		socket.broadcast.emit("notifyStopTyping");
+// 	});
+
+// 	socket.on("chat message", function (msg) {
+// 		console.log("message: " + msg);
+
+// 		//broadcast message to everyone in port:5000 except yourself.
+// 		socket.broadcast.emit("received", {
+// 			message: msg,
+// 			user: socket.request.user.username
+// 		});
+
+// 		//save chat to the database
+// 		Messages.create({}, (err, message) => {
+// 			message.body = msg;
+// 			message.sentBy = socket.request.user._id;
+// 			message.save();
+// 		});
+		
+// 	});
+// });
 
 
 
