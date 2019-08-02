@@ -3,7 +3,10 @@
 	<div class="list-group">
 		<% conversations.forEach(conversation => { %>
 		<% var userno = 0; if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }%>
+		<%  %>
 		<a href="/conversations/<%=conversation._id%>" id="<%=conversation._id%>" class="list-group-item">
+			<%var unreadMessages = unreadMessagesCounter.filter(el => el.conversation_id.toString() === conversation._id.toString());%>
+			<span class="badge"><%=unreadMessages[0].count%></span>
 			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%></h4>
 			<p class="list-group-item-text"><%=conversation.lastMessageAuthor.username%>: <%=conversation.lastMessage%></p>
 		</a>
@@ -14,10 +17,10 @@
 <script>
 
 var socket = io('/chat');
-
 socket.on('connect', () => {
 	socket.on("newMessage", data => {
-		var conversation = document.getElementById(data.conversationId);
+		var unreadNumber = document.getElementById(data.conversationId);
+		$('#' + data.conversationId).children('span').text(Number(unreadNumber.childNodes[1].innerText) + 1);
 		$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
 	});
 })

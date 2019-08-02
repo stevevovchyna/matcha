@@ -145,29 +145,30 @@ var chatSocket = io.of('/chat');
 var currentRoom = "";
 
 chatSocket.on('connection', socket => {
-	console.log("User connected to the chat");
+	console.log(socket.request.user.username + " connected to the chat");
 	socket.on('disconnect', () => {
-		console.log("User disconnected from the chat");
+		console.log(socket.request.user.username + " disconnected from the chat");
 	});
 	socket.on('connectToRoom', room => {
-		console.log("User connected to the conversation " + room);
+		console.log(socket.request.user.username + " connected to the conversation " + room);
 		currentRoom = xss(room);
-		socket.join(room);
-	})
-	socket.on("chat message", (room, msg) => {
+		socket.join(currentRoom);
+		socket.broadcast.to(currentRoom).emit("read", {});
+	});
+	socket.on("chat message", (room, msg, fn) => {
 		var message = xss(msg.message);
 		var authorName = xss(msg.authorName);
 		var authorId = xss(msg.authorId);
+		var roomParticipants = socket.adapter.rooms[room];
+		var onlineToggle = roomParticipants.length === 1 ? false : true;
 		console.log("message: " + message);
-
-		//broadcast message to everyone the room
+		fn(onlineToggle);
+		//broadcast message to everyone in the room
 		socket.broadcast.to(room).emit("received", {
-
-			// APPARENTLY, HERE YOU HAVE TO MAKE THE MESSAGE ISREAD AS SOON AS THE CLIENT ECEIVES IN IN THE CHAT WHEN HE IS IN THE CHAT HIMSELF
-			
 			message: message,
 			user: authorName,
-			conversationId: currentRoom
+			conversationId: currentRoom,
+			isOnline: onlineToggle
 		});
 		socket.broadcast.emit('newMessage', {
 			message: message,
@@ -179,7 +180,8 @@ chatSocket.on('connection', socket => {
 		Messages.create({
 			conversationId: currentRoom,
 			body: message,
-			sentBy: authorId
+			sentBy: authorId,
+			isRead: onlineToggle
 		}, (err) => {
 			if (err) {
 				console.log(err);

@@ -4,29 +4,35 @@
 	if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }
 %>
 <div class="container">
-		<a href="/conversations">Back</a>
-		Conversation with <%=conversation.participants[userno].username%>
-	<ul id="messages" class="list-group">
+	<!-- <div>
+		<a href="/conversations"><button type="button" class="btn btn-info">Back</button></a>
+	</div> -->
+		<h3>Conversation with <%=conversation.participants[userno].username%></h3>
+	<div id="messages" class="list-group">
 		<%messages.forEach(message => {%>
-			<div class="well well-sm">
-				  <b><%=message.sentBy.username%></b>: <%=message.body%> <small class="pull-right"><%=moment(message.createdAt).fromNow()%></small>
-				<% if(!message.isRead) {%>
-					<i class="fas fa-circle"></i>
-				<%}%>
-			</div>
+			<% var newMessageClass = ""; 
+				if (!message.isRead) {
+					if (message.sentBy._id.toString() !== currentUser._id.toString()) {
+						newMessageClass = "myNewMessage";
+					} else {
+						newMessageClass = "newMessage";
+					}
+				}%>
+			<a class="list-group-item <%=newMessageClass%>">
+				<h4 class="list-group-item-heading"><%=message.sentBy.username%></h4>
+				<small class="pull-right"><%=moment(message.createdAt).fromNow()%></small>
+				<p class="list-group-item-text"><%=message.body%></p>
+			</a>
 		<%})%>
-	</ul>
-
-	<div class="bottom_wrapper clearfix">
-		<form id="form">
-			<div class="message_input_wrapper">
-				<input id="message" class="message_input" placeholder="Type your message here..." />
-			</div>
-			<button class="send_message">
-				Send
-			</button>
-		</form>
 	</div>
+	<form id="form">
+		<div class="input-group">
+			<input id="message" class="form-control" placeholder="Type your message here..." />
+			<span class="input-group-btn">
+				<button class="send_message btn btn-default">Send</button>
+			</span>
+		</div>
+	</form>
 </div>
 <script src="https://cdn.jsdelivr.net/gh/rexeze/formatTimeStamp/src/index-cdn.js"></script>
 
@@ -41,28 +47,39 @@ socket.on('connect', () => {
 });
 
 (() => {
+	setTimeout(() => { $(".myNewMessage").removeClass("myNewMessage")}, 3000);
 	$("form").submit(e => {
 		e.preventDefault(); // prevents page reloading
 		socket.emit("chat message", room, {
 			message: $("#message").val(),
 			authorName: "<%=currentUser.username%>",
 			authorId: "<%=currentUser._id%>"
+		}, (ret) => {
+			var a = document.createElement("a");
+			a.setAttribute('class', 'list-group-item newMessage');
+			a.innerHTML = '<h4 class="list-group-item-heading"><%=currentUser.username%></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">'+$("#message").val()+'</p>';
+			messages.appendChild(a);
+			$("#message").val("");
+			if (ret) {
+				console.log(ret);
+				setTimeout(() => { $(".newMessage").toggleClass("newMessage");}, 3000);
+			}
 		});
-		var div = document.createElement("div");
-		div.setAttribute('class', 'well well-sm');
-		div.innerHTML = '<b><%=currentUser.username%></b>: ' + $("#message").val() + '<small class="pull-right">a moment ago</small><i class="fas fa-circle"></i>';
-		messages.appendChild(div);
-		$("#message").val("");
 		return false;
 	});
-	// is it private??!!!!
 	socket.on("received", data => {
-		var div = document.createElement("div");
+		var a = document.createElement("a");
 		var messages = document.getElementById("messages");
-		div.setAttribute('class', 'well well-sm');
-		div.innerHTML = '<b>' + data.user + '</b>: ' + data.message + '<small class="pull-right">a moment ago</small><i class="fas fa-circle"></i>';
-		messages.appendChild(div);
+		a.setAttribute('class', 'list-group-item newMessage');
+		a.innerHTML = '<h4 class="list-group-item-heading">' + data.user + '</h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' + data.message + '</p>';
+		messages.appendChild(a);
+		setTimeout(() => { $(".newMessage").toggleClass("newMessage");}, 3000);
 	});
+	socket.on("read", data => {
+		console.log("sosi!");
+		// $(".newMessage").toggleClass("newMessage");
+		setTimeout(() => { $(".newMessage").removeClass("newMessage");}, 3000);
+	})
 })();
 
 // fetching initial chat messages from the database

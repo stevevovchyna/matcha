@@ -17,8 +17,23 @@ router.get("/conversations", middleware.isLoggedIn, (req, res) => {
 			if (err) {
 				console.log(err);
 			} else {
-				var result = conversations.filter(conversation => conversation.isActive);
-				res.render('conversations', {conversations: result});
+				Messages.find({"isRead": false}, (err, messages) => {					
+					if (err) {
+						console.log(err);
+					} else {
+						var unreadMessagesCounter = [];
+						var result = conversations.filter(conversation => conversation.isActive);
+						result.forEach(conver => {
+							var unreadMessages = messages.filter(message => 
+								message.conversationId.toString() === conver._id.toString() &&
+								message.isRead === false &&
+								message.sentBy._id.toString() !== req.user._id.toString()
+							);
+							unreadMessagesCounter.push({ conversation_id: conver._id, count: unreadMessages.length });
+						});
+						res.render('conversations', {conversations: result, unreadMessagesCounter: unreadMessagesCounter});
+					}
+				})
 			}
 		})
 });
@@ -38,7 +53,8 @@ router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) 
 					if (err) {
 						console.log(err);
 					} else {
-						Messages.update({"isRead": false}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
+						var sender_id = conversation.participants.filter(user => user._id.toString() !== req.user._id.toString());
+						Messages.updateMany({"isRead": false, "sentBy": sender_id[0]._id}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
 							if (err) {
 								console.log(err);
 							} else {
