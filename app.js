@@ -202,47 +202,6 @@ chatSocket.on('connection', socket => {
 	});
 });
 
-// socket.on("connection", socket => {
-// 	console.log("user connected to the chat");
-
-// 	socket.on("disconnect", function () {
-// 		console.log("user disconnected from the chat");
-// 	});
-
-// 	//Someone is typing
-// 	socket.on("typing", data => {
-// 		socket.broadcast.emit("notifyTyping", {
-// 			user: data.user,
-// 			message: data.message
-// 		});
-// 	});
-
-// 	//when someone stops typing
-// 	socket.on("stopTyping", () => {
-// 		socket.broadcast.emit("notifyStopTyping");
-// 	});
-
-// 	socket.on("chat message", function (msg) {
-// 		console.log("message: " + msg);
-
-// 		//broadcast message to everyone in port:5000 except yourself.
-// 		socket.broadcast.emit("received", {
-// 			message: msg,
-// 			user: socket.request.user.username
-// 		});
-
-// 		//save chat to the database
-// 		Messages.create({}, (err, message) => {
-// 			message.body = msg;
-// 			message.sentBy = socket.request.user._id;
-// 			message.save();
-// 		});
-		
-// 	});
-// });
-
-
-
 let port = process.env.PORT;
 if (port == null || port == "") {
 	port = 3000;

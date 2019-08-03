@@ -134,9 +134,9 @@ i {
 
 .newMessage, .myNewMessage {
 	background: lightblue;
-	transition: background 10s linear;
-    -webkit-transition: background 10s linear;
-    -moz-transition: background 10s linear;
+	transition: background 3s ease-in-out;
+    -webkit-transition: background 3s ease-in-out;
+    -moz-transition: background 3s ease-in-out;
 }
 
 
