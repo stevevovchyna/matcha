@@ -1,23 +1,31 @@
 <%include partials/header%>
 <div class="container">
+<%
+%>
 
-		<h2>Your profile activiy</h2>
-		<h3>Visits</h3>
-		<% user.visits.forEach((visit) => { %>
-			<p><a href="/profile/<%= visit.id._id %>"><%= visit.id.username %></a> checked your profile! <%= moment(visit.createdAt).fromNow() %></p>
-		<% }); %>
-		<h3>Likes</h3>
-		<% user.likeslog.forEach((like) => { %>
-			<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a> liked your profile! <%= moment(like.createdAt).fromNow() %></p>
-		<% }); %>
-		<h3>Dislikes</h3>
-		<% user.dislikeslog.forEach((dislike) => { %>
-			<p><a href="/profile/<%= dislike.id._id %>"><%= dislike.id.username %></a> disliked your profile! <%= moment(dislike.createdAt).fromNow() %></p>
-		<% }); %>
-		<h3>You now have likes from: </h3>
-		<% user.likes.forEach((like) => { %>
-			<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a></p>
-		<% }); %>
+	<h2>Your profile activiy</h2>
+	<h4>Visits of your profile</h4>
+	<%user.visits.forEach(visit => { %>
+		<p><%=visit.visitor_id.username%> checked your profile <%= moment(visit.createdAt).fromNow() %></p>
+	<%});%>
+	<h4>Profiles you've visited</h4>
+	<%user.myVisits.forEach(visit => { %>
+		<p>You've checked <%=visit.profile_id.username%>'s profile <%= moment(visit.createdAt).fromNow() %></p>
+	<%});%>
+	<h4>Profiles you've liked</h4>
+	
+	<h4>Profile that "liked" you</h4>
+	<% user.likeslog.forEach((like) => { %>
+		<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a> liked your profile! <%= moment(like.createdAt).fromNow() %></p>
+	<% }); %>
+	<h4>You now have likes from: </h4>
+	<% user.likes.forEach((like) => { %>
+		<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a></p>
+	<% }); %>
+
+
+
+
 </div>
 
 <%include partials/footer%>

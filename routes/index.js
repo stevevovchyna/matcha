@@ -16,8 +16,7 @@ var options = {
 	httpAdapter: 'https',
 	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
 	formatter: null
-  };
-   
+};
 var geocoder = NodeGeocoder(options);
 
 //LANDING PAGE
@@ -41,12 +40,12 @@ router.get("/gettags", middleware.isLoggedIn, (req, res) => {
 });
 
 // REGISTER PAGE ROUTE
-router.get("/register", (req, res) => {
+router.get("/register", middleware.checkIfLogged, (req, res) => {
 	res.render("register");
 });
 
 // ADDING REGISTERED USER DATA TO THE DB
-router.post("/register", (req, res) => {
+router.post("/register", middleware.checkIfLogged, (req, res) => {
 	if (!req.body.email || !req.body.password ||
 		!req.body.username || !req.body.firstname ||
 		!req.body.lastname) {
@@ -125,21 +124,21 @@ router.post("/register", (req, res) => {
 						return res.redirect("/register");
 					}
 					var transporter = nodemailer.createTransport({ service: 'sendgrid', auth: { user: "steve.vovchyna@gmail.com", pass: "omtMovBe7sEwdz_6KCHz" } });
-	        	    var mailOptions = {
+					var mailOptions = {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
 						subject: 'Account Verification Token',
 						text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/localhost:3000\/verification\/' + token.token + '.\n'
 					};
-	        	    transporter.sendMail(mailOptions, function (err) {
-	        	        if (err) {
+					transporter.sendMail(mailOptions, (err) => {
+						if (err) {
 							req.flash("error", err.message);
 							return res.redirect("/register");
 						} else {
-							req.flash("success, 'A verification email has been sent to " + newUser.email + '.');
+							req.flash('success', 'A verification email has been sent to ' + newUser.email + '.');
 							return res.redirect("/login");
 						}
-	        	    });
+					});
 				});
 			});
 		});
@@ -147,7 +146,7 @@ router.post("/register", (req, res) => {
 });
 
 //VERIFICATION ROUTE
-router.get("/verification/:token", (req, res) => {
+router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 	Token.findOne({token: req.sanitize(req.params.token)}, (err, token) => {
 		if (!token) {
 			req.flash("error", "Invalid link! Please recheck your email");
@@ -167,22 +166,32 @@ router.get("/verification/:token", (req, res) => {
 				if (err) {
 					req.flash("error", err.message);
 					return res.redirect("/login");
+				} else {
+					req.flash("success", "Your account has been verified! You can now log in!");
+					res.redirect("/login");
 				}
-				req.flash("success", "Your account has been verified! You can now log in!");
-				res.redirect("/login");
 			});
 		});
 	});
 });
 
 //LOGIN PAGE ROUTE
-router.get("/login", (req, res) => {
+router.get("/login", middleware.checkIfLogged, (req, res) => {
 	res.render("login");
 });
 
+// 42 AUTH ROUTES
+router.get('/auth/42', middleware.checkIfLogged, passport.authenticate('42'));
+
+router.get('/auth/42/callback', middleware.location,
+	passport.authenticate('42', { failureRedirect: '/login' }), (req, res) => {
+	// Successful authentication, redirect home.
+		res.redirect('/feed/browse/default.asc');
+});
+
 //AUTH ROUTE
-router.post("/login", middleware.additionalCheck, middleware.location, passport.authenticate("local", {
-	successRedirect: "/feed/browse",
+router.post("/login", middleware.checkIfLogged, middleware.additionalCheck, middleware.location, passport.authenticate("local", {
+	successRedirect: "/feed/browse/default.asc",
 	failureRedirect: "/login",
 	failureFlash: true
 }));
@@ -199,7 +208,7 @@ router.get("/forgot", (req, res) => {
 	res.render("forgot");
 });
 
-router.post('/forgot', function (req, res, next) {
+router.post('/forgot', (req, res, next) => {
 	async.waterfall([
 		function (done) {
 			crypto.randomBytes(20, function (err, buf) {
@@ -311,7 +320,5 @@ router.post('/reset/:token', function (req, res) {
 		res.redirect('/login');
 	});
 });
-
-
 
 module.exports = router;

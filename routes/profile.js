@@ -42,21 +42,26 @@ cloudinary.config({
 	api_secret: 'b9OL__XMw1SlZsYtLvFLe6_Cn00'
 });
 
-
 router.get("/:id", middleware.isLoggedIn, (req, res) => {
-	User.findById(req.sanitize(req.params.id), function (err, user) {
-		if (req._passport.session.user !== req.params.id) {
-			Visits.create({}, (err, visits) => {
-				visits.id = req._passport.session.user;
-				visits.save(() => {
-					user.visits.push(visits);
-					user.save();
+	User.findById(req.sanitize(req.params.id), (err, user) => {
+		if (req._passport.session.user._id.toString() !== req.params.id.toString()) {
+			Visits.create({profile_id: req.params.id, visitor_id: req._passport.session.user._id}, (err, newVisit) => {
+				if (err) console.log(err);
+				user.visits.push(newVisit);
+				user.save((err) => {
+					if (err) console.log(err);
+					User.findById(req.user._id, (err, myuser) => {
+						myuser.myVisits.push(newVisit);
+						myuser.save((err) => {
+							if (err) console.log(err);
+							res.render("profiles/profile", {user: user})
+						});
+					})
 				});
 			});
+		} else {
+			res.render("profiles/profile", { user: user });
 		}
-		res.render("profiles/profile", {
-			user: user
-		});
 	});
 });
 
@@ -271,17 +276,22 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 			res.redirect("/profile/" + req.params.id);
 		} else {
 			var url = user.pictures.id(req.params.pic_id);
+			var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
 			user.pictures.pull(req.params.pic_id);
+			console.log(deletedPicture);
 			user.save(() => {
-				cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
-					if (err) {
-						req.flash("error", err.message);
-						console.log(err);
-						res.redirect("/profile/" + req.params.id);
-					}
-					req.flash("success", "Picture deleted!");
-					res.redirect("/profile/" + req.params.id);
-				});
+				if (deletedPicture[0].naked_url) {
+					cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
+						if (err) {
+							req.flash("error", err.message);
+							console.log(err);
+							res.redirect("/profile/" + req.params.id);
+						}
+						console.log("real picture deleted!!!");
+					});
+				}
+				req.flash("success", "Picture deleted!");
+				res.redirect("/profile/" + req.params.id);
 			});
 		}
 	});

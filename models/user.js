@@ -1,7 +1,9 @@
 const mongoose = require("mongoose"),
 passportLocalMongoose = require("passport-local-mongoose");
+const findOrCreate = require('mongoose-findorcreate');
 
 var UserSchema = new mongoose.Schema({
+	intra_id: String,
 	username: String,
 	lastname: String,
 	lastseen: {type: Date},
@@ -12,12 +14,18 @@ var UserSchema = new mongoose.Schema({
 	},
 	locationname: String,
 	location: {
-		type: { type: String },
+		type: {
+			type: String,
+			default: "Point"
+		},
 		coordinates: [Number],
 	},
 	reallocationname: String,
 	reallocation: {
-		type: { type: String },
+		type: {
+			type: String,
+			default: "Point"
+		},
 		coordinates: [Number],
 	},
 	sexPreferences: {
@@ -52,13 +60,31 @@ var UserSchema = new mongoose.Schema({
 			ref: "Visits"
 		}
 	],
+	myVisits: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Visits"
+		}
+	],
 	likes: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Likes"
 		}
 	],
+	myLikes: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Likes"
+		}
+	],
 	likeslog: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Likeslog"
+		}
+	],
+	mylikeslog: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Likeslog"
@@ -82,6 +108,12 @@ var UserSchema = new mongoose.Schema({
 			ref: "Dislikeslog"
 		}
 	],
+	mydislikeslog: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Dislikeslog"
+		}
+	],
 	createdAt: {
 		type: Date,
 		required: true,
@@ -98,6 +130,7 @@ UserSchema.plugin(passportLocalMongoose, {
 });
 
 UserSchema.index( { "location" : "2dsphere" } );
+UserSchema.plugin(findOrCreate);
 
 //exporting model to the db
 module.exports = mongoose.model("User", UserSchema);

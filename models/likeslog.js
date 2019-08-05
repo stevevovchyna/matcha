@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 var likeslogSchema = new mongoose.Schema({
 	createdAt: { type: Date, default: Date.now },
-	id: {
+	liker_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User"
+	},
+	liked_one_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User"
 	}

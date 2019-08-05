@@ -38,7 +38,7 @@ middlewareObject.isConnected = (req, res, next) => {
 				if (err) {
 					console.log(err);
 				} else {
-					console.log("It's inactive, SIr!!!");
+					console.log("It's inactive, Sir!!!");
 					next();
 				}
 			})
@@ -50,7 +50,7 @@ middlewareObject.isConnected = (req, res, next) => {
 
 middlewareObject.haveLikedMe = (req, res, next) => {
 	User.findById(req.sanitize(req.user._id)).populate('likes').exec((err, user) => {
-		var result = user.likes.filter(like => like.id.toString() === req.params.id.toString());
+		var result = user.likes.filter(like => like.liker_id.toString() === req.params.id.toString());
 		if (result.length > 0) {
 			Conversations.find({}, (err, conversations) => {
 				var conversationFound = conversations.filter(
@@ -70,7 +70,7 @@ middlewareObject.haveLikedMe = (req, res, next) => {
 					Conversations.create({}, (err, conversation) => {
 						conversation.participants.push(req.params.id);
 						conversation.participants.push(req.user._id);
-						conversation.lastMessage = "Hi there!";
+						conversation.lastMessage = "Start of your conversation!";
 						conversation.lastMessageAuthor = req.user._id;
 						conversation.save(() => {
 							console.log("New conversation was created!!!");
@@ -87,32 +87,38 @@ middlewareObject.haveLikedMe = (req, res, next) => {
 }
 
 middlewareObject.haveFilled = (req, res, next) => {
-	if (req.isAuthenticated()) {
-		User.findById(req.user._id, (err, user) => {
-			if (user.filledFields) {
-				return next();
-			} else {
-				user.filledFields = true;
-				user.save((err) => {
-					if (err) {
-						req.flash("error", err.message);
-						res.redirect("/login");
-					}
+	User.findById(req.user._id, (err, user) => {
+		if (user.filledFields) {
+			return next();
+		} else {
+			user.filledFields = true;
+			user.save((err) => {
+				if (err) {
+					req.flash("error", err.message);
+					res.redirect("/login");
+				} else {
 					res.redirect("/profile/" + user._id + "/edit");
-				});
-			}
-		});
+				}
+			});
+		}
+	});
+}
+
+middlewareObject.checkIfLogged = (req, res, next) => {
+	if (req.isAuthenticated()) {
+		res.redirect('/feed/browse/default.asc');
 	} else {
-		req.flash("error", "Please login first!");
-		res.redirect("/login");
+		next();
 	}
 }
 
 middlewareObject.isLoggedIn = (req, res, next) => {
-	if (req.isAuthenticated())
+	if (req.isAuthenticated()) {
 		return next();
-	req.flash("error", "Please login first!");
-	res.redirect("/login");
+	} else {
+		req.flash("error", "Please login first");
+		res.redirect("/login");
+	}
 };
 
 middlewareObject.additionalCheck = (req, res, next) => {

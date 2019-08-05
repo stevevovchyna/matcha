@@ -2,9 +2,13 @@ const mongoose = require("mongoose");
 
 var visitsSchema = new mongoose.Schema({
 	createdAt: { type: Date, default: Date.now },
-	id: {
+	profile_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User"
+	},
+	visitor_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'User'
 	}
 });
 

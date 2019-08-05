@@ -33,7 +33,18 @@ redisStore = 			require('connect-redis')(session),
 server = 				http.Server(app),
 io = 					socketio(server),
 redisClient = 			redis.createClient(),
-xss = 					require("xss");
+xss = 					require("xss"),
+FortyTwoStrategy = 		require('passport-42').Strategy;
+
+const NodeGeocoder = 	require('node-geocoder');
+
+var options = {
+	provider: 'google',
+	httpAdapter: 'https',
+	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
+	formatter: null
+};
+var geocoder = NodeGeocoder(options);
 
 const sessionStore = new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 });
 
@@ -62,6 +73,7 @@ app.use(session({ //session initializer
 	resave: false,
 	saveUninitialized: true
 }));
+
 io.use(passportSocketIo.authorize({
 	key: 'connect.sid',
 	secret: "I love Kate",
@@ -78,13 +90,70 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(methodOverride("_method"));
 
-
 passport.use(new localStrategy(User.authenticate()));
-passport.serializeUser(function (user, done) {
-	done(null, user.id);
+passport.use(new FortyTwoStrategy({
+		clientID: '738c8f86020f7a4b67ed7f77a01425d699fd61cb5189339b5f537d777b1c5d63',
+		clientSecret: '57efff68ef25910a11c8af0f3e86fc12d8911f72bae9a58af691d450482122ce',
+		callbackURL: "http://localhost:3000/auth/42/callback"
+	},
+	function (accessToken, refreshToken, profile, cb) {
+		User.find({intra_id: profile._json.id}, (err, user) => {
+			if (err) {
+				console.log(err);
+				return cb(err);
+			}
+			//user is not found
+			if (user.length == 0) {
+				var userLocation = {
+					latitude: "",
+					longitude: "",
+					city: ""
+				};
+				geocoder.geocode(profile._json.campus[0].time_zone, (err, res) => {
+					userLocation = {
+						latitude: res[0].latitude,
+						longitude: res[0].longitude,
+						city: res[0].city
+					}
+					user = new User({
+						intra_id: profile._json.id,
+						isVerified: true,
+						username: profile._json.login,
+						email: profile._json.email,
+						lastname: profile._json.last_name,
+						firstname: profile._json.first_name,
+						pictures: [{
+							url: profile._json.image_url,
+							isProfile: true
+						}],
+						reallocationname: userLocation.city,
+						reallocation: {
+							type: "Point",
+							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+						},
+						locationname: userLocation.city,
+						location: {
+							type: "Point",
+							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+						}
+					});
+					user.save((err) => {
+						if (err) console.log(err);
+						return cb(err, user)
+					});
+				});
+			} else {
+				//user is found!!!
+				return cb(err, user[0]);
+			}
+		});
+	}
+));
+passport.serializeUser((user, done) => {
+	done(null, user);
 });
-passport.deserializeUser(function (id, done) {
-	User.findById(id).populate('blockedUsers').exec((err, user) => {
+passport.deserializeUser((user, done) => {
+	User.findById(user._id).populate('blockedUsers').exec((err, user) => {
 		done(err, user);
 	});
 });

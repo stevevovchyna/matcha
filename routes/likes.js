@@ -25,51 +25,51 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 				if (req.user._id.toString() === user._id.toString()) {
 					res.send({status: 'error', error: "You can't 'like' your own profile"});
 				} else {
-					var match = 0;
-
 					User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
 						if (err) {
 							res.send({status: 'error', error: err});
 							console.log(err);
 						} else {
-							userlikes.likes.forEach((like) => {
-								if (like.id.toString() === req.user._id.toString()) {
-									match = 1;
-								}
-							});
-							if (match) {
-								res.send({status: 'error', error: "This person already knows about your sympathy", user: userlikes});
-							} else {
-								Likes.create({}, (err, like) => {
+							var foundLikes = userlikes.likes.filter(like => like.liker_id.toString() === req.user._id.toString());
+							if (foundLikes.length === 0) {
+								//new like is being created
+								Likes.create({ liker_id: req.user._id, liked_one_id: req.params.id}, (err, like) => {
 									if (err) {
 										console.log(err);
 										res.send({status: 'error', error: err});
 									} else {
-										like.id = req.user._id;
-										like.save();
-
-										Likeslog.create({}, (err, likelog) => {
+										Likeslog.create({ liker_id: req.user._id, liked_one_id: req.params.id }, (err, likelog) => {
 											if (err) {
 												console.log(err);
 												res.send({status: 'error', error: err});
 											} else {
-												likelog.id = req.user._id;
-												likelog.save();
+												user.likeslog.push(likelog);
+												user.likes.push(like);
+												// liked user gets  a new like in the Likes array and new likelog entry in the Likelogs
+												user.save(() => {
+													if (res.locals.message !== "") {
+														var message = res.locals.message;
+														res.locals.message = "";
+													} else {
+														var message = "That's a like!";
+														res.locals.message = "";
+													}
+													User.findById(req.user._id, (err, liker_user) => {
+														liker_user.mylikeslog.push(likelog);
+														liker_user.myLikes.push(like);
+														// user who liked gets an entry in the 'myLikes' field and in the 'mylikeslog' field
+														liker_user.save((err) => {
+															if (err) console.log(err);
+															res.send({status: 'success', user: user, message: message});
+														})
+													});
+												});
 											}
-											user.likeslog.push(likelog);
-											user.likes.push(like);
-											user.save(() => {
-												if (res.locals.message !== "") {
-													var message = res.locals.message;
-													res.locals.message = "";
-												} else {
-													var message = "That's a like!";
-												}
-												res.send({status: 'success', user: user, message: message});
-											});
 										});
 									}
 								});
+							} else {
+								res.send({status: 'error', error: "This person already knows about your sympathy", user: userlikes});
 							}
 						}
 					});
@@ -88,37 +88,45 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 			if (req.user._id.toString() === user._id.toString()) {
 				res.send({status: 'error', error: "Don't be so hard on yourself"});
 			} else {
-				var match = 0;
-				var id = "";
 				User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
 					if (err) {
 						console.log(err);
 						res.send({status: 'error', error: err});
 					} else {
-						userlikes.likes.forEach((like) => {
-							if (like.id.toString() === req.user._id.toString()) {
-								match = 1;
-								id = like._id.toString();
-							}
-						});
-						if (match) {
+						var foundLikes = userlikes.likes.filter(like => like.liker_id.toString() === req.user._id.toString());
+						if (foundLikes.length === 1) {
+							var id = foundLikes[0]._id;
+							// corresponding like is being deleted
 							Likes.findByIdAndDelete(id, (err) => {
 								if (err) {
 									console.log(err);
 									res.send({status: 'error', error: err});
 								} else {
-									Dislikeslog.create({}, (err, dislike) => {
+									// creating corresponding entry in the dislikeslog
+									Dislikeslog.create({ disliker_id: req.user._id, disliked_one_id: req.params.id }, (err, dislikelog) => {
 										if (err) {
 											console.log(err);
 											res.send({status: 'error', error: err});
 										} else {
-											dislike.id = req.user._id;
-											dislike.save();
+											//a new entry in the 'dislikeslog' is being created
+											user.dislikeslog.push(dislikelog);
+											user.likes.pull(id);
+											// disliked user has a new entry in the 'dislikeslog' field and an old like is being deleted
+											user.save((err) => {
+												if (err) console.log(err);
+												// user that dislikes gets his data updated
+												User.findById(req.user._id, (err, disliking_user) => {
+													if (err) console.log(err);
+													disliking_user.mydislikeslog.push(dislikelog);
+													disliking_user.myLikes.pull(id);
+													// disliking user gets a new entry about the dislike and his like is being deleted from the db
+													disliking_user.save((err) => {
+														if (err) console.log(err);
+														res.send({status: 'success', user: user});
+													});
+												});
+											});
 										}
-										user.dislikeslog.push(dislike);
-										user.likes.pull(id);
-										user.save();
-										res.send({status: 'success', user: user});
 									});
 								}
 							});
@@ -131,137 +139,16 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 		}
 	});
 });
-// router.put("/:id/like", middleware.isLoggedIn, (req, res) => {
-// 	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
-// 		if (err) {
-// 			req.flash("error", "Something went wrong(" + err.message + ").");
-// 			console.log(err);
-// 			res.redirect("back");
-// 		} else {
-// 			if (req.user._id.toString() === user._id.toString()) {
-// 				req.flash("error", "You can't 'like' you own profile");
-// 				return res.redirect("back");
-// 			} else {
-// 				var match = 0;
-
-// 				User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
-// 					if (err) {
-// 						req.flash("error", "Something went wrong(" + err.message + ").");
-// 						console.log(err);
-// 						res.redirect("back");
-// 					} else {
-// 						userlikes.likes.forEach((like) => {
-// 							if (like.id.toString() === req.user._id.toString()) {
-// 								match = 1;
-// 							}
-// 						});
-// 						if (match) {
-// 							req.flash("success", "This person already knows about your sympathy!");
-// 							return res.redirect("back");
-// 						} else {
-// 							Likes.create({}, (err, like) => {
-// 								if (err) {
-// 									req.flash("error", "Something went wrong(" + err.message + ").");
-// 									console.log(err);
-// 									res.redirect("back");
-// 								} else {
-// 									like.id = req.user._id;
-// 									like.save();
-
-// 									Likeslog.create({}, (err, likelog) => {
-// 										if (err) {
-// 											req.flash("error", "Something went wrong(" + err.message + ").");
-// 											console.log(err);
-// 											res.redirect("back");
-// 										} else {
-// 											likelog.id = req.user._id;
-// 											likelog.save();
-// 										}
-// 										user.likeslog.push(likelog);
-// 										user.likes.push(like);
-// 										user.save(() => {
-// 											req.flash("success", "That's a like!");
-// 											res.redirect("back");
-// 										});
-// 									});
-// 								}
-// 							});
-// 						}
-// 					}
-// 				});
-// 			}
-// 		}
-// 	});
-// });
-
-// router.delete("/:id/dislike", middleware.isLoggedIn, (req, res) => {
-// 	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
-// 		if (err) {
-// 			req.flash("error", "Something went wrong(" + err.message + ").");
-// 			console.log(err);
-// 			res.redirect("back");
-// 		} else {
-// 			if (req.user._id.toString() === user._id.toString()) {
-// 				req.flash("error", "Don't be so hard on yourself!");
-// 				return res.redirect("back");
-// 			} else {
-// 				var match = 0;
-// 				var id = "";
-// 				User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
-// 					if (err) {
-// 						req.flash("error", "Something went wrong(" + err.message + ").");
-// 						console.log(err);
-// 						res.redirect("back");
-// 					} else {
-// 						userlikes.likes.forEach((like) => {
-// 							if (like.id.toString() === req.user._id.toString()) {
-// 								match = 1;
-// 								id = like._id.toString();
-// 							}
-// 						});
-// 						if (match) {
-// 							Likes.findByIdAndDelete(id, (err) => {
-// 								if (err) {
-// 									req.flash("error", "Something went wrong(" + err.message + ").");
-// 									console.log(err);
-// 									res.redirect("back");
-// 								} else {
-// 									Dislikeslog.create({}, (err, dislike) => {
-// 										if (err) {
-// 											req.flash("error", "Something went wrong(" + err.message + ").");
-// 											console.log(err);
-// 											res.redirect("back");
-// 										} else {
-// 											dislike.id = req.user._id;
-// 											dislike.save();
-// 										}
-// 										user.dislikeslog.push(dislike);
-// 										user.likes.pull(id);
-// 										user.save();
-// 										req.flash("success", "As you wish! You don't like this person anymore!");
-// 										return res.redirect("back");
-// 									});
-// 								}
-// 							});
-// 						} else {
-// 							req.flash("success", "Like this account first!");
-// 							return res.redirect("back");
-// 						}
-// 					}
-// 				});
-// 			}
-// 		}
-// 	});
-// });
 
 router.get("/:id/activity", middleware.checkProfileOwnership, (req, res) => {
 	User.findById(req.sanitize(req.params.id))
 	.populate({path: 'likes', populate: {path: 'id'}})
-	.populate({path: 'visits', populate: {path: 'id'}})
+	.populate({path: 'visits', populate: {path: 'visitor_id'}})
+	.populate({path: 'myVisits', populate: {path: 'profile_id'}})
 	.populate({path: 'likeslog', populate: {path: 'id'}})
 	.populate({path: 'dislikeslog', populate: {path: 'id'}})
 	.exec((err, user) => {
-				res.render("activity", {user: user});
+		res.render("activity", {user: user});
 	});
 });
 

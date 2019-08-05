@@ -5,7 +5,8 @@ const User = require("../models/user");
 const middleware = require("../middleware");
 const _ = require('lodash');
 
-router.get("/browse/", middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
+router.get("/browse", middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
+	console.log("tut takozh gotovo!!");
 	res.redirect("/feed/browse/default.asc");
 });
 
@@ -43,8 +44,8 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 				break;
 		}
 		User.find({})
-		.populate({path: 'likes', populate: {path: 'id'}})
-		.populate({path: 'visits', populate: {path: 'id'}})
+		.populate('likes')
+		.populate('visits')
 		.exec((err, user) => {
 			if (err) {
 				req.flash("error", err.message);
@@ -58,7 +59,8 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						},
 						key: 'location',
 						distanceField: "dist.calculated",
-						maxDistance: 1000000000,
+						maxDistance: 100000,
+						minDistance: 10,
 						spherical: true
 					}
 				}], (err, user) => {

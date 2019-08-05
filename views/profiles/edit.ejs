@@ -1,43 +1,41 @@
 <%include ../partials/header%>
-<script type="text/javascript" src="/suggestion.js"></script>
-<div id="newcamp">
-<h1>
-	Edit Profile
-</h1>
+<div class="container">
+<h3 class="page-header">Edit Profile</h3>
+<div class="form-group"><a href="/forgot">Forgot your password?</a></div>
 	<form action="/profile/<%=user._id%>/editinfo?_method=PUT" method="POST">
 		<div class="form-group">
-			<input class="form-control inputto" type="text" value="<%=user.username%>" name="user[username]" placeholder="username">
+			<input class="form-control " type="text" value="<%=user.username%>" name="user[username]" placeholder="username">
 		</div>
 		<div class="form-group">
-			<input class="form-control inputto" type="text" name="user[firstname]" value="<%=user.firstname%>" placeholder="firstname">
+			<input class="form-control " type="text" name="user[firstname]" value="<%=user.firstname%>" placeholder="firstname">
 		</div>
 		<div class="form-group">
-			<input class="form-control inputto" type="text" value="<%=user.lastname%>" name="user[lastname]" placeholder="lastname">
+			<input class="form-control " type="text" value="<%=user.lastname%>" name="user[lastname]" placeholder="lastname">
 		</div>
 		<div class="form-group">
-			<input class="form-control inputto" type="text" name="user[email]" value="<%= user.email %>" placeholder="location">
+			<input class="form-control " type="text" name="user[email]" value="<%= user.email %>" placeholder="location">
 		</div>
 		<div class="form-group">
-			<input class="form-control inputto" type="text" name="location" value="<%= user.locationname %>" placeholder="location">
+			<input class="form-control " type="text" name="location" value="<%= user.locationname %>" placeholder="location">
 		</div>
 		<div class="form-group">
-			<select class="form-control inputto" name="user[gender]">
+			<select class="form-control " name="user[gender]">
 				<option <% if (user.gender == "Female") { %> selected <% } %> value="Female">Female</option>
 				<option <% if (user.gender == "Male") { %> selected <% } %> value="Male">Male</option>
 			</select>
 		</div>
 		<div class="form-group">
-			<select class="form-control inputto" name="user[sexPreferences]">
+			<select class="form-control " name="user[sexPreferences]">
 				<option <% if (user.sexPreferences == "Female") { %> selected <% } %> value="Female">Female</option>
 				<option <% if (user.sexPreferences == "Male") { %> selected <% } %> value="Male">Male</option>
 				<option <% if (user.sexPreferences == "Bi-Sexual") { %> selected <% } %> value="Bi-Sexual">Bi-Sexual</option>
 			</select>
 		</div>
 		<div class="form-group">
-			<textarea class="form-control inputto" type="text" name="user[bio]" placeholder="Your Bio"><%= user.bio %></textarea>
+			<textarea class="form-control " type="text" name="user[bio]" placeholder="Your Bio"><%= user.bio %></textarea>
 		</div>
 		<div class="form-group">
-			<button class="btn btn-primary btn-block inputto">Submit</button>
+			<button class="btn btn-primary btn-block ">Submit</button>
 		</div>
 	</form>
 
@@ -50,10 +48,10 @@
 </div>
 <form action="/profile/<%=user._id%>/edittag?_method=PUT" method="POST">
 	<div class="form-group">
-		<input class="form-control inputto" id="tags" type="text" name="interests" placeholder="My interests">
+		<input class="form-control " id="tags" type="text" name="interests" placeholder="My interests">
 	</div>
 	<div class="form-group">
-		<button class="btn btn-primary btn-block inputto">Submit</button>
+		<button class="btn btn-primary btn-block ">Submit</button>
 	</div>
 </form>
 
@@ -74,14 +72,13 @@
 	</div>
 	<form action="/profile/<%=user._id%>/editpic?_method=PUT" method="POST" enctype="multipart/form-data">
 		<div class="form-group">
-				<input class="inputto" type="file" id="image" name="image" accept="image/*">
+				<input class="" type="file" id="image" name="image" accept="image/*">
 			</div>
 			<div class="form-group">
-				<button class="btn btn-primary btn-block inputto">Submit</button>
+				<button class="btn btn-primary btn-block ">Submit</button>
 			</div>
 	</form>
-	<a href="/profile/<%=user._id%>">Back</a>
 </div>
 </div>
-
+<script type="text/javascript" src="/suggestion.js"></script>
 <%include ../partials/footer%>
