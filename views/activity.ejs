@@ -1,30 +1,89 @@
 <%include partials/header%>
 <div class="container">
-<%
-%>
 
 	<h2>Your profile activiy</h2>
-	<h4>Visits of your profile</h4>
-	<%user.visits.forEach(visit => { %>
-		<p><%=visit.visitor_id.username%> checked your profile <%= moment(visit.createdAt).fromNow() %></p>
-	<%});%>
-	<h4>Profiles you've visited</h4>
-	<%user.myVisits.forEach(visit => { %>
-		<p>You've checked <%=visit.profile_id.username%>'s profile <%= moment(visit.createdAt).fromNow() %></p>
-	<%});%>
-	<h4>Profiles you've liked</h4>
-	
-	<h4>Profile that "liked" you</h4>
-	<% user.likeslog.forEach((like) => { %>
-		<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a> liked your profile! <%= moment(like.createdAt).fromNow() %></p>
-	<% }); %>
-	<h4>You now have likes from: </h4>
-	<% user.likes.forEach((like) => { %>
-		<p><a href="/profile/<%= like.id._id %>"><%= like.id.username %></a></p>
-	<% }); %>
-
-
-
+	<div class="row">
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourPorfileVisits">Visits of your profile</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesYouHaveVisited">Profiles you've visited</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesYouLiked">Profiles you've liked</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesLikedYou">Profiles that liked you</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profileLikesLog">Your profile "likes" log</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profileDislikesLog">Your profile "dislikes" log</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourLikingActivity">Your liking activity</button>
+		</div>
+		<div class="col-xs-6 col-sm-6">
+			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourDislikingActivity">Your disliking activity</button>
+		</div>
+</div>
+		  <div class="collapse" id="yourPorfileVisits">
+				<div class="well">
+				<%user.visits.forEach(visit => { %>
+					<p><a href="/profile/<%=visit.visitor_id._id%>"><%=visit.visitor_id.username%></a> checked your profile <%= moment(visit.createdAt).fromNow() %></p>
+				<%});%>
+			</div>
+		</div>
+		<div class="collapse" id="profilesYouHaveVisited">
+				<div class="well">
+				<%user.myVisits.forEach(visit => { %>
+					<p>You've checked <a href="/profile/<%=visit.profile_id._id%>"><%=visit.profile_id.username%></a>'s profile <%= moment(visit.createdAt).fromNow() %></p>
+				<%});%>
+			</div>
+		</div>
+		<div class="collapse" id="profilesYouLiked">
+				<div class="well">
+					<%user.myLikes.forEach(like => {%>
+						<p><a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %></a></p>
+					<%});%>
+				</div>
+			</div>
+			<div class="collapse" id="profilesLikedYou">
+					<div class="well">
+					<%user.likes.forEach(like => {%>
+						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a></p>
+					<%});%>
+				</div>
+			</div>
+			<div class="collapse" id="profileLikesLog">
+					<div class="well">
+					<% user.likeslog.forEach((like) => { %>
+						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a> liked your profile <%= moment(like.createdAt).fromNow() %></p>
+					<% }); %>
+				</div>
+			</div>
+			<div class="collapse" id="profileDislikesLog">
+					<div class="well">
+					<% user.dislikeslog.forEach((dislike) => { %>
+						<p><a href="/profile/<%= dislike.disliker_id._id %>"><%= dislike.disliker_id.username %></a> disliked your profile <%= moment(dislike.createdAt).fromNow() %></p>
+					<% }); %>
+				</div>
+			</div>
+			<div class="collapse" id="yourLikingActivity">
+					<div class="well">
+					<% user.mylikeslog.forEach((like) => { %>
+						<p>You've liked <a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %>'s</a> profile <%= moment(like.createdAt).fromNow() %></p>
+					<% }); %>
+				</div>
+			</div>
+			<div class="collapse" id="yourDislikingActivity">
+					<div class="well">
+					<% user.mydislikeslog.forEach((dislike) => { %>
+						<p>You've disliked <a href="/profile/<%= dislike.disliked_one_id._id %>"><%= dislike.disliked_one_id.username %>'s</a> profile <%= moment(dislike.createdAt).fromNow() %></p>
+					<% }); %>
+				</div>
+			</div>
 
 </div>
 

@@ -142,11 +142,14 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 
 router.get("/:id/activity", middleware.checkProfileOwnership, (req, res) => {
 	User.findById(req.sanitize(req.params.id))
-	.populate({path: 'likes', populate: {path: 'id'}})
-	.populate({path: 'visits', populate: {path: 'visitor_id'}})
-	.populate({path: 'myVisits', populate: {path: 'profile_id'}})
-	.populate({path: 'likeslog', populate: {path: 'id'}})
-	.populate({path: 'dislikeslog', populate: {path: 'id'}})
+	.populate({ path: 'likes', populate: {path: 'liked_one_id, liker_id' }})
+	.populate({ path: 'myLikes', populate: {path: 'liker_id, liked_one_id' }})
+	.populate({ path: 'visits', populate: {path: 'profile_id, visitor_id' }})
+	.populate({ path: 'myVisits', populate: {path: 'visitor_id, profile_id' }})
+	.populate({ path: 'likeslog', populate: { path: 'liked_one_id, liker_id' }})
+	.populate({ path: 'mylikeslog', populate: { path: 'liker_id, liked_one_id' }})
+	.populate({ path: 'dislikeslog', populate: { path: 'disliked_one_id, disliker_id' }})
+	.populate({ path: 'mydislikeslog', populate: { path: 'disliker_id, disliked_one_id' }})
 	.exec((err, user) => {
 		res.render("activity", {user: user});
 	});
