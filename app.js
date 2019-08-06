@@ -7,7 +7,8 @@ mongoose = 				require("mongoose"),
 User = 					require("./models/user"),
 Likes = 				require("./models/likes"),
 Messages = 				require("./models/message"),
-Conversations = 				require("./models/conversations"),
+Notifications = 		require("./models/notifications"),
+Conversations = 		require("./models/conversations"),
 Dislikeslog = 			require("./models/dislikeslog"),
 Token = 				require("./models/token"),
 passport = 				require("passport"),
@@ -184,14 +185,53 @@ app.use(chatRoutes);
 var eventSocket = io.of('/events');
 var onlineUsers = [];
 // on connection event
-eventSocket.on('connection', function (socket) {
+eventSocket.on('connection', (socket) => {
 	if (socket.request.user && socket.request.user.logged_in) {
 		onlineUsers.push(socket.request.user);
 		console.log(socket.request.user.username + " connected");
 	}	
 	eventSocket.emit('broadcast', onlineUsers);
 
-	socket.on('disconnect', function () {
+	socket.on('connectToRoom', socketId => {
+		console.log(socket.request.user.username + " connected to the socket: " + socketId);
+		var mySocketId = xss(socketId);
+		socket.join(mySocketId);
+	});
+
+	socket.on('new visit', (socketId, users_info) => {
+		console.log("Ther's some movement in the " + socketId);
+		if (users_info.visitor !== users_info.visited_one) {
+			Notifications.create({
+				n_type: "visit",
+				for_who: users_info.visited_one,
+				from_whom: users_info.visitor
+			}, (err, newNotification) => {
+				if (err) console.log(err);
+				else {
+					User.findById(users_info.visited_one, (err, foundUser) => {
+						if (err) console.log(err);
+						else {
+							foundUser.notifications.push(newNotification);
+							foundUser.save((err) => {
+								if (err) console.log(err);
+							});
+							console.log("everything's created!");
+							User.findById(users_info.visitor, (err, foundVisitor) => {
+								if (err) {
+									console.log(err);
+								} else {
+									socket.broadcast.to(socketId).emit('new notification', { id: foundVisitor._id, username: foundVisitor.username});
+								}
+							})
+						}
+					})
+				}
+			});
+		}
+		console.log(users_info);
+	});
+
+	socket.on('disconnect', () => {
 		for (var i = 0; i < onlineUsers.length; i++) {
 			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
 				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
@@ -239,11 +279,18 @@ chatSocket.on('connection', socket => {
 			conversationId: currentRoom,
 			isOnline: onlineToggle
 		});
-		socket.broadcast.emit('newMessage', {
+		socket.broadcast.emit('new message notification', {
 			message: message,
 			user: authorName,
-			conversationId: currentRoom
+			conversationId: currentRoom,
+			userId: authorId
 		});
+		// eventSocket.emit('newmessagenotification', {
+		// 	message: message,
+		// 	user: authorName,
+		// 	conversationId: currentRoom,
+		// 	userId: authorId
+		// });
 
 		//save chat to the database
 		Messages.create({

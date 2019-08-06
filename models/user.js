@@ -114,6 +114,12 @@ var UserSchema = new mongoose.Schema({
 			ref: "Dislikeslog"
 		}
 	],
+	notifications: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Notifications"
+		}
+	],
 	createdAt: {
 		type: Date,
 		required: true,

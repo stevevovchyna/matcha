@@ -15,8 +15,7 @@
 
 	<div id="online"></div>
 	<script>
-		// var socket = io('/events');
-		socket.on('broadcast',function(data) {
+		eventSocket.on('broadcast',(data) => {
 			var online = document.getElementById("online");
 			var curUserId = "<%=user._id%>";
 			var newArr = data.filter(user => user._id.toString() === curUserId.toString());
@@ -105,9 +104,38 @@
 					<% } %>
 				<% }) %>
 			</div>
-	
 	</div>
 	</div>
 	</div>
 </div>
+<script>
+	(() => {
+		var currentUser = "<%=currentUser._id.toString()%>";
+		var pageUser = "<%=user._id.toString()%>";
+		var recipientSocketId = "<%=user._id%>";
+		var mySocketId = "<%=currentUser._id%>";
+		var notification = document.createElement('li');
+		var notificationsButton = document.getElementById('notifications-button');
+
+		eventSocket.on('connect', () => {
+   		// Connected, let's sign-up for to receive messages for this room
+			eventSocket.emit('connectToRoom', mySocketId);
+		});
+
+		eventSocket.emit('new visit', recipientSocketId, {
+			visitor: "<%=currentUser._id%>",
+			visited_one: "<%=user._id%>"
+		});
+
+		eventSocket.on('new notification', newNotification => {
+			console.log("--------------------");
+			console.log(newNotification);
+			console.log("--------------------");
+			notification.setAttribute('class', 'active');
+			notification.innerHTML = "<a href=\"/profile/" + newNotification.id+ "\">" + newNotification.username + " checked your profile!</a>";
+			notificationsButton.appendChild(notification);
+			document.getElementById('notifications-badge').innerText = document.getElementById('notifications-button').children.length;
+		});
+})();
+</script>
 <%include ../partials/footer%>

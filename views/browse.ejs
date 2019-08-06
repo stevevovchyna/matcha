@@ -76,7 +76,7 @@
 				<div class="caption" id="<%=user._id%>">
 					<div id="online-<%=user._id%>"></div>
 					<script>
-						socket.on('broadcast',function(data) {
+						eventSocket.on('broadcast',function(data) {
 							var online = document.getElementById("online-<%=user._id%>");
 							var curUserId = "<%=user._id%>";
 							var newArr = data.filter(user => user._id.toString() === curUserId.toString());

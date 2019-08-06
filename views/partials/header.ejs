@@ -13,6 +13,7 @@
 		integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
 		integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
 		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous">
 	</script>
@@ -25,14 +26,15 @@
 	<script src="/socket.io/socket.io.js"></script>
 	<!-- Custom CSS -->
 	<link rel="stylesheet" href="/app.css">
+	<!-- <link rel="stylesheet" href="/bootstrap.min.css"> -->
 	<script type="text/javascript" src="/app.js"></script>
 
 	<title>Matcha</title>
 
 	</script>
 	<script type="text/javascript">
-		var socket = io('/events');
-		socket.on('broadcast', function (data) {
+		var eventSocket = io('/events');
+		eventSocket.on('broadcast', (data) => {
 			console.log(data);
 		});
 	</script>
@@ -50,19 +52,28 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="/">Matcha</a>
-				<p class="navbar-brand" id="counter"></p>
 			</div>
-
 			<!-- Collect the nav links, forms, and other content for toggling -->
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav">
 					<% if (currentUser) { %>
-					<li><a href="/feed/browse">Browse</a></li>
-					<li><a href="/feed/research">Research</a></li>
-					<li><a href="/profile/<%= currentUser._id %>">My Profile</a></li>
-					<li><a href="/profile/<%= currentUser._id %>/edit">Edit Profile</a></li>
-					<li><a href="/likes/<%= currentUser._id %>/activity">Activity</a></li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+								aria-expanded="false">Feed<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="/feed/browse">Browse</a></li>
+								<li><a href="/feed/research">Research</a></li>
+							</ul>
+						</li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+								aria-expanded="false">Profile<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="/profile/<%= currentUser._id %>">My Profile</a></li>
+								<li><a href="/profile/<%= currentUser._id %>/edit">Edit Profile</a></li>
+								<li><a href="/likes/<%= currentUser._id %>/activity">Activity</a></li>
+							</ul>
+						</li>
 					<li><a href="/conversations">Conversations</a></li>
 					<% } %>
 				</ul>
@@ -71,9 +82,40 @@
 					<li><a href="/login">Log in</a></li>
 					<li><a href="/register">Sign Up</a></li>
 					<%} else { %>
-					<li><a>Hello there, <%=currentUser.username%></a></li>
-					<li><a href="/logout">Logout</a></li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+							aria-expanded="false">Notifications <span id="notifications-badge" class="badge">0</span></a>
+							<ul class="dropdown-menu" id="notifications-button">
+								<li><a>You've got a new notification!</a></li>
+								<li><a>You've got a new notification!</a></li>
+							</ul>
+						</li>
+						<li><a>wazzup, <%=currentUser.username%>?</a></li>
+						<li><a href="/logout">Logout</a></li>
 					<%}%>
+
+					<script>
+						(() => {
+							// var chatSocket = io('/chat');
+
+							var currUser = "<%currentUser._id.toString()%>";
+							var notification = document.createElement('li');
+							var notificationsButton = document.getElementById('notifications-button');
+
+							var notificationsBadge = document.getElementById('notifications-badge');
+							var notifications = document.getElementById('notifications-button');
+							notificationsBadge.innerText = notifications.children.length;
+
+							eventSocket.on('newmessagenotification', notificat => {
+								if (currUser !== notificat.userId.toString()) {
+									notification.setAttribute('class', 'active');
+									notification.innerHTML = "<a href=\"/conversations/" + notificat.conversationId + "\">You've got a new message from <a href=\"/profile/" + notificat.userId+ "\">" + notificat.user + "</a>";
+									notificationsButton.appendChild(notification);
+									document.getElementById('notifications-badge').innerText = document.getElementById('notifications-button').children.length;
+								}
+							})
+						})();
+					</script>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
