@@ -17,7 +17,8 @@ var notificationsSchema = new mongoose.Schema({
 	isChecked: {
 		type: Boolean,
 		default: false
-	}
+	},
+	conversationID: String
 });
 
 //exporting model to the db

@@ -59,6 +59,7 @@ feedRoutes = require("./routes/feed"),
 likesRoutes = require("./routes/likes"),
 profileRoutes = require("./routes/profile");
 fakenblockRoutes = require("./routes/fakenblock");
+notificationsRoutes = require("./routes/notifications");
 chatRoutes = require("./routes/chat");
 
 // databse connection
@@ -176,6 +177,7 @@ app.use("/profile", profileRoutes);
 app.use("/likes", likesRoutes);
 app.use("/feed", feedRoutes);
 app.use("/fakenblock", fakenblockRoutes);
+app.use(notificationsRoutes);
 app.use(chatRoutes);
 
 // seed("Male");
@@ -198,7 +200,7 @@ eventSocket.on('connection', (socket) => {
 		socket.join(mySocketId);
 	});
 
-	socket.on('new visit', (socketId, users_info) => {
+	socket.on('new income notification', (socketId, users_info) => {
 		console.log("Ther's some movement in the " + socketId);
 		if (users_info.visitor !== users_info.visited_one) {
 			Notifications.create({
@@ -220,7 +222,12 @@ eventSocket.on('connection', (socket) => {
 								if (err) {
 									console.log(err);
 								} else {
-									socket.broadcast.to(socketId).emit('new notification', { id: foundVisitor._id, username: foundVisitor.username});
+									socket.broadcast.to(socketId).emit('new notification', {
+										id: foundVisitor._id,
+										username: foundVisitor.username,
+										notificationID: newNotification._id,
+										conversationID: newNotification.conversationID
+									});
 								}
 							})
 						}
@@ -285,12 +292,6 @@ chatSocket.on('connection', socket => {
 			conversationId: currentRoom,
 			userId: authorId
 		});
-		// eventSocket.emit('newmessagenotification', {
-		// 	message: message,
-		// 	user: authorName,
-		// 	conversationId: currentRoom,
-		// 	userId: authorId
-		// });
 
 		//save chat to the database
 		Messages.create({

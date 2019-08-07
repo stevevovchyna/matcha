@@ -2,6 +2,7 @@ const flash = require("connect-flash");
 const expressSanitizer = require("express-sanitizer");
 const User = require("../models/user");
 const Conversations = require("../models/conversations");
+const Notifications = require("../models/notifications");
 const iplocate = require('node-iplocate');
 
 var middlewareObject = {};
@@ -149,6 +150,31 @@ middlewareObject.checkProfileOwnership = (req, res, next) => {
 		res.redirect("/feed/browse");
 	}
 };
+
+middlewareObject.checkOwnership = (req, res, next) => {
+	if (req.isAuthenticated()) {
+		if (req.params.user_id == res.locals.currentUser._id) {
+			next();
+		} else {
+			req.flash("error", "You don't have permission to do that");
+			res.redirect("back");
+		}
+	} else {
+		req.flash("error", "You don't have permission to do that");
+		res.redirect("back");
+	}
+}
+
+middlewareObject.checkNotificationRecipient = (req, res, next) => {
+	Notifications.findById(req.params.notification_id, (err, foundNotification) => {
+		if (foundNotification.for_who.toString() === req.user._id.toString()) {
+			next();
+		} else {
+			req.flash("error", "You don't have permission to do that");
+			res.redirect("back");
+		}
+	});
+}
 
 
 module.exports = middlewareObject;

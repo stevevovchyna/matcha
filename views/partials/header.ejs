@@ -30,14 +30,19 @@
 	<script type="text/javascript" src="/app.js"></script>
 
 	<title>Matcha</title>
-
-	</script>
+<%if (currentUser) {%>
 	<script type="text/javascript">
+		var mySocketId = "<%=currentUser._id%>";
 		var eventSocket = io('/events');
 		eventSocket.on('broadcast', (data) => {
 			console.log(data);
 		});
+		eventSocket.on('connect', () => {
+   		// Connected, let's sign-up for to receive messages for this room
+			eventSocket.emit('connectToRoom', mySocketId);
+		});
 	</script>
+	<%}%>
 </head>
 
 <body>
@@ -85,37 +90,129 @@
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
 							aria-expanded="false">Notifications <span id="notifications-badge" class="badge">0</span></a>
-							<ul class="dropdown-menu" id="notifications-button">
-								<li><a>You've got a new notification!</a></li>
-								<li><a>You've got a new notification!</a></li>
+							<ul class="dropdown-menu scrollable-menu" id="notifications-button" role="menu">
+								<li id="check-all" class="position-sticky" onclick="checkAllNotifications('<%=currentUser._id%>')"><a href="#">Check all notifications</a></li>
+								<!-- <li role="separator" class="divider" id="n-divider"></li> -->
 							</ul>
 						</li>
 						<li><a>wazzup, <%=currentUser.username%>?</a></li>
 						<li><a href="/logout">Logout</a></li>
 					<%}%>
-
+					<%if (currentUser) {%>
 					<script>
 						(() => {
-							// var chatSocket = io('/chat');
-
-							var currUser = "<%currentUser._id.toString()%>";
-							var notification = document.createElement('li');
-							var notificationsButton = document.getElementById('notifications-button');
-
+							var currUser = "<%currentUser._id.toString()%>";							
 							var notificationsBadge = document.getElementById('notifications-badge');
-							var notifications = document.getElementById('notifications-button');
-							notificationsBadge.innerText = notifications.children.length;
+							var notificationsButton = document.getElementById('notifications-button');
+							var counter = Array.from(notificationsButton.children).filter(notificacion => notificacion.className == 'btn-info').length;
+							notificationsBadge.innerText = counter;
 
-							eventSocket.on('newmessagenotification', notificat => {
-								if (currUser !== notificat.userId.toString()) {
-									notification.setAttribute('class', 'active');
-									notification.innerHTML = "<a href=\"/conversations/" + notificat.conversationId + "\">You've got a new message from <a href=\"/profile/" + notificat.userId+ "\">" + notificat.user + "</a>";
-									notificationsButton.appendChild(notification);
-									document.getElementById('notifications-badge').innerText = document.getElementById('notifications-button').children.length;
+							eventSocket.on('new notification', newNotification => {
+								var newNotificationElement = document.createElement('li');
+								if (newNotification.conversationID)
+									var conversationID = newNotification.conversationID;
+								else
+									var conversationID = "";
+								newNotificationElement.setAttribute('class', 'btn-info');
+								newNotificationElement.setAttribute('onclick', 'checkNotification("' + newNotification.notificationID + '", "' + conversationID + '")');
+								newNotificationElement.innerHTML = "<a href=\"/profile/" + newNotification.id+ "\">" + newNotification.username + " checked your profile!</a>";
+								document.getElementById('check-all').insertAdjacentElement('afterend', newNotificationElement);
+								var counter = Array.from(notificationsButton.children).filter(notificacion => notificacion.className == 'btn-info').length;
+								notificationsBadge.innerText = counter;
+							});
+
+							xmlhttp = new XMLHttpRequest();
+							xmlhttp.open("GET", "http://localhost:3000/notifications/<%=currentUser._id%>/?_method=GET", true);
+							xmlhttp.onreadystatechange = () => {
+								if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+									var resp = JSON.parse(xmlhttp.responseText);
+									if (resp.status === 'success') {
+										resp.foundNotifications = resp.foundNotifications.reverse();
+										for (let one_notification of resp.foundNotifications) {
+											var newNotificationElement = document.createElement('li');
+											if (one_notification.conversationID)
+												var conversationID = one_notification.conversationID;
+											else
+												var conversationID = "";
+											if (!one_notification.isChecked) {
+												newNotificationElement.setAttribute('class', 'btn-info');
+												newNotificationElement.setAttribute('onclick', 'checkNotification("' + one_notification._id + '", "' + conversationID + '")');
+											}
+											switch (one_notification.n_type) {
+												case 'visit':
+													newNotificationElement.innerHTML = "<a href=\"#\">"+one_notification.from_whom.username+" checked your profile!</a>";
+													break;
+												case 'like':
+													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" liked your profile!</a>";
+													break;
+												case 'message':
+													newNotificationElement.innerHTML = "<a href=\"/conversations/"+one_notification.conversationID+"\">You've got a new message from <a href=\"/profile/"+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+"</a>";
+													break;
+												case 'mutual_like':
+													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" liked you back!!!</a>";
+													break;
+												case 'mutual_dislike':
+													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" have disconnected from your profile!</a>";
+													break;
+												default:
+													newNotificationElement.innerHTML = "<a>You have no notifications as for now</a>";
+											}
+											document.getElementById('check-all').insertAdjacentElement('afterend', newNotificationElement);
+										}
+										var counter = Array.from(notificationsButton.children).filter(notificacion => notificacion.className == 'btn-info').length;
+										notificationsBadge.innerText = counter;
+									} else {
+										var newNotificationElement = document.createElement('li');
+										newNotificationElement.innerText = "There are no notifications at the moment";
+										document.getElementById('check-all').insertAdjacentElement('afterend', newNotificationElement);
+									}
 								}
-							})
+							}
+							xmlhttp.send("<%=currentUser._id%>");
 						})();
+
+						function checkNotification(notificationID, conversationID){
+							xmlhttp = new XMLHttpRequest();
+							xmlhttp.open("POST", "http://localhost:3000/notifications/"+notificationID+"/check?_method=PUT", true);
+							xmlhttp.onreadystatechange = () => {
+								if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+									var resp = JSON.parse(xmlhttp.responseText);
+									if (resp.status === 'success') {
+										window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+									} else if (resp.status === 'error') {
+										document.getElementById('flash').innerHTML = '<div class="alert alert-danger alert-dismissible">There was an error manipulating your notification. Please try again</div>'
+									}
+								}
+							}
+							xmlhttp.send(notificationID);
+						}
+
+						function checkAllNotifications(userID){
+							var notificationsBadge = document.getElementById('notifications-badge');
+							var notificationsButton = document.getElementById('notifications-button');
+							var flash = document.getElementById('flash');
+							xmlhttp = new XMLHttpRequest();
+							xmlhttp.open("POST", "http://localhost:3000/notifications/"+userID+"/checkall?_method=PUT", true);
+							xmlhttp.onreadystatechange = () => {
+								if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+									var resp = JSON.parse(xmlhttp.responseText);
+									if (resp.status === 'success') {
+										var notificationsToChange = document.getElementById('notifications-button').children;
+										for (let notific of notificationsToChange) {
+											notific.className = "";
+										}
+										var counter = Array.from(notificationsButton.children).filter(notificacion => notificacion.className == 'btn-info').length;
+										notificationsBadge.innerText = counter;
+									} else if (resp.status === 'error') {
+										flash.innerHTML = '<div class="alert alert-danger alert-dismissible">There was an error manipulating your notification. Please try again</div>'
+									}
+								}
+							}
+							xmlhttp.send(userID);
+							return false;
+						}
 					</script>
+				<%}%>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->

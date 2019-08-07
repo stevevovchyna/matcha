@@ -135,6 +135,11 @@
     -moz-transition: background 3s ease-in-out;
 }
 
+.scrollable-menu {
+    height: auto;
+    max-height: 200px;
+    overflow-x: hidden;
+}
 
 /* RANGE SELECTOR WITH 2 HADLES */
 section.range-slider {
