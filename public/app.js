@@ -1,14 +1,21 @@
 function filterBy(min, max, param) {
+	var f_min = parseInt(min);
+	var f_max = parseInt(max);
+	if ((f_min < 0) || (f_max > 20000) || (f_min > f_max)) {
+		$('div.modal-body > p').text('Incorrect filter parameters');
+		$('#myModal').modal('show');
+		return;
+	}
 	var lol = document.getElementsByClassName(param);
 	for (var i = 0; i < lol.length; i++) {
 		if (lol[i].parentElement.parentElement.parentElement.style.display = 'none') {
 			lol[i].parentElement.parentElement.parentElement.style.display = 'block';
 		}
-		if (parseInt(lol[i].innerText) < min || parseInt(lol[i].innerText) > max) {
+		if ((parseInt(lol[i].innerText) < f_min) || (parseInt(lol[i].innerText) > f_max)) {
 			lol[i].parentElement.parentElement.parentElement.style.display = "none";
-			console.log(lol[i].innerText);
 		}
 	}
+	console.log('OTSORTOVAL!!!!!')
 }
 
 function getVals() {
@@ -55,8 +62,8 @@ function likeUser(id, profile = "no") {
 				if (profile === "yes") {
 					$('#possibility').text("This person already knows about your sympathy");
 				}
-				card.querySelector('.fame').innerText = "Fame points: " + (resp.user.likes.length + resp.user.visits.length);
-				card.querySelector('span,.likes').innerText = resp.user.likes.length;
+				card.querySelector('#fame-badge-' + userid).innerText = resp.user.likes.length + resp.user.visits.length;
+				card.querySelector('#like-badge-' + userid).innerText = resp.user.likes.length;
 				$('div.modal-body > p').text(resp.message);
 				$('#myModal').modal('show');
 			} else {
@@ -81,8 +88,8 @@ function dislikeUser(id, profile = "no") {
 				if (profile === "yes") {
 					$('#possibility').text("You can like this profile!!!");
 				}
-				card.querySelector('.fame').innerText = "Fame points: " + (resp.user.likes.length + resp.user.visits.length);
-				card.querySelector('span,.likes').innerText = resp.user.likes.length;
+				card.querySelector('#fame-badge-' + userid).innerText = resp.user.likes.length + resp.user.visits.length;
+				card.querySelector('#like-badge-' + userid).innerText = resp.user.likes.length;
 				$('div.modal-body > p').text("You don't like this person's profile anymore");
 				$('#myModal').modal('show');
 			} else {

@@ -4,10 +4,10 @@ var f = require('faker');
 
 
 
-function seedDB(orientation){
+function seedDB(orientation, number){
 	
 	var randomUser = [];
-	for (var i = 0; i < 10; i++) {
+	for (var i = 0; i < number; i++) {
 		var long = f.address.longitude();
 		var lat = f.address.latitude();
 		var randomUser = (
@@ -23,13 +23,16 @@ function seedDB(orientation){
 					coordinates: [long, lat]
 				},
 				bio: f.lorem.paragraph(),
-				interests: [{ text: f.hacker.noun() }, { text: f.hacker.noun() }],
+				interests: [{ text: f.hacker.noun() }, { text: f.hacker.noun() }, { text: f.hacker.noun() }],
 				pictures: [{
 					url: f.image.avatar(),
 					isProfile: true
 				}],
 				email: f.internet.email(),
-				isVerified: true
+				isVerified: true,
+				birthday: f.date.past(),
+				lastseen: f.date.recent(),
+
 			}
 		);
 		User.create(randomUser, (err, user) => {

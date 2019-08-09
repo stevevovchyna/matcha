@@ -243,9 +243,10 @@ app.use("/fakenblock", fakenblockRoutes);
 app.use(notificationsRoutes);
 app.use(chatRoutes);
 
-// seed("Male");
-// seed("Female");
-// seed("Bi-Sexual");
+// seed("Male", 5);
+// seed("Female", 5);
+// seed("Bi-Sexual", 5);
+
 
 var eventSocket = io.of('/events');
 var onlineUsers = [];

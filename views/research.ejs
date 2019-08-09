@@ -1,5 +1,5 @@
 <%include partials/header%>
-  <!-- Modal -->
+<!-- Modal -->
 <div class="modal fade" id="myModal" role="dialog">
 	<div class="modal-dialog modal-sm">
 		<div class="modal-content">
@@ -13,110 +13,191 @@
 	</div>
 </div>
 <div class="container">
-	<button class="btn btn-success" onclick="window.location.href='http:\/\/localhost:3000/feed/research'">Reset</button>
-	<form action="/feed/research/result?_method=PUT" method="POST">
-		<p>Location range</p>
-		<section class="range-slider">
-			<span class="rangeValues"></span>
-			<input name="userparams[locmin]" value="<% if(locals.userparams){%><%=userparams.locmin%><% } else { %>0<% } %>" min="0" max="20000" step="1" type="range">
-			<input name="userparams[locmax]" value="<% if(locals.userparams){%><%=userparams.locmax%><% } else { %>20000<% } %>" min="0" max="20000" step="1" type="range">
-		</section>
-		<p>Fame rate range</p>
-		<section class="range-slider">
-			<span class="rangeValues"></span>
-			<input name="userparams[famemin]" value="<% if(locals.userparams){%><%=userparams.famemin%><% } else { %>0<% } %>" min="0" max="200" step="1" type="range">
-			<input name="userparams[famemax]" value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>200<% } %>" min="0" max="200" step="1" type="range">
-		</section>
-		<p>Common tags range</p>
-		<section class="range-slider">
-			<span class="rangeValues"></span>
-			<input name="userparams[tagmin]" value="<% if(locals.userparams){%><%=userparams.tagmin%><% } else { %>0<% } %>" min="0" max="50" step="1" type="range">
-			<input name="userparams[tagmax]" value="<% if(locals.userparams){%><%=userparams.tagmax%><% } else { %>50<% } %>" min="0" max="50" step="1" type="range">
-		</section>
-		<select id="sorting" name="userparams[sorttype]">
-			<option <% if (locals.user && order.sorttype.toString() === 'default') { %> selected <% } else {%>selected<% } %> value="default">By Default</option>
-			<option <% if (locals.user && order.sorttype.toString() === 'location') { %> selected <% } %> value="location">By Location</option>
-			<option <% if (locals.user && order.sorttype.toString() === 'famerate') { %> selected <% } %> value="famerate">By Fame Rate</option>
-			<option <% if (locals.user && order.sorttype.toString() === 'tags') { %> selected <% } %> value="tags">By Tags</option>
-		</select>
-		<select id="sorting" name="userparams[sortorder]">
-			<option <% if (locals.user && order.order.toString() === 'asc') { %> selected <% } else {%>selected<% } %> value="asc">Ascending</option>
-			<option <% if (locals.user && order.order.toString() === 'desc') { %> selected <% } %> value="desc">Descending</option>
-		</select>
-		<button class="btn btn-primary" type="submit">Search</button>
-	</form>
+	<div class="row">
+		<div class="col-lg-3 col-md-3 col-sm-4">
+			<div class="col-lg-12 form-group">
+				<form action="/feed/research/result?_method=PUT" method="POST">
+					<span class="label label-default">Location</span>
+					<input class="form-control" type="number" name="userparams[locmin]" value="<% if(locals.userparams){%><%=userparams.locmin%><% } else { %>0<% } %>" id="userparams[locmin]" minlength="0" maxlength="20000">
+					<input class="form-control" type="number" name="userparams[locmax]" value="<% if(locals.userparams){%><%=userparams.locmax%><% } else { %>20000<% } %>" id="userparams[locmax]"minlength="0" maxlength="20000">
 
-<% if (locals.user) { %> 
-	<div class="row row-eq-height" style="display: flex; flex-wrap: wrap;">
-			<% user.forEach((user) => { %>
-			<%	if (user.isVerified) { %>
-			<div class="col-sm-6 col-md-4">
-				<div class="thumbnail">
-					<div class="caption">
-						<%	var url = "";
-						user.pictures.forEach((pic) => {
-							if (pic.isProfile) {
-								url = pic.url;
+					<span class="label label-default">Famerate</span>
+					<input class="form-control" type="number" name="userparams[famemin]" value="<% if(locals.userparams){%><%=userparams.famemin%><% } else { %>0<% } %>" id="userparams[famemin]" minlength="0" maxlength="200">
+					<input class="form-control" type="number" name="userparams[famemax]" value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>200<% } %>" id="userparams[famemax]" minlength="0" maxlength="200">
+
+					<span class="label label-default">Common Tags</span>
+					<input class="form-control" type="number" name="userparams[tagmin]" value="<% if(locals.userparams){%><%=userparams.tagmin%><% } else { %>0<% } %>" id="userparams[tagmin]" minlength="0" maxlength="100">
+					<input class="form-control" type="number" name="userparams[tagmax]" value="<% if(locals.userparams){%><%=userparams.tagmax%><% } else { %>100<% } %>" id="userparams[tagmax]" minlength="0" maxlength="100">
+					
+					<div>
+						<span class="label label-default">Sort by...</span>
+						<select class="form-control" id="sorting" name="userparams[sorttype]">
+							<option <% if (locals.user && order.sorttype.toString() === 'default') { %> selected
+								<% } else {%>selected<% } %> value="default">By Default</option>
+							<option <% if (locals.user && order.sorttype.toString() === 'location') { %> selected
+								<% } %> value="location">By Location</option>
+							<option <% if (locals.user && order.sorttype.toString() === 'famerate') { %> selected
+								<% } %> value="famerate">By Fame Rate</option>
+							<option <% if (locals.user && order.sorttype.toString() === 'tags') { %> selected <% } %>
+								value="tags">By Tags</option>
+						</select>
+					</div>
+
+					<div>
+						<select class="form-control" id="sorting" name="userparams[sortorder]">
+							<option <% if (locals.user && order.order.toString() === 'asc') { %> selected
+								<% } else {%>selected<% } %> value="asc">Ascending</option>
+							<option <% if (locals.user && order.order.toString() === 'desc') { %> selected <% } %>
+								value="desc">
+								Descending</option>
+						</select>
+					</div>
+					<button class="btn btn-primary btn-block" type="submit">Search</button>
+				</form>
+			</div>
+			<div class="col-lg-12 form-group">
+
+				<button class="btn btn-danger btn-block"
+				onclick="window.location.href='http:\/\/localhost:3000/feed/research'">Reset</button>
+			</div>
+		</div>
+
+		<% if (locals.user) { %>
+		<div class="col-lg-9 col-md-9 col-sm-8">
+			<div class="row" style="display: flex; flex-wrap: wrap;">
+
+				<!-- EVERY NEW USER ON THE PAGE -->
+
+				<% user.forEach((user) => {
+					var sex = "";
+					var interest = "";
+					var binterest = "";
+					var url = "";
+					if (user.gender == "Male") {
+						sex = 'fas fa-male';
+					} else {
+						sex = "fas fa-female";
+					}
+					if (user.sexPreferences == "Male") {
+						interest = "fas fa-male";
+					} else if (user.sexPreferences == "Female") {
+						interest = "fas fa-female";
+					} else if (user.sexPreferences == "Bi-Sexual"){
+						interest = "fas fa-female";
+						binterest = "fas fa-male";
+					}
+					if (user.isVerified) { %>
+				<div class="col-sm-12 col-md-6 col-lg-6">
+					<div class="thumbnail">
+
+						<!-- AVATAR BLOCK -->
+
+						<div class="caption">
+							<%	user.pictures.forEach((pic) => {
+								if (pic.isProfile) {
+									url = pic.url;
 							}});
 							if (url == "") { %>
-						<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
-						<% } else { %>
-						<img width="150" src="<%= url %>" alt="">
-						<% } %>
-					</div>
-					<div class="caption" id="<%=user._id%>">
-						<div id="online-<%=user._id%>"></div>
-						<script>
-							socket.on('broadcast',function(data) {
-								var online = document.getElementById("online-<%=user._id%>");
-								var curUserId = "<%=user._id%>";
-								var newArr = data.filter(user => user._id.toString() === curUserId.toString());
-								if (newArr.length > 0) {
-									online.innerHTML = " <i class=\"fas fa-circle\"></i> Online";
-									online.style.color = "green";
-								} else {
-									online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
-									online.style.color = "grey";
-								}
-								// console.log(data);
-							});
-						</script>
-						<h3><%= user.username %></h3>
-						<h3><%= moment(user.birthday).toNow(true) %> old</h3>
-						<h3><span class="likes"><%= user.likes.length %></span> <i class="far fa-heart"></i></h3>
-						<h3 class="fame">Fame points: <%= user.famerate %></h3>
-						<p><%= user.gender %></p>
-						<p><%= user.sexPreferences %></p>
-						<p><%= user.locationname %></p>
-						<p><%=user.username%> is <%=Math.round(user.dist.calculated/1000)%> kilometers from you!</p>
-						<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
-						<p class="hidden commontags"><%=user.commontags%></p>
-						<p class="hidden famerate"><%=user.famerate%></p>
-						<p><%= user.bio %></p>
-						<% user.interests.forEach((tags) => { %>
-						<button class="btn btn-primary">#<%= tags.text %></button>
-						<% }); %>
+							<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg"
+								alt="">
+							<% } else { %>
+							<img width="150" src="<%= url %>" alt="">
+							<% } %>
+						</div>
+
+						<!-- USER INFO BLOCK -->
+
+						<div class="caption" id="<%=user._id%>">
+							<hr>
 							<div>
-								<a href="/profile/<%= user._id %>" class="btn btn-primary" role="button">Profile</a>
+								<a href="/profile/<%= user._id %>" class="btn btn-primary btn-block"
+									role="button"><%= user.username %>'s profile</a>
 							</div>
-						<% if(user._id.toString() !== currentUser._id.toString()) { %>
-						<% if (currentUser.pictures.length > 0) { %>
-						<!-- <form action="/likes/<%=user._id%>/like?_method=PUT" method="POST">
-							<button class="btn btn-danger inputto">Like</button>
-						</form> -->
-						<button class="btn btn-danger inputto" onclick="likeUser('<%=user._id.toString()%>')" >Like</button>
-						<button class="btn btn-danger inputto" onclick="dislikeUser('<%=user._id.toString()%>')" >Dislike</button>
-						<!-- <form action="/likes/<%=user._id%>/dislike?_method=DELETE" method="POST">
-							<button class="btn btn-danger inputto">Dislike</button>
-						</form> -->
-						<% } %>
-						<% } %>
+							<small>
+								<span class="label" id="online-<%=user._id%>"></span>
+							</small>
+							<script>
+								eventSocket.on('broadcast', function (data) {
+									var online = document.getElementById("online-<%=user._id%>");
+									var curUserId = "<%=user._id%>";
+									var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+									if (newArr.length > 0) {
+										online.innerText = "Online";
+										online.classList.remove('label-default');
+										online.classList.add("label-success");
+									} else {
+										online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+										online.classList.remove("label-success");
+										online.classList.add("label-default");
+									}
+								});
+							</script>
+
+							<!-- LIKES AND FAMERATE -->
+
+							<div class="btn-group btn-group-justified">
+								<div class="btn"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+									<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
+								<div class="btn"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
+										id="fame-badge-<%=user._id%>"><%= user.famerate %></span></div>
+							</div>
+
+							<!-- BIRTHDATE -->
+
+							<h4><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h4>
+
+							<!-- SEX AND INTERESTS -->
+
+							<h4><i class="<%=sex%>"></i> <i class="fas fa-arrow-right"></i> <i
+									class="<%=interest%>"></i><i class="<%=binterest%>"></i></h4>
+
+							<!-- USER LOCATION -->
+
+							<h4><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+								<%= user.locationname %></h4>
+
+							<!-- USER'S DISTANCE -->
+
+							<h5><i class="fas fa-map-signs"></i> <%=Math.round(user.dist.calculated/1000)%> kilometers
+								from
+								you!</h5>
+
+							<!-- HIDDEN STUFF FOR PURPOSE -->
+
+							<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
+							<p class="hidden commontags"><%if (user.commontags) {%> user.commontags<%} else {%>0<%}%></p>
+						<p class="hidden famerate"><%=user.famerate%></p>
+
+							<!-- USER'S BIO -->
+
+							<p><i class="fas fa-info"></i> <%= user.bio %></p>
+
+							<!-- USER'S INTERESTS AKA TAGS -->
+
+							<p4>
+								<% user.interests.forEach((tags) => { %>
+								<button class="btn btn-primary btn-sm">#<%= tags.text %></button>
+								<% }); %>
+							</p4>
+							<hr>
+
+							<!-- LIKE AND DISLIKE BUTTONS -->
+
+							<% if(user._id.toString() !== currentUser._id.toString()) { %>
+							<% if (currentUser.pictures.length > 0) { %>
+							<button class="btn btn-danger btn-block"
+								onclick="likeUser('<%=user._id.toString()%>')">Like</button>
+							<button class="btn btn-danger btn-block"
+								onclick="dislikeUser('<%=user._id.toString()%>')">Dislike</button>
+							<% } %>
+							<% } %>
+						</div>
 					</div>
 				</div>
+				<% }}) %>
 			</div>
-	
-			<% }}) %>
 		</div>
-<% } %>
+		<% } %>
+	</div>
 </div>
 <%include partials/footer%>

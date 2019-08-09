@@ -59,7 +59,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						},
 						key: 'location',
 						distanceField: "dist.calculated",
-						maxDistance: 100000,
+						maxDistance: 1000000000,
 						minDistance: 10,
 						spherical: true
 					}
@@ -92,14 +92,12 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 								});
 
 								var ret = _.sortBy(ret, sort);
-								
 								res.render("browse", {
 									user: order === 'asc' ? ret : ret.reverse(),
 									currUser: req.user,
 									order: sortType + '.' + order
 								});
 							} else {
-
 								// GETEROSEXUAL USER PATTERN
 								user.forEach(oneuser => {
 									if (req.user.gender.toString() !== oneuser.gender.toString() &&
@@ -112,7 +110,6 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 								});
 
 								var ret = _.sortBy(ret, sort);
-								
 								res.render("browse", {
 									user: order === 'asc' ? ret : ret.reverse(),
 									currUser: req.user,
@@ -131,7 +128,6 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 							});
 
 							var ret = _.sortBy(ret, sort);
-							
 							res.render("browse", {
 								user: order === 'asc' ? ret : ret.reverse(),
 								currUser: req.user,
@@ -150,7 +146,7 @@ router.get('/research', middleware.isLoggedIn, (req, res) => {
 });
 
 
-router.put('/research/result', middleware.isLoggedIn, (req, res) => {
+router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, (req, res) => {
 	var sortType = req.sanitize(req.body.userparams.sorttype.toString());
 	var order = req.sanitize(req.body.userparams.sortorder.toString());
 	if (sortType.toString() !== "default" && sortType.toString() !== "location" &&

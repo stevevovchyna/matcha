@@ -11,6 +11,28 @@ const moment = require('moment');
 
 var middlewareObject = {};
 
+middlewareObject.checkSortInput = (req, res, next) => {
+
+	var params = Object.values(req.body.userparams);
+	var err = 0;
+	for (var i = 0; i < 6; i++) {
+		if (parseInt(params[i]) < 0 || parseInt(params[i]) > 20000) {
+			err++;
+		}
+	}
+	if (parseInt(params[0]) > parseInt(params[1]) ||
+		parseInt(params[2]) > parseInt(params[3]) ||
+		parseInt(params[4]) > parseInt(params[5])) {
+		err++;
+	}
+	if (err > 0) {
+		req.flash("error", "Invalid search data! Please make sure you are using correct parameters!");
+		res.redirect("/feed/research");
+	} else {
+		next();
+	}
+}
+
 middlewareObject.checkDate = (req, res, next) => {
 	if (!req.body.user.birthdate || req.body.user.birthdate == "") {
 		req.flash("error", "Birth date field empty! Please let us know your birth date");

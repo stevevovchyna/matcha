@@ -19,9 +19,9 @@
 	margin-right: auto;
 }
 
-.thumbnail {
+/* .thumbnail {
 	padding: 0;
-}
+} */
 
 .thumbnail .caption {
 	padding: 0;
@@ -144,7 +144,7 @@
 /* RANGE SELECTOR WITH 2 HADLES */
 section.range-slider {
     position: relative;
-    width: 300px;
+    width: 100%;
     height: 35px;
     text-align: center;
 }
@@ -155,7 +155,7 @@ section.range-slider input {
     overflow: hidden;
     left: 0;
     top: 15px;
-    width: 300px;
+    width: 100%;
     outline: none;
     height: 18px;
     margin: 0;
@@ -166,7 +166,8 @@ section.range-slider input::-webkit-slider-thumb {
     pointer-events: all;
     position: relative;
     z-index: 1;
-    outline: 0;
+	outline: 0;
+	cursor: pointer
 }
 
 section.range-slider input::-moz-range-thumb {
