@@ -1,17 +1,18 @@
 const express = require("express");
+const app = 			express();
 const router = express.Router({mergeParams: true});
 const passport = require("passport");
 const User = require("../models/user");
 const Likes = require("../models/likes");
 const Dislikeslog = require("../models/dislikeslog");
+const Notifications = require("../models/notifications");
 const Likeslog = require("../models/likeslog");
 const Visits = require("../models/visits");
 const middleware = require("../middleware");
 const _  = require('lodash');
-const app = 			express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-
+const mainFileImport = require('../app.js');
 
 router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req, res) => {
 	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
@@ -27,8 +28,8 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 				} else {
 					User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
 						if (err) {
-							res.send({status: 'error', error: err});
 							console.log(err);
+							res.send({status: 'error', error: err});
 						} else {
 							var foundLikes = userlikes.likes.filter(like => like.liker_id.toString() === req.user._id.toString());
 							if (foundLikes.length === 0) {
@@ -48,9 +49,11 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 												// liked user gets  a new like in the Likes array and new likelog entry in the Likelogs
 												user.save(() => {
 													if (res.locals.message !== "") {
+														var n_type = 'mutual_like';
 														var message = res.locals.message;
 														res.locals.message = "";
 													} else {
+														var n_type = 'like';
 														var message = "That's a like!";
 														res.locals.message = "";
 													}
@@ -60,8 +63,41 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 														// user who liked gets an entry in the 'myLikes' field and in the 'mylikeslog' field
 														liker_user.save((err) => {
 															if (err) console.log(err);
-															res.send({status: 'success', user: user, message: message});
-														})
+
+															// CREATING A NEW NOTIFICATION
+															var users_info = {
+																visitor: req.user._id,
+																visited_one: req.params.id,
+																n_type: n_type,
+															}
+															Notifications.create({
+																n_type: users_info.n_type,
+																for_who: users_info.visited_one,
+																from_whom: users_info.visitor,
+															}, (err, newNotification) => {
+																if (err) console.log(err);
+																else {
+																	// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
+																	User.findById(users_info.visited_one, (err, foundUser) => {
+																		if (err) console.log(err);
+																		else {
+																			foundUser.notifications.push(newNotification);
+																			foundUser.save((err) => {
+																				if (err) console.log(err);
+																				// EMITING A NOTIFICATION TO THE USER
+																				mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
+																					foundVisitorID: req.user._id,
+																					foundVisitorUsername: req.user.username,
+																					notificationID: newNotification._id,
+																					n_type: users_info.n_type
+																				});
+																				res.send({status: 'success', user: user, message: message});
+																			});
+																		}
+																	});
+																}
+															});
+														});
 													});
 												});
 											}
@@ -122,7 +158,43 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 													// disliking user gets a new entry about the dislike and his like is being deleted from the db
 													disliking_user.save((err) => {
 														if (err) console.log(err);
-														res.send({status: 'success', user: user});
+														if (res.locals.message === "mutual_dislike") {
+															var users_info = {
+																visitor: req.user._id,
+																visited_one: req.params.id,
+																n_type: 'mutual_dislike',
+															}
+															res.locals.message = "";
+															Notifications.create({
+																n_type: users_info.n_type,
+																for_who: users_info.visited_one,
+																from_whom: users_info.visitor,
+															}, (err, newNotification) => {
+																if (err) console.log(err);
+																else {
+																	// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
+																	User.findById(users_info.visited_one, (err, foundUser) => {
+																		if (err) console.log(err);
+																		else {
+																			foundUser.notifications.push(newNotification);
+																			foundUser.save((err) => {
+																				if (err) console.log(err);
+																				// EMITING A NOTIFICATION TO THE USER
+																				mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
+																					foundVisitorID: req.user._id,
+																					foundVisitorUsername: req.user.username,
+																					notificationID: newNotification._id,
+																					n_type: users_info.n_type
+																				});
+																				res.send({ status: 'success', user: user });
+																			});
+																		}
+																	});
+																}
+															});
+														} else {
+															res.send({ status: 'success', user: user });
+														}
 													});
 												});
 											});

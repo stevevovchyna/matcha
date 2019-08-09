@@ -30,6 +30,7 @@
 	</script>
 	<div class="row">
 			<div class="col-sm-4">
+
 		<div class="caption">
 			<%	var url = "";
 					user.pictures.forEach((pic) => {
@@ -46,6 +47,7 @@
 			<div class="col-sm-8">
 		<div class="caption" id="<%=user._id%>">
 			<h3><%= user.username %></h3>
+			<h3><%= moment(user.birthday).toNow(true) %> old</h3>
 			<h3><span class="likes"><%= user.likes.length %></span> <i class="far fa-heart"></i></h3>
 			<h3 class="fame">Fame points: <%= user.visits.length + user.likes.length %></h3>
 			<% if (currentUser._id.toString() == user._id.toString()) { %>
@@ -117,7 +119,8 @@
 
 		eventSocket.emit('new income notification', recipientSocketId, {
 			visitor: "<%=currentUser._id%>",
-			visited_one: "<%=user._id%>"
+			visited_one: "<%=user._id%>",
+			n_type: "visit"
 		});
 })();
 </script>

@@ -7,7 +7,21 @@
 		<a href="/conversations/<%=conversation._id%>" id="<%=conversation._id%>" class="list-group-item">
 			<%var unreadMessages = unreadMessagesCounter.filter(el => el.conversation_id.toString() === conversation._id.toString());%>
 			<span class="badge"><%=unreadMessages[0].count%></span>
-			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%></h4>
+			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%> <small id="online-<%=conversation.participants[userno]._id%>"></small></h4>
+			<script>
+				eventSocket.on('broadcast',function(data) {
+					var curUserId = "<%=conversation.participants[userno]._id%>";
+					var online = document.getElementById("online-" + curUserId);
+					var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+					if (newArr.length > 0) {
+						online.innerHTML = " <i class=\"fas fa-circle\"></i> Online";
+						online.style.color = "green";
+					} else {
+						online.innerText = "last seen: <%= moment(conversation.participants[userno].lastseen).fromNow() %>";
+						online.style.color = "grey";
+					}
+				});
+			</script>
 			<p class="list-group-item-text"><%=conversation.lastMessageAuthor.username%>: <%=conversation.lastMessage%></p>
 		</a>
 		<% });%>

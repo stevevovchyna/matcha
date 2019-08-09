@@ -1,4 +1,5 @@
 const mongoose = require("mongoose"),
+DateOnly = 				require('mongoose-dateonly')(mongoose),
 passportLocalMongoose = require("passport-local-mongoose");
 const findOrCreate = require('mongoose-findorcreate');
 
@@ -6,6 +7,10 @@ var UserSchema = new mongoose.Schema({
 	intra_id: String,
 	username: String,
 	lastname: String,
+	birthday: {
+		type: Date,
+		default: '1995-01-01T00:00:00.000Z'
+	},
 	lastseen: {type: Date},
 	firstname: String,
 	gender: {

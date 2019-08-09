@@ -4,6 +4,7 @@ const express = 		require('express'),
 app =		 			express(),
 bodyParser = 			require("body-parser"),
 mongoose = 				require("mongoose"),
+DateOnly = 				require('mongoose-dateonly')(mongoose),
 User = 					require("./models/user"),
 Likes = 				require("./models/likes"),
 Messages = 				require("./models/message"),
@@ -35,7 +36,8 @@ server = 				http.Server(app),
 io = 					socketio(server),
 redisClient = 			redis.createClient(),
 xss = 					require("xss"),
-FortyTwoStrategy = 		require('passport-42').Strategy;
+FortyTwoStrategy = 		require('passport-42').Strategy,
+TwitterStrategy = 		require('passport-twitter').Strategy;
 
 const NodeGeocoder = 	require('node-geocoder');
 
@@ -151,6 +153,67 @@ passport.use(new FortyTwoStrategy({
 		});
 	}
 ));
+// TWITTER AUTH STRATEGY
+// passport.use(new TwitterStrategy({
+// 		clientID: '',
+// 		clientSecret: '',
+// 		callbackURL: "http://localhost:3000/auth/twitter/callback"
+// 	},
+// 	function (accessToken, refreshToken, profile, cb) {
+// 		User.find({twitter_id: profile._json.id}, (err, user) => {
+// 			if (err) {
+// 				console.log(err);
+// 				return cb(err);
+// 			}
+// 			//user is not found
+// 			if (user.length == 0) {
+// 				var userLocation = {
+// 					latitude: "",
+// 					longitude: "",
+// 					city: ""
+// 				};
+// 				//getting a location of the user!!!
+// 				geocoder.geocode(profile.<possible-location-data>, (err, res) => {
+// 					userLocation = {
+// 						latitude: res[0].latitude,
+// 						longitude: res[0].longitude,
+// 						city: res[0].city
+// 					}
+// 					user = new User({
+// 						twitter_id: profile._json.id,
+// 						isVerified: true,
+// 						username: profile._json.login,
+// 						email: profile._json.email,
+// 						lastname: profile._json.last_name,
+// 						firstname: profile._json.first_name,
+// 						pictures: [{
+// 							url: profile._json.image_url,
+// 							isProfile: true
+// 						}],
+// 						reallocationname: userLocation.city,
+// 						reallocation: {
+// 							type: "Point",
+// 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+// 						},
+// 						locationname: userLocation.city,
+// 						location: {
+// 							type: "Point",
+// 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+// 						}
+// 					});
+// 					user.save((err) => {
+// 						if (err) console.log(err);
+// 						return cb(err, user)
+// 					});
+// 				});
+// 			} else {
+// 				//user is found!!!
+// 				return cb(err, user[0]);
+// 			}
+// 		});
+// 	}
+// ));
+
 passport.serializeUser((user, done) => {
 	done(null, user);
 });
@@ -186,6 +249,7 @@ app.use(chatRoutes);
 
 var eventSocket = io.of('/events');
 var onlineUsers = [];
+module.exports.eventSocket = eventSocket;
 // on connection event
 eventSocket.on('connection', (socket) => {
 	if (socket.request.user && socket.request.user.logged_in) {
@@ -204,9 +268,10 @@ eventSocket.on('connection', (socket) => {
 		console.log("Ther's some movement in the " + socketId);
 		if (users_info.visitor !== users_info.visited_one) {
 			Notifications.create({
-				n_type: "visit",
+				n_type: users_info.n_type,
 				for_who: users_info.visited_one,
-				from_whom: users_info.visitor
+				from_whom: users_info.visitor,
+				conversationID: users_info.conversationID ? users_info.conversationID : ""
 			}, (err, newNotification) => {
 				if (err) console.log(err);
 				else {
@@ -223,10 +288,10 @@ eventSocket.on('connection', (socket) => {
 									console.log(err);
 								} else {
 									socket.broadcast.to(socketId).emit('new notification', {
-										id: foundVisitor._id,
-										username: foundVisitor.username,
+										foundVisitorID: foundVisitor._id,
+										foundVisitorUsername: foundVisitor.username,
 										notificationID: newNotification._id,
-										conversationID: newNotification.conversationID
+										n_type: users_info.n_type
 									});
 								}
 							})
@@ -259,7 +324,6 @@ eventSocket.on('connection', (socket) => {
 
 var chatSocket = io.of('/chat');
 var currentRoom = "";
-
 chatSocket.on('connection', socket => {
 	console.log(socket.request.user.username + " connected to the chat");
 	socket.on('disconnect', () => {
@@ -275,6 +339,7 @@ chatSocket.on('connection', socket => {
 		var message = xss(msg.message);
 		var authorName = xss(msg.authorName);
 		var authorId = xss(msg.authorId);
+		var recipientID = xss(msg.recipientID)
 		var roomParticipants = socket.adapter.rooms[room];
 		var onlineToggle = roomParticipants.length === 1 ? false : true;
 		console.log("message: " + message);
@@ -286,6 +351,51 @@ chatSocket.on('connection', socket => {
 			conversationId: currentRoom,
 			isOnline: onlineToggle
 		});
+		// creating and emiting of a new notification!!!
+		if (!onlineToggle) {
+			console.log("I'm in , Sir! Creating a notification for you!!!");
+			var users_info = {
+				visitor: authorId,
+				visited_one: recipientID,
+				n_type: 'message',
+				conversationID: currentRoom
+			}
+			if (users_info.visitor !== users_info.visited_one) {
+				Notifications.create({
+					n_type: users_info.n_type,
+					for_who: users_info.visited_one,
+					from_whom: users_info.visitor,
+					conversationID: users_info.conversationID
+				}, (err, newNotification) => {
+					if (err) console.log(err);
+					else {
+						console.log("Notification created!!! Adding it to the user's profile!!");
+						User.findById(users_info.visited_one, (err, foundUser) => {
+							if (err) console.log(err);
+							else {
+								foundUser.notifications.push(newNotification);
+								foundUser.save((err) => {
+									if (err) console.log(err);
+								});
+								console.log("everything's fine! emiting notification with a socket!!!");
+								User.findById(users_info.visitor, (err, foundVisitor) => {
+									if (err) console.log(err);
+									else {
+										io.of('/events').to(recipientID).emit('new notification', {
+											foundVisitorID: foundVisitor._id,
+											foundVisitorUsername: foundVisitor.username,
+											notificationID: newNotification._id,
+											conversationID: users_info.conversationID,
+											n_type: 'message'
+										});
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+		}
 		socket.broadcast.emit('new message notification', {
 			message: message,
 			user: authorName,
@@ -294,28 +404,11 @@ chatSocket.on('connection', socket => {
 		});
 
 		//save chat to the database
-		Messages.create({
-			conversationId: currentRoom,
-			body: message,
-			sentBy: authorId,
-			isRead: onlineToggle
-		}, (err) => {
-			if (err) {
-				console.log(err);
-			}
-		});
-		Conversations
-		.findByIdAndUpdate(
-			currentRoom,
-			{
-				lastMessage: message,
-				lastMessageAuthor: authorId
-			},
-			err => {
-				if (err) {
-					console.log(err);
-				}
-		});
+		Messages.create({ conversationId: currentRoom, body: message, sentBy: authorId, isRead: onlineToggle},
+			err => { if (err) console.log(err); });
+		// SAVING LAST MESSAGE AUTHOR AND THE MESAGE ITSELF RO THE CONVERSATION TO DISPLAY IT ON THE CONVERSATIONS PAGE
+		Conversations.findByIdAndUpdate(currentRoom, { lastMessage: message, lastMessageAuthor: authorId },
+			err => { if (err) console.log(err);	});
 	});
 });
 

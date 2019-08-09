@@ -7,6 +7,9 @@ const Tags = require("../models/tags");
 const middleware = require("../middleware");
 const NodeGeocoder = require("node-geocoder");
 const async = require("async");
+const xss = require("xss");
+const mongoose = require('mongoose');
+const DateOnly = require('mongoose-dateonly')(mongoose);
 
 var options = {
 	provider: 'google',
@@ -43,9 +46,11 @@ cloudinary.config({
 });
 
 router.get("/:id", middleware.isLoggedIn, (req, res) => {
+	console.log(req.params.id);
+	console.log(req.user._id);
 	User.findById(req.sanitize(req.params.id), (err, user) => {
-		if (req._passport.session.user._id.toString() !== req.params.id.toString()) {
-			Visits.create({profile_id: req.params.id, visitor_id: req._passport.session.user._id}, (err, newVisit) => {
+		if (req.user._id.toString() !== req.params.id.toString()) {
+			Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
 				if (err) console.log(err);
 				user.visits.push(newVisit);
 				user.save((err) => {
@@ -151,7 +156,7 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 	});
 });
 
-router.put("/:id/editinfo", middleware.checkProfileOwnership, (req, res) => {
+router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDate, (req, res) => {
 	var email = req.sanitize(req.body.user.email);
 	var username = req.sanitize(req.body.user.username);
 	var firstname = req.sanitize(req.body.user.firstname);
@@ -159,6 +164,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, (req, res) => {
 	var bio = req.sanitize(req.body.user.bio);
 	var gender = req.sanitize(req.body.user.gender);
 	var sexPreferences = req.sanitize(req.body.user.sexPreferences);
+	var birthDate = new DateOnly(xss(req.body.user.birthdate));
 	if(req.body.location) {var location = req.sanitize(req.body.location);}
 	if ((gender.toString() === "Male" || gender.toString() === "Female") &&
 		(sexPreferences.toString() === "Male" || sexPreferences.toString() === "Female" || sexPreferences.toString() === "Bi-Sexual")) {
@@ -180,7 +186,8 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, (req, res) => {
 					firstname: firstname,
 					gender: gender,
 					sexPreferences: sexPreferences,
-					bio: bio
+					bio: bio,
+					birthday: birthDate.toDate()
 				};
 			} else {
 				if (err) {
@@ -203,7 +210,8 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, (req, res) => {
 					location: {
 						type: "Point",
 						coordinates: [coords.lng, coords.lat]
-					}
+					},
+					birthday: birthDate.toDate()
 				};
 			}
 			User.findByIdAndUpdate(req.params.id, newUser, (err, user) => {

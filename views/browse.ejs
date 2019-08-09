@@ -91,6 +91,7 @@
 						});
 					</script>
 					<h3><%= user.username %></h3>
+					<h3><%= moment(user.birthday).toNow(true) %> old</h3>
 					<h3><span class="likes"><%= user.likes.length %></span> <i class="far fa-heart"></i></h3>
 					<h3 class="fame">Fame points: <%= user.famerate %></h3>
 					<p><%= user.gender %></p>

@@ -91,7 +91,7 @@
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
 							aria-expanded="false">Notifications <span id="notifications-badge" class="badge">0</span></a>
 							<ul class="dropdown-menu scrollable-menu" id="notifications-button" role="menu">
-								<li id="check-all" class="position-sticky" onclick="checkAllNotifications('<%=currentUser._id%>')"><a href="#">Check all notifications</a></li>
+								<li id="check-all" class="position-sticky" onclick="checkAllNotifications('<%=currentUser._id%>')"><a href="#">Check all notifications at once</a></li>
 								<!-- <li role="separator" class="divider" id="n-divider"></li> -->
 							</ul>
 						</li>
@@ -115,7 +115,25 @@
 									var conversationID = "";
 								newNotificationElement.setAttribute('class', 'btn-info');
 								newNotificationElement.setAttribute('onclick', 'checkNotification("' + newNotification.notificationID + '", "' + conversationID + '")');
-								newNotificationElement.innerHTML = "<a href=\"/profile/" + newNotification.id+ "\">" + newNotification.username + " checked your profile!</a>";
+								switch (newNotification.n_type) {
+									case 'visit':
+										newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.foundVisitorUsername+" checked your profile!</a>";
+										break;
+									case 'like':
+										newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.foundVisitorUsername+" liked your profile!</a>";
+										break;
+									case 'message':
+										newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.foundVisitorUsername+" sent you a new message</a>";
+										break;
+									case 'mutual_like':
+										newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.foundVisitorUsername+" liked you back!</a>";
+										break;
+									case 'mutual_dislike':
+										newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.foundVisitorUsername+" have disconnected from your profile!</a>"
+										break;
+									default:
+										newNotificationElement.innerHTML = "<a>You have no notifications as for now</a>";
+								}
 								document.getElementById('check-all').insertAdjacentElement('afterend', newNotificationElement);
 								var counter = Array.from(notificationsButton.children).filter(notificacion => notificacion.className == 'btn-info').length;
 								notificationsBadge.innerText = counter;
@@ -128,31 +146,31 @@
 									var resp = JSON.parse(xmlhttp.responseText);
 									if (resp.status === 'success') {
 										resp.foundNotifications = resp.foundNotifications.reverse();
-										for (let one_notification of resp.foundNotifications) {
+										for (let newNotification of resp.foundNotifications) {
 											var newNotificationElement = document.createElement('li');
-											if (one_notification.conversationID)
-												var conversationID = one_notification.conversationID;
+											if (newNotification.conversationID)
+												var conversationID = newNotification.conversationID;
 											else
 												var conversationID = "";
-											if (!one_notification.isChecked) {
+											if (!newNotification.isChecked) {
 												newNotificationElement.setAttribute('class', 'btn-info');
-												newNotificationElement.setAttribute('onclick', 'checkNotification("' + one_notification._id + '", "' + conversationID + '")');
+												newNotificationElement.setAttribute('onclick', 'checkNotification("' + newNotification._id + '", "' + conversationID + '")');
 											}
-											switch (one_notification.n_type) {
+											switch (newNotification.n_type) {
 												case 'visit':
-													newNotificationElement.innerHTML = "<a href=\"#\">"+one_notification.from_whom.username+" checked your profile!</a>";
+													newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.from_whom.username+" checked your profile!</a>";
 													break;
 												case 'like':
-													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" liked your profile!</a>";
+													newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.from_whom.username+" liked your profile!</a>";
 													break;
 												case 'message':
-													newNotificationElement.innerHTML = "<a href=\"/conversations/"+one_notification.conversationID+"\">You've got a new message from <a href=\"/profile/"+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+"</a>";
+													newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.from_whom.username+" sent you a new message</a>";
 													break;
 												case 'mutual_like':
-													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" liked you back!!!</a>";
+													newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.from_whom.username+" liked you back!</a>";
 													break;
 												case 'mutual_dislike':
-													newNotificationElement.innerHTML = "<a href=\"/profile/\""+one_notification.from_whom._id+"\">"+one_notification.from_whom.username+" have disconnected from your profile!</a>";
+													newNotificationElement.innerHTML = "<a href=\"#\">"+newNotification.from_whom.username+" have disconnected from your profile!</a>";
 													break;
 												default:
 													newNotificationElement.innerHTML = "<a>You have no notifications as for now</a>";
@@ -178,7 +196,26 @@
 								if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 									var resp = JSON.parse(xmlhttp.responseText);
 									if (resp.status === 'success') {
-										window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+										switch (resp.updatedNotification.n_type) {
+											case 'visit':
+												window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+												break;
+											case 'message':
+												window.location.href = '/conversations/' + resp.updatedNotification.conversationID;
+												break;
+											case 'like':
+												window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+												break;
+											case 'mutual_like':
+												window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+												break;
+											case 'mutual_dislike':
+												window.location.href = '/profile/' + resp.updatedNotification.from_whom;
+												break;
+											default:
+												document.getElementById('flash').innerHTML = '<div class="alert alert-danger alert-dismissible">There was an error manipulating your notification. Please try again</div>';
+												break;
+										}
 									} else if (resp.status === 'error') {
 										document.getElementById('flash').innerHTML = '<div class="alert alert-danger alert-dismissible">There was an error manipulating your notification. Please try again</div>'
 									}

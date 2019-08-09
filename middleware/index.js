@@ -4,8 +4,32 @@ const User = require("../models/user");
 const Conversations = require("../models/conversations");
 const Notifications = require("../models/notifications");
 const iplocate = require('node-iplocate');
+const xss = require("xss");
+const mongoose = require('mongoose');
+const DateOnly = require('mongoose-dateonly')(mongoose);
+const moment = require('moment');
 
 var middlewareObject = {};
+
+middlewareObject.checkDate = (req, res, next) => {
+	if (!req.body.user.birthdate || req.body.user.birthdate == "") {
+		req.flash("error", "Birth date field empty! Please let us know your birth date");
+		res.redirect("back");
+	} else {
+		var birthDate = new DateOnly(xss(req.body.user.birthdate));
+		var now = new DateOnly();
+		if (!moment(birthDate.toDate(),"YYYY-MM-DD HH:mm Z").isValid()){
+			req.flash("error", "Invalid date! Please double-check your input");
+			res.redirect("back");
+		} else if ((now.year - birthDate.year < 16 && now.year - birthDate.year < 100) || (now.year - birthDate.year) < 0) {
+			req.flash("error", "Seems like you are too young or too old, sweetie. Come back when you are at least 16 y.o. or younger than 100 years");
+			res.redirect("back");
+		} else {
+			console.log("Your birthdate is : " + birthDate + "and you are "+(now.year - birthDate.year)+" years old");
+			next();
+		}
+	}
+}
 
 middlewareObject.location = (req, res, next) => {
 	let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
@@ -40,6 +64,7 @@ middlewareObject.isConnected = (req, res, next) => {
 					console.log(err);
 				} else {
 					console.log("It's inactive, Sir!!!");
+					res.locals.message = "mutual_dislike";
 					next();
 				}
 			})

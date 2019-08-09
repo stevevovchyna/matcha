@@ -189,6 +189,16 @@ router.get('/auth/42/callback', middleware.location,
 		res.redirect('/feed/browse/default.asc');
 });
 
+// TWITTER AUTH ROUTES
+router.get('/auth/twitter', middleware.checkIfLogged, passport.authenticate('twitter'));
+
+router.get('/auth/twitter/callback', middleware.location,
+	passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
+	// Successful authentication, redirect home.
+		res.redirect('/feed/browse/default.asc');
+});
+
+
 //AUTH ROUTE
 router.post("/login", middleware.checkIfLogged, middleware.additionalCheck, middleware.location, passport.authenticate("local", {
 	successRedirect: "/feed/browse/default.asc",

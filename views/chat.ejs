@@ -50,7 +50,8 @@ socket.on('connect', () => {
 		socket.emit("chat message", room, {
 			message: $("#message").val(),
 			authorName: "<%=currentUser.username%>",
-			authorId: "<%=currentUser._id%>"
+			authorId: "<%=currentUser._id%>",
+			recipientID: "<%=conversation.participants[userno]._id%>"
 		}, (ret) => {
 			var a = document.createElement("a");
 			a.setAttribute('class', 'list-group-item newMessage');
