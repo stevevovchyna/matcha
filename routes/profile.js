@@ -45,27 +45,30 @@ cloudinary.config({
 	api_secret: 'b9OL__XMw1SlZsYtLvFLe6_Cn00'
 });
 
-router.get("/:id", middleware.isLoggedIn, (req, res) => {
-	console.log(req.params.id);
-	console.log(req.user._id);
+router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) => {
 	User.findById(req.sanitize(req.params.id), (err, user) => {
-		if (req.user._id.toString() !== req.params.id.toString()) {
-			Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
-				if (err) console.log(err);
-				user.visits.push(newVisit);
-				user.save((err) => {
+		if (err) console.log(err);
+		else {
+			if (req.user._id.toString() !== req.params.id.toString()) {
+				Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
 					if (err) console.log(err);
-					User.findById(req.user._id, (err, myuser) => {
-						myuser.myVisits.push(newVisit);
-						myuser.save((err) => {
-							if (err) console.log(err);
-							res.render("profiles/profile", {user: user})
+					user.visits.push(newVisit);
+					user.save((err) => {
+						if (err) console.log(err);
+						User.findById(req.user._id, (err, myuser) => {
+							myuser.myVisits.push(newVisit);
+							myuser.save((err) => {
+								if (err) console.log(err);
+								user.distance = parseInt(res.locals.distance);
+								res.render("profiles/profile", {user: user});
 						});
-					})
+						})
+					});
 				});
-			});
-		} else {
-			res.render("profiles/profile", { user: user });
+			} else {
+				user.distance = parseInt(res.locals.distance);
+				res.render("profiles/profile", { user: user });
+			}
 		}
 	});
 });
@@ -137,19 +140,16 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res) => {
 	User.findById(req.params.id, (err, user) => {
 		if (err) {
-			req.flash("error", err.message);
 			console.log(err);
-			res.redirect("/profile/" + req.params.id + "/edit");
+			res.send({status: "error", error: err});
 		} else {
 			user.interests.pull(req.params.tag_id);
 			user.save((err) => {
 				if (err) {
-					req.flash("error", err.message);
 					console.log(err);
-					res.redirect("/profile/" + req.params.id + "/edit");
+					res.send({status: "error", error: err.message});
 				} else {
-					req.flash('success', "Tag removed!");
-					res.redirect("/profile/" + req.params.id + "/edit");
+					res.send({status: "success"});
 				}
 			});
 		}

@@ -11,8 +11,57 @@ const moment = require('moment');
 
 var middlewareObject = {};
 
-middlewareObject.checkSortInput = (req, res, next) => {
+middlewareObject.countDistance = (req, res, next) => {
+	if (req.user._id !== req.params.id) {
+		User.findById(req.params.id, (err, foundUser) => {
+			res.locals.distance = 0;
+			// getting user's location
+			if (req.user.location) {
+				var lon1 = req.user.location.coordinates[0];
+				var lat1 = req.user.location.coordinates[1];
+			} else if (req.user.reallocation) {
+				var lon1 = req.user.reallocation.coordinates[0];
+				var lat1 = req.user.reallocation.coordinates[1];
+			} else {
+				var lon1 = 30.5234;
+				var lat1 = 50.4501;
+			}
+			// getting user's location - the page we visit
+			if (foundUser.location) {
+				var lon2 = foundUser.location.coordinates[0];
+				var lat2 = foundUser.location.coordinates[1];
+			} else if (foundUser.reallocation) {
+				var lon2 = foundUser.reallocation.coordinates[0];
+				var lat2 = foundUser.reallocation.coordinates[1];
+			} else {
+				var lon2 = 30.5234;
+				var lat2 = 50.4501;
+			}
+			if ((lat1 == lat2) && (lon1 == lon2)) {
+				res.locals.distance = 0;
+			} else {
+				var radlat1 = Math.PI * lat1/180;
+				var radlat2 = Math.PI * lat2/180;
+				var theta = lon1-lon2;
+				var radtheta = Math.PI * theta/180;
+				var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+				if (dist > 1)
+					dist = 1;
+				dist = Math.acos(dist);
+				dist = dist * 180/Math.PI;
+				dist = dist * 60 * 1.1515;
+				dist = dist * 1.609344;
+				res.locals.distance = dist;
+			}
+			next();
+		});
+	} else {
+		res.locals.distance = 0;
+		next();
+	}
+}
 
+middlewareObject.checkSortInput = (req, res, next) => {
 	var params = Object.values(req.body.userparams);
 	var err = 0;
 	for (var i = 0; i < 6; i++) {

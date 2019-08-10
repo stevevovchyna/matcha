@@ -301,7 +301,6 @@ eventSocket.on('connection', (socket) => {
 				}
 			});
 		}
-		console.log(users_info);
 	});
 
 	socket.on('disconnect', () => {

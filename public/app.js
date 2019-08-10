@@ -1,3 +1,26 @@
+const deleteTag = (user_id, tag_id) => {
+	var stringUserID = user_id.toString();
+	var stringTagID = tag_id.toString();
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.open("POST", "http://localhost:3000/profile/"+stringUserID+"/"+stringTagID+"/tagdel?_method=DELETE", true);
+	xmlhttp.onreadystatechange = function () {
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			var resp = JSON.parse(xmlhttp.responseText);
+			if (resp.status === 'success') {
+				var taggi = document.getElementById(stringTagID);
+				taggi.remove();
+				$('div.modal-body > p').text("Tag deleted!");
+				$('#myModal').modal('show');
+			} else {
+				$('div.modal-body > p').text("Something went wrong!");
+				$('#myModal').modal('show');
+				console.log(resp.error);
+			}
+		}
+	}
+	xmlhttp.send(stringUserID);
+}
+
 function filterBy(min, max, param) {
 	var f_min = parseInt(min);
 	var f_max = parseInt(max);

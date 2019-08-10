@@ -33,21 +33,48 @@ if (user.isVerified) { %>
 <div class="container">
 	<div class="row">
 		<div class="col-sm-12 col-md-6 col-lg-6">
-			<div class="thumbnail">
+			
+			<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+				<!-- Indicators -->
+				<ol class="carousel-indicators">
+					<li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+					<% if (user.pictures) { for (var i = 1; i < user.pictures.length; i++) { %>
+					<li data-target="#carousel-example-generic" data-slide-to="<%=i%>"></li>
+					<% }} %>
+				</ol>
 
-				<!-- AVATAR BLOCK -->
-
-				<div class="caption">
+				<!-- Wrapper for slides -->
+				<div class="carousel-inner" role="listbox">
+					<div class="item active">
 					<%	user.pictures.forEach((pic) => {
-								if (pic.isProfile) {
-									url = pic.url;
-							}});
-							if (url == "") { %>
-					<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
+						if (pic.isProfile) {
+							url = pic.url;
+					}});
+					if (url == "") { %>
+						<img style="margin:auto;" src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
 					<% } else { %>
-					<img width="300" src="<%= url %>" alt="">
+						<img style="margin:auto;" src="<%= url %>" alt="">
 					<% } %>
 				</div>
+				<% if (user.pictures) { for (var i = 0; i < user.pictures.length; i++) { if (!user.pictures[i].isProfile) {%>
+					<div class="item">
+						<img src="<%=user.pictures[i].url%>" alt="">
+					</div>
+				<% }}} %>
+					
+
+				</div>
+
+
+				<!-- Controls -->
+				<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+					<span class="sr-only">Previous</span>
+				</a>
+				<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+					<span class="sr-only">Next</span>
+				</a>
 			</div>
 		</div>
 
@@ -81,9 +108,11 @@ if (user.isVerified) { %>
 					<!-- LIKES AND FAMERATE -->
 
 					<div class="btn-group btn-group-justified">
-						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-heart"
+								aria-hidden="true"></span>
 							<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
-						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
+						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-star"
+								aria-hidden="true"></span> <span
 								id="fame-badge-<%=user._id%>"><%= user.visits.length + user.likes.length %></span>
 						</div>
 					</div>
@@ -106,6 +135,12 @@ if (user.isVerified) { %>
 
 					<h2><i class="fas fa-compass"></i> <%= user.locationname %></h2>
 
+					<!-- USER'S DISTANCE -->
+					<% if (currentUser._id.toString() !== user._id.toString()) { %>
+					<h2><i class="fas fa-map-signs"></i> <%=user.distance%> kilometers from
+						you!</h2>
+					<%}%>
+
 					<!-- HIDDEN STUFF FOR PURPOSE -->
 
 					<p class="hidden commontags"><%if (user.commontags) {%> user.commontags<%} else {%>0<%}%></p>
@@ -119,7 +154,7 @@ if (user.isVerified) { %>
 
 					<p4>
 						<% user.interests.forEach((tags) => { %>
-						<button class="btn btn-primary btn">#<%= tags.text %></button>
+						<button class="btn btn-primary btn-lg">#<%= tags.text %></button>
 						<% }); %>
 					</p4>
 
