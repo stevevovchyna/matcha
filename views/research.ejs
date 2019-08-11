@@ -17,6 +17,10 @@
 		<div class="col-lg-3 col-md-3 col-sm-4">
 			<div class="col-lg-12 form-group">
 				<form action="/feed/research/result?_method=PUT" method="POST">
+					<span class="label label-default">Age</span>
+					<input class="form-control" type="number" name="userparams[agemin]" value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>0<% } %>" id="userparams[agemin]" minlength="0" maxlength="100">
+					<input class="form-control" type="number" name="userparams[agemax]" value="<% if(locals.userparams){%><%=userparams.agemax%><% } else { %>100<% } %>" id="userparams[agemax]"minlength="0" maxlength="100">
+
 					<span class="label label-default">Location</span>
 					<input class="form-control" type="number" name="userparams[locmin]" value="<% if(locals.userparams){%><%=userparams.locmin%><% } else { %>0<% } %>" id="userparams[locmin]" minlength="0" maxlength="20000">
 					<input class="form-control" type="number" name="userparams[locmax]" value="<% if(locals.userparams){%><%=userparams.locmax%><% } else { %>20000<% } %>" id="userparams[locmax]"minlength="0" maxlength="20000">
@@ -40,6 +44,8 @@
 								<% } %> value="famerate">By Fame Rate</option>
 							<option <% if (locals.user && order.sorttype.toString() === 'tags') { %> selected <% } %>
 								value="tags">By Tags</option>
+							<option <% if (locals.user && order.sorttype.toString() === 'age') { %> selected <% } %>
+								value="age">By Age</option>
 						</select>
 					</div>
 

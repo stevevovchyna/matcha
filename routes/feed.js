@@ -4,6 +4,7 @@ const passport = require("passport");
 const User = require("../models/user");
 const middleware = require("../middleware");
 const _ = require('lodash');
+const moment = require('moment');
 
 router.get("/browse", middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
 	console.log("tut takozh gotovo!!");
@@ -15,7 +16,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 	var order = req.sanitize(req.params.order.toString());
 	if (sortType.toString() !== "default" && sortType.toString() !== "location" &&
 		sortType.toString() !== "famerate" &&
-		sortType.toString() !== "tags" || (order.toString() !== "asc" && order.toString() !== "desc")) {
+		sortType.toString() !== "tags"  && sortType.toString() !== 'age' || (order.toString() !== "asc" && order.toString() !== "desc")) {
 		req.flash("error", "Invalid link!!!");
 		res.redirect("/feed/browse/default.asc");
 	} else {
@@ -41,6 +42,9 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 				break;
 			case 'tags':
 				var sort = ["commontags"];
+				break;
+			case 'age':
+				var sort = ['age'];
 				break;
 		}
 		User.find({})
@@ -85,6 +89,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 									if (req.user.gender.toString() === oneuser.gender.toString() &&
 										req.user.sexPreferences.toString() === oneuser.sexPreferences.toString() &&
 										oneuser.sexPreferences.toString() !== "Bi-Sexual") {
+											oneuser.age = moment(Date.now()).diff(moment(oneuser.birthday), 'days');
 											oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
 											oneuser.commmontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
 											ret.push(oneuser);
@@ -103,9 +108,10 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 									if (req.user.gender.toString() !== oneuser.gender.toString() &&
 										req.user.sexPreferences.toString() !== oneuser.sexPreferences.toString() &&
 										oneuser.sexPreferences.toString() !== "Bi-Sexual") {
-										oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
-										oneuser.commmontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
-										ret.push(oneuser);
+											oneuser.age = moment(Date.now()).diff(moment(oneuser.birthday), 'days');
+											oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
+											oneuser.commmontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
+											ret.push(oneuser);
 									}
 								});
 
@@ -121,10 +127,11 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 							// BI-SEXUAL USER PATTERN
 							user.forEach(oneuser => {
 								if (oneuser.sexPreferences.toString() === "Bi-Sexual") {
-										oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
-										oneuser.commontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
-										ret.push(oneuser);
-									}
+									oneuser.age = moment(Date.now()).diff(moment(oneuser.birthday), 'days');
+									oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
+									oneuser.commontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
+									ret.push(oneuser);
+								}
 							});
 
 							var ret = _.sortBy(ret, sort);
@@ -149,9 +156,14 @@ router.get('/research', middleware.isLoggedIn, (req, res) => {
 router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, (req, res) => {
 	var sortType = req.sanitize(req.body.userparams.sorttype.toString());
 	var order = req.sanitize(req.body.userparams.sortorder.toString());
+
+	req.body.userparams.agemax = parseInt(req.body.userparams.agemax) * 365;
+	req.body.userparams.agemin = parseInt(req.body.userparams.agemin) * 365;
+
 	if (sortType.toString() !== "default" && sortType.toString() !== "location" &&
 		sortType.toString() !== "famerate" &&
-		sortType.toString() !== "tags" || (order.toString() !== "asc" && order.toString() !== "desc")) {
+		sortType.toString() !== "tags"  && sortType.toString() !== 'age' ||
+		(order.toString() !== "asc" && order.toString() !== "desc")) {
 		req.flash("error", "Invalid link!!!");
 		res.redirect("/feed/browse/default.asc");
 	} else {
@@ -178,6 +190,9 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 			case 'tags':
 				var sort = ["commontags"];
 				break;
+			case 'age':
+				var sort = ["age"];
+				break;
 		}
 		User.find({}).populate("blockedUsers").populate('likes').populate('visits')
 			.exec((err, user) => {
@@ -203,6 +218,7 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 							res.redirect("back");
 						} else {
 							for (var i = 0; i < foundUser.length; i++) {
+								foundUser[i].age = moment(Date.now()).diff(moment(foundUser[i].birthday), 'days');
 								foundUser[i].famerate = foundUser[i].likes.length + foundUser[i].visits.length;
 								foundUser[i].commontags = _.intersection(_.map(req.user.interests, 'text'), _.map(foundUser[i].interests, 'text')).length;
 								if (foundUser[i]._id.toString() === req.user._id.toString()) {
@@ -214,7 +230,8 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 							for (var i = 0; i < foundUser.length; i++) {
 								if ((_.inRange(parseInt(foundUser[i].dist.calculated.toString()) / 1000, parseInt(req.body.userparams.locmin), parseInt(req.body.userparams.locmax) + 1)) &&
 									(_.inRange(parseInt(foundUser[i].famerate), parseInt(req.body.userparams.famemin), parseInt(req.body.userparams.famemax) + 1)) &&
-									(_.inRange(parseInt(foundUser[i].commontags), parseInt(req.body.userparams.tagmin), parseInt(req.body.userparams.tagmax) + 1))) {
+									(_.inRange(parseInt(foundUser[i].commontags), parseInt(req.body.userparams.tagmin), parseInt(req.body.userparams.tagmax) + 1)) &&
+									(_.inRange(parseInt(foundUser[i].age), parseInt(req.body.userparams.agemin), parseInt(req.body.userparams.agemax + 1)))) {
 									ret.push(foundUser[i]);
 								}
 							}
@@ -223,6 +240,8 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 							var zapasikIds = zapasik[0].blockedUsers.map(userid => userid.id.toString());
 							var userret = ret.filter(finaluser => !zapasikIds.includes(finaluser._id.toString()));
 							var orderOut = {'sorttype': sortType, 'order' : order};
+							req.body.userparams.agemax /= 365;
+							req.body.userparams.agemin /= 365;
 							res.render('research', {
 								user: order === 'asc' ? userret : userret.reverse(),
 								userparams: req.body.userparams,

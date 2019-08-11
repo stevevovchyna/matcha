@@ -64,15 +64,16 @@ middlewareObject.countDistance = (req, res, next) => {
 middlewareObject.checkSortInput = (req, res, next) => {
 	var params = Object.values(req.body.userparams);
 	var err = 0;
-	for (var i = 0; i < 6; i++) {
-		if (parseInt(params[i]) < 0 || parseInt(params[i]) > 20000) {
+	for (var i = 0; i < 8; i++) {
+		if (parseInt(params[i]) < 0 || parseInt(params[i]) > 36500) {
 			err++;
 		}
 	}
 	if (parseInt(params[0]) > parseInt(params[1]) ||
 		parseInt(params[2]) > parseInt(params[3]) ||
-		parseInt(params[4]) > parseInt(params[5])) {
-		err++;
+		parseInt(params[4]) > parseInt(params[5]) ||
+		parseInt(params[6]) > parseInt(params[7])) {
+			err++;
 	}
 	if (err > 0) {
 		req.flash("error", "Invalid search data! Please make sure you are using correct parameters!");

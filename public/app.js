@@ -24,7 +24,15 @@ const deleteTag = (user_id, tag_id) => {
 function filterBy(min, max, param) {
 	var f_min = parseInt(min);
 	var f_max = parseInt(max);
-	if ((f_min < 0) || (f_max > 20000) || (f_min > f_max)) {
+	var maxRange = 20000;
+	if (param == 'age') {
+		f_min *= 365;
+		f_max *= 365;
+		maxRange = 36500;
+	}
+	console.log(f_min);
+	console.log(f_max);
+	if ((f_min < 0) || (f_max > maxRange) || (f_min > f_max)) {
 		$('div.modal-body > p').text('Incorrect filter parameters');
 		$('#myModal').modal('show');
 		return;
@@ -38,7 +46,6 @@ function filterBy(min, max, param) {
 			lol[i].parentElement.parentElement.parentElement.style.display = "none";
 		}
 	}
-	console.log('OTSORTOVAL!!!!!')
 }
 
 function getVals() {

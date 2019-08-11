@@ -14,39 +14,6 @@
 <div class="container">
 	<div class="row">
 		<div class="col-lg-3 col-md-3 col-sm-4">
-			<div class="col-lg-12 form-group">
-				<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
-							minlength="0" maxlength="20000">
-						<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
-							minlength="0" maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Distance</button>
-					</div>
-				</form>
-			</div>
-			<div class="col-lg-12 form-group">
-				<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="minfame" value="0" id="minfame" minlength="0"
-							maxlength="20000">
-						<input class="form-control" type="number" name="maxfame" value="20000" id="maxfame"
-							minlength="0" maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Famerate</button>
-					</div>
-				</form>
-			</div>
-			<div class="col-lg-12 form-group">
-				<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
-							minlength="0" maxlength="20000">
-						<input class="form-control" type="number" name="maxcommontags" value="20000" id="maxcommontags"
-							minlength="0" maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Common Tags</button>
-					</div>
-				</form>
-			</div>
 			<div class="col-lg-12 form-group button-group-vertical">
 				<select class="form-control" name="sorting" id="sorting">
 					<option <% if (order.toString() === 'default.asc') { %> selected <% } %> value="default.asc">By
@@ -75,17 +42,67 @@
 					<option <% if (order.toString() === 'tags.desc') { %> selected <% } %> value="tags.desc">By Tags
 						Descending
 					</option>
+					<option <% if (order.toString() === 'age.asc') { %> selected <% } %> value="age.asc">By Age
+						Ascending
+					</option>
+					<option <% if (order.toString() === 'age.desc') { %> selected <% } %> value="age.desc">By Age
+						Descending
+					</option>
 				</select>
 				<button type="submit" class="btn btn-info btn-block"
 					onclick="location.href = 'http:\/\/localhost:3000/feed/browse/' + document.getElementById('sorting').value;">Sort</button>
+			</div>
+			<div class="col-lg-12 form-group">
+				<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
+					<div class="button-group-vertical">
+						<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
+							minlength="0" maxlength="20000">
+						<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
+							minlength="0" maxlength="20000">
+						<button class="btn btn-info btn-block" type="submit">Filter by Distance</button>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-12 form-group">
+				<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
+					<div class="button-group-vertical">
+						<input class="form-control" type="number" name="minfame" value="0" id="minfame" minlength="0"
+							maxlength="20000">
+						<input class="form-control" type="number" name="maxfame" value="1000" id="maxfame" minlength="0"
+							maxlength="20000">
+						<button class="btn btn-info btn-block" type="submit">Filter by Famerate</button>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-12 form-group">
+				<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
+					<div class="button-group-vertical">
+						<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
+							minlength="0" maxlength="20000">
+						<input class="form-control" type="number" name="maxcommontags" value="100" id="maxcommontags"
+							minlength="0" maxlength="20000">
+						<button class="btn btn-info btn-block" type="submit">Filter by Common Tags</button>
+					</div>
+				</form>
+			</div>
+			<div class="col-lg-12 form-group">
+				<form action="javascript:filterBy(minage.value, maxage.value, 'age')">
+					<div class="button-group-vertical">
+						<input class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
+							maxlength="100">
+						<input class="form-control" type="number" name="maxage" value="100" id="maxage" minlength="0"
+							maxlength="100">
+						<button class="btn btn-info btn-block" type="submit">Filter by Age</button>
+					</div>
+				</form>
 			</div>
 		</div>
 		<div class="col-lg-9 col-md-9 col-sm-8">
 			<div class="row" style="display: flex; flex-wrap: wrap;">
 
-			<!-- EVERY NEW USER ON THE PAGE -->
+				<!-- EVERY NEW USER ON THE PAGE -->
 
-			<% user.forEach((user) => {
+				<% user.forEach((user) => {
 					var sex = "";
 					var interest = "";
 					var binterest = "";
@@ -104,113 +121,117 @@
 						binterest = "fas fa-male";
 					}
 					if (user.isVerified) { %>
-			<div class="col-sm-12 col-md-6 col-lg-6">
-				<div class="thumbnail">
+				<div class="col-sm-12 col-md-6 col-lg-6">
+					<div class="thumbnail">
 
-					<!-- AVATAR BLOCK -->
+						<!-- AVATAR BLOCK -->
 
-					<div class="caption">
-						<%	user.pictures.forEach((pic) => {
+						<div class="caption">
+							<%	user.pictures.forEach((pic) => {
 								if (pic.isProfile) {
 									url = pic.url;
 							}});
 							if (url == "") { %>
-						<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg"
-							alt="">
-						<% } else { %>
-						<img width="150" src="<%= url %>" alt="">
-						<% } %>
-					</div>
-
-					<!-- USER INFO BLOCK -->
-
-					<div class="caption" id="<%=user._id%>">
-						<hr>
-						<div>
-							<a href="/profile/<%= user._id %>" class="btn btn-primary btn-block"
-								role="button"><%= user.username %>'s profile</a>
-						</div>
-						<small>
-							<span class="label" id="online-<%=user._id%>"></span>
-						</small>
-						<script>
-							eventSocket.on('broadcast', function (data) {
-								var online = document.getElementById("online-<%=user._id%>");
-								var curUserId = "<%=user._id%>";
-								var newArr = data.filter(user => user._id.toString() === curUserId.toString());
-								if (newArr.length > 0) {
-									online.innerText = "Online";
-									online.classList.remove('label-default');
-									online.classList.add("label-success");
-								} else {
-									online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
-									online.classList.remove("label-success");
-									online.classList.add("label-default");
-								}
-							});
-						</script>
-
-						<!-- LIKES AND FAMERATE -->
-
-						<div class="btn-group btn-group-justified">
-							<div class="btn"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span> <span
-									id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
-							<div class="btn"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
-									id="fame-badge-<%=user._id%>"><%= user.famerate %></span></div>
-						</div>
-
-						<!-- BIRTHDATE -->
-
-						<h4><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h4>
-
-						<!-- SEX AND INTERESTS -->
-
-						<h4><i class="<%=sex%>"></i> <i class="fas fa-arrow-right"></i> <i class="<%=interest%>"></i><i
-								class="<%=binterest%>"></i></h4>
-
-						<!-- USER LOCATION -->
-
-						<h4><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
-							<%= user.locationname %></h4>
-
-						<!-- USER'S DISTANCE -->
-
-						<h5><i class="fas fa-map-signs"></i> <%=Math.round(user.dist.calculated/1000)%> kilometers from
-							you!</h5>
-
-						<!-- HIDDEN STUFF FOR PURPOSE -->
-
-						<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
-						<p class="hidden commontags"><%if (user.commontags) {%> user.commontags<%} else {%>0<%}%></p>
-						<p class="hidden famerate"><%=user.famerate%></p>
-
-						<!-- USER'S BIO -->
-
-						<p><i class="fas fa-info"></i> <%= user.bio %></p>
-
-						<!-- USER'S INTERESTS AKA TAGS -->
-
-						<p4>
-							<% user.interests.forEach((tags) => { %>
-							<button class="btn btn-primary btn-sm">#<%= tags.text %></button>
-							<% }); %>
-						</p4>
-						<hr>
-
-						<!-- LIKE AND DISLIKE BUTTONS -->
-
-						<% if(user._id.toString() !== currentUser._id.toString()) { %>
-							<% if (currentUser.pictures.length > 0) { %>
-								<button class="btn btn-danger btn-block"
-									onclick="likeUser('<%=user._id.toString()%>')">Like</button>
-								<button class="btn btn-danger btn-block"
-									onclick="dislikeUser('<%=user._id.toString()%>')">Dislike</button>
+							<img src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg"
+								alt="">
+							<% } else { %>
+							<img width="150" src="<%= url %>" alt="">
 							<% } %>
-						<% } %>
+						</div>
+
+						<!-- USER INFO BLOCK -->
+
+						<div class="caption" id="<%=user._id%>">
+							<hr>
+							<div>
+								<a href="/profile/<%= user._id %>" class="btn btn-primary btn-block"
+									role="button"><%= user.username %>'s profile</a>
+							</div>
+							<small>
+								<span class="label" id="online-<%=user._id%>"></span>
+							</small>
+							<script>
+								eventSocket.on('broadcast', function (data) {
+									var online = document.getElementById("online-<%=user._id%>");
+									var curUserId = "<%=user._id%>";
+									var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+									if (newArr.length > 0) {
+										online.innerText = "Online";
+										online.classList.remove('label-default');
+										online.classList.add("label-success");
+									} else {
+										online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+										online.classList.remove("label-success");
+										online.classList.add("label-default");
+									}
+								});
+							</script>
+
+							<!-- LIKES AND FAMERATE -->
+
+							<div class="btn-group btn-group-justified">
+								<div class="btn"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+									<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
+								<div class="btn"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
+										id="fame-badge-<%=user._id%>"><%= user.famerate %></span></div>
+							</div>
+
+							<!-- BIRTHDATE -->
+
+							<h4><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h4>
+							<h4><i class="fas fa-baby-carriage"></i>
+								<%= moment(Date.now()).diff(moment(user.birthday), 'days') %></h4>
+
+							<!-- SEX AND INTERESTS -->
+
+							<h4><i class="<%=sex%>"></i> <i class="fas fa-arrow-right"></i> <i
+									class="<%=interest%>"></i><i class="<%=binterest%>"></i></h4>
+
+							<!-- USER LOCATION -->
+
+							<h4><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+								<%= user.locationname %></h4>
+
+							<!-- USER'S DISTANCE -->
+
+							<h5><i class="fas fa-map-signs"></i> <%=Math.round(user.dist.calculated/1000)%> kilometers
+								from
+								you!</h5>
+
+							<!-- HIDDEN STUFF FOR PURPOSE -->
+
+							<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
+							<p class="hidden commontags"><%if (user.commontags) {%> user.commontags<%} else {%>0<%}%></p>
+						<p class="hidden famerate"><%=user.famerate%></p>
+							<p class="hidden age"><%= moment(Date.now()).diff(moment(user.birthday), 'days') %></p>
+
+							<!-- USER'S BIO -->
+
+							<p><i class="fas fa-info"></i> <%= user.bio %></p>
+
+							<!-- USER'S INTERESTS AKA TAGS -->
+
+							<p4>
+								<% user.interests.forEach((tags) => { %>
+								<button class="btn btn-primary btn-sm">#<%= tags.text %></button>
+								<% }); %>
+							</p4>
+							<hr>
+
+							<!-- LIKE AND DISLIKE BUTTONS -->
+
+							<% if(user._id.toString() !== currentUser._id.toString()) { %>
+							<% if (currentUser.pictures.length > 0) { %>
+							<button class="btn btn-danger btn-block"
+								onclick="likeUser('<%=user._id.toString()%>')">Like</button>
+							<button class="btn btn-danger btn-block"
+								onclick="dislikeUser('<%=user._id.toString()%>')">Dislike</button>
+							<% } %>
+							<% } %>
+						</div>
 					</div>
 				</div>
-			</div>
-			<% }}) %>
+				<% }}) %>
 			</div>
 		</div>
 	</div>
