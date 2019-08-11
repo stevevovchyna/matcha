@@ -40,7 +40,7 @@ for (var i = 0; i < chats.length; i++) {
 socket.on('connect', () => {
 	socket.on("new message notification", data => {
 		var unreadNumber = document.getElementById(data.conversationId);
-		$('#' + data.conversationId).children('span').text(Number(unreadNumber.childNodes[1].innerText) + 1);
+		$('#' + data.conversationId).children('span').text(Number($('#' + data.conversationId).children('span').text()) + 1);
 		$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
 		$('#' + data.conversationId).css('background', 'lightblue');
 	});

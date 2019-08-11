@@ -203,7 +203,15 @@
 				<% }}) %>
 			</div>
 		</div>
-		<% } %>
+		<% } else { %>
+			<div class="col-lg-9 col-md-9 col-sm-8">
+				<div class="row" style="display: flex; flex-wrap: wrap;">
+					<div class="col-sm-12 col-md-12 col-lg-12">
+						<h1 class="page-header">Set filter and sort parameters to start searching!</h1>
+					</div>
+				</div>
+			</div>
+			<%}%>
 	</div>
 </div>
 <%include partials/footer%>
