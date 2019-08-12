@@ -1,5 +1,7 @@
 const express = require("express");
-const router = express.Router({mergeParams: true});
+const router = express.Router({
+	mergeParams: true
+});
 const passport = require("passport");
 const User = require("../models/user");
 const Visits = require("../models/visits");
@@ -10,14 +12,16 @@ const async = require("async");
 const xss = require("xss");
 const mongoose = require('mongoose');
 const DateOnly = require('mongoose-dateonly')(mongoose);
+const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
+const emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$");
 
 var options = {
 	provider: 'google',
 	httpAdapter: 'https',
 	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
 	formatter: null
-  };
-   
+};
+
 var geocoder = NodeGeocoder(options);
 
 var multer = require('multer');
@@ -47,38 +51,50 @@ cloudinary.config({
 
 router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) => {
 	User.findById(req.sanitize(req.params.id))
-	.populate('blockedUsers')
-	.exec((err, user) => {
-		if (err) console.log(err);
-		else {
-			var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
-			if (blocked.length == 0) {
-				if (req.user._id.toString() !== req.params.id.toString()) {
-					Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
-						if (err) console.log(err);
-						user.visits.push(newVisit);
-						user.save((err) => {
+		.populate('blockedUsers')
+		.exec((err, user) => {
+			if (err) console.log(err);
+			else {
+				var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
+				if (blocked.length == 0) {
+					if (req.user._id.toString() !== req.params.id.toString()) {
+						Visits.create({
+							profile_id: req.params.id,
+							visitor_id: req.user._id
+						}, (err, newVisit) => {
 							if (err) console.log(err);
-							User.findById(req.user._id, (err, myuser) => {
-								myuser.myVisits.push(newVisit);
-								myuser.save((err) => {
-									if (err) console.log(err);
-									user.distance = parseInt(res.locals.distance);
-									res.render("profiles/profile", {user: user, youAreBlocked: false});
+							user.visits.push(newVisit);
+							user.save((err) => {
+								if (err) console.log(err);
+								User.findById(req.user._id, (err, myuser) => {
+									myuser.myVisits.push(newVisit);
+									myuser.save((err) => {
+										if (err) console.log(err);
+										user.distance = parseInt(res.locals.distance);
+										res.render("profiles/profile", {
+											user: user,
+											youAreBlocked: false
+										});
+									});
 								});
 							});
 						});
-					});
+					} else {
+						user.distance = parseInt(res.locals.distance);
+						res.render("profiles/profile", {
+							user: user,
+							youAreBlocked: false
+						});
+					}
 				} else {
 					user.distance = parseInt(res.locals.distance);
-					res.render("profiles/profile", { user: user, youAreBlocked: false });
+					res.render("profiles/profile", {
+						user: user,
+						youAreBlocked: true
+					});
 				}
-			} else {
-				user.distance = parseInt(res.locals.distance);
-				res.render("profiles/profile", { user: user, youAreBlocked: true });
 			}
-		}
-	});
+		});
 });
 
 router.get("/:id/edit", middleware.checkProfileOwnership, (req, res) => {
@@ -108,8 +124,10 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 				req.flash("error", "Field can't be empty!");
 				return res.redirect("/profile/" + req.params.id + "/edit");
 			} else if (arr.length > 0 && arr[0] !== "") {
-				var newArr = arr.map(function(value) {
-					return {text: value};
+				var newArr = arr.map(function (value) {
+					return {
+						text: value
+					};
 				});
 				newArr.forEach((tag) => {
 					user.interests.push(tag);
@@ -123,15 +141,19 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 								if (dbtag.text.toString() === arr[i].toString()) {
 									arr.splice(i, 1);
 									i--;
-									break ;
+									break;
 								}
 							}
 						}
-						uniqueArr = arr.map(function(value) {
-							return {text: value};
+						uniqueArr = arr.map(function (value) {
+							return {
+								text: value
+							};
 						});
 						Tags.insertMany(uniqueArr, (err, tags) => {
-							if(err){console.log(err);};
+							if (err) {
+								console.log(err);
+							};
 							req.flash("success", "Tags added!");
 							return res.redirect("/profile/" + req.params.id + "/edit");
 						});
@@ -149,15 +171,23 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 	User.findById(req.params.id, (err, user) => {
 		if (err) {
 			console.log(err);
-			res.send({status: "error", error: err});
+			res.send({
+				status: "error",
+				error: err
+			});
 		} else {
 			user.interests.pull(req.params.tag_id);
 			user.save((err) => {
 				if (err) {
 					console.log(err);
-					res.send({status: "error", error: err.message});
+					res.send({
+						status: "error",
+						error: err.message
+					});
 				} else {
-					res.send({status: "success"});
+					res.send({
+						status: "success"
+					});
 				}
 			});
 		}
@@ -165,6 +195,14 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 });
 
 router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDate, (req, res) => {
+	if (!loginRegExp.test(req.body.user.firstname) || !loginRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
+		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
+		return res.redirect("back");
+	}
+	if (!emailRegExp.test(req.body.user.email)) {
+		req.flash("error", "Please make sure you've entered a correct email address!");
+		return res.redirect("back");
+	}
 	var email = req.sanitize(req.body.user.email);
 	var username = req.sanitize(req.body.user.username);
 	var firstname = req.sanitize(req.body.user.firstname);
@@ -173,7 +211,9 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 	var gender = req.sanitize(req.body.user.gender);
 	var sexPreferences = req.sanitize(req.body.user.sexPreferences);
 	var birthDate = new DateOnly(xss(req.body.user.birthdate));
-	if(req.body.location) {var location = req.sanitize(req.body.location);}
+	if (req.body.location) {
+		var location = req.sanitize(req.body.location);
+	}
 	if ((gender.toString() === "Male" || gender.toString() === "Female") &&
 		(sexPreferences.toString() === "Male" || sexPreferences.toString() === "Female" || sexPreferences.toString() === "Bi-Sexual")) {
 		User.findByIdAndUpdate(req.params.id, {}, (err, userdata) => {
@@ -227,8 +267,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 					req.flash("error", "Something went wrong while editing your data!");
 					console.log(err);
 					res.redirect("back");
-				}
-				else {
+				} else {
 					req.flash("success", "Profile info updated!");
 					return res.redirect("/profile/" + req.params.id + "/edit");
 				}
@@ -264,12 +303,18 @@ router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('imag
 						req.flash("error", err.message);
 						console.log(err);
 						res.redirect("back");
-					}
-					else {
+					} else {
 						if (user.pictures.length == 0) {
-							user.pictures.push({ isProfile: true, url: result.secure_url, naked_url: result.public_id });
+							user.pictures.push({
+								isProfile: true,
+								url: result.secure_url,
+								naked_url: result.public_id
+							});
 						} else {
-							user.pictures.push({ url: result.secure_url, naked_url: result.public_id });
+							user.pictures.push({
+								url: result.secure_url,
+								naked_url: result.public_id
+							});
 						}
 						user.save(() => {
 							req.flash("success", "Picture was added!");
@@ -278,10 +323,11 @@ router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('imag
 					}
 				});
 			});
-		}], (err) => {
-			if (err) return next(err);
-			res.redirect("/profile/" + req.params.id);
-		});
+		}
+	], (err) => {
+		if (err) return next(err);
+		res.redirect("/profile/" + req.params.id);
+	});
 });
 
 router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res) => {
@@ -294,7 +340,9 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 			var url = user.pictures.id(req.params.pic_id);
 			var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
 			user.pictures.pull(req.params.pic_id);
-			console.log(deletedPicture);
+			if (user.pictures[0]) {
+				user.pictures[0].isProfile = true;
+			}
 			user.save(() => {
 				if (deletedPicture[0].naked_url) {
 					cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
@@ -303,7 +351,6 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 							console.log(err);
 							res.redirect("/profile/" + req.params.id);
 						}
-						console.log("real picture deleted!!!");
 					});
 				}
 				req.flash("success", "Picture deleted!");

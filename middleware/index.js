@@ -97,7 +97,6 @@ middlewareObject.checkDate = (req, res, next) => {
 			req.flash("error", "Seems like you are too young or too old, sweetie. Come back when you are at least 16 y.o. or younger than 100 years");
 			res.redirect("back");
 		} else {
-			console.log("Your birthdate is : " + birthDate + "and you are "+(now.year - birthDate.year)+" years old");
 			next();
 		}
 	}

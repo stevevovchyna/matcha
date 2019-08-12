@@ -11,6 +11,10 @@ const middleware = require("../middleware");
 const NodeGeocoder = require("node-geocoder");
 const iplocate = require('node-iplocate');
 
+const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
+const emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$");
+const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
+
 var options = {
 	provider: 'google',
 	httpAdapter: 'https',
@@ -22,6 +26,16 @@ var geocoder = NodeGeocoder(options);
 //LANDING PAGE
 router.get("/", (req, res) => {
 	res.render("landing");
+});
+
+router.put('/password', (req, res) => {
+	var loginRegExp = RegExp("^[a-z0-9_-]{3,16}$");
+	var emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$")
+	var passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
+	// re.test(req.body.password);
+	console.log(passwordRegExp.test(req.body.password.toString()))
+	console.log(req.body.password);
+	res.redirect('/feed/browse');
 });
 
 
@@ -52,7 +66,18 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 		req.flash("error", "Please fill in all the required fields!");
 		return res.redirect("/register");
 	}
-	
+	if (!loginRegExp.test(req.body.firstname) || !loginRegExp.test(req.body.lastname) || !loginRegExp.test(req.body.username)) {
+		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
+		return res.redirect("/register");
+	}
+	if (!emailRegExp.test(req.body.email)) {
+		req.flash("error", "Please make sure you've entered a correct email address!");
+		return res.redirect("/register");
+	}
+	if (!passwordRegExp.test(req.body.password)) {
+		req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
+		return res.redirect("/register");
+	}
 	var email = req.sanitize(req.body.email);
 	var username = req.sanitize(req.body.username);
 	var firstname = req.sanitize(req.body.firstname);
@@ -108,6 +133,8 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 				req.flash("error", "User with this email already exists! Please provide a different email address.");
 				return res.redirect("/register");
 			}
+			// var re = new RegExp('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,16}$/g');
+			// re.test(req.body.password);
 			User.register(newUser, req.body.password, (err, user) => {
 				if (err) {
 					console.log(err.message);
@@ -287,6 +314,10 @@ router.post('/reset/:token', function (req, res) {
 			if (!req.body.password || !req.body.confirm) {
 				req.flash("error", "Empty fields! Please, fill in both fields!");
 				return res.redirect('back');
+			}
+			if (!passwordRegExp.test(req.body.password) && !passwordRegExp.test(req.body.confirm)) {
+				req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
+				return res.redirect("back");
 			}
 			User.findOne({
 				passwordResetToken: req.sanitize(req.params.token),
