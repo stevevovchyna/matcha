@@ -1,90 +1,95 @@
 <%include partials/header%>
 <div class="container">
 
-	<h2>Your profile activiy</h2>
+	<h2 class="page-header">Your profile activiy</h2>
 	<div class="row">
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourPorfileVisits">Visits of your profile</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesYouHaveVisited">Profiles you've visited</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesYouLiked">Profiles you've liked</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profilesLikedYou">Profiles that liked you</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profileLikesLog">Your profile "likes" log</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#profileDislikesLog">Your profile "dislikes" log</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourLikingActivity">Your liking activity</button>
-		</div>
-		<div class="col-xs-6 col-sm-6">
-			<button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#yourDislikingActivity">Your disliking activity</button>
-		</div>
-</div>
-		  <div class="collapse" id="yourPorfileVisits">
-				<div class="well">
-				<%user.visits.forEach(visit => { %>
-					<p><a href="/profile/<%=visit.visitor_id._id%>"><%=visit.visitor_id.username%></a> checked your profile <%= moment(visit.createdAt).fromNow() %></p>
-				<%});%>
-			</div>
-		</div>
-		<div class="collapse" id="profilesYouHaveVisited">
-				<div class="well">
-				<%user.myVisits.forEach(visit => { %>
-					<p>You've checked <a href="/profile/<%=visit.profile_id._id%>"><%=visit.profile_id.username%></a>'s profile <%= moment(visit.createdAt).fromNow() %></p>
-				<%});%>
-			</div>
-		</div>
-		<div class="collapse" id="profilesYouLiked">
-				<div class="well">
-					<%user.myLikes.forEach(like => {%>
-						<p><a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %></a></p>
-					<%});%>
-				</div>
-			</div>
-			<div class="collapse" id="profilesLikedYou">
-					<div class="well">
-					<%user.likes.forEach(like => {%>
-						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a></p>
-					<%});%>
-				</div>
-			</div>
-			<div class="collapse" id="profileLikesLog">
-					<div class="well">
-					<% user.likeslog.forEach((like) => { %>
-						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a> liked your profile <%= moment(like.createdAt).fromNow() %></p>
-					<% }); %>
-				</div>
-			</div>
-			<div class="collapse" id="profileDislikesLog">
-					<div class="well">
-					<% user.dislikeslog.forEach((dislike) => { %>
-						<p><a href="/profile/<%= dislike.disliker_id._id %>"><%= dislike.disliker_id.username %></a> disliked your profile <%= moment(dislike.createdAt).fromNow() %></p>
-					<% }); %>
-				</div>
-			</div>
-			<div class="collapse" id="yourLikingActivity">
-					<div class="well">
-					<% user.mylikeslog.forEach((like) => { %>
-						<p>You've liked <a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %>'s</a> profile <%= moment(like.createdAt).fromNow() %></p>
-					<% }); %>
-				</div>
-			</div>
-			<div class="collapse" id="yourDislikingActivity">
-					<div class="well">
-					<% user.mydislikeslog.forEach((dislike) => { %>
-						<p>You've disliked <a href="/profile/<%= dislike.disliked_one_id._id %>"><%= dislike.disliked_one_id.username %>'s</a> profile <%= moment(dislike.createdAt).fromNow() %></p>
-					<% }); %>
-				</div>
-			</div>
+		<div class="col-lg-3 col-md-3 col-sm-12">
 
+
+	<ul class="nav nav-pills nav-stacked" id="myTabs" role="tablist">
+		<li role="presentation"><a href="#yourPorfileVisits" aria-controls="yourPorfileVisits" role="tab" data-toggle="tab">Visits of your profile</a></li>
+		<li role="presentation"><a href="#profilesYouHaveVisited" aria-controls="profilesYouHaveVisited" role="tab" data-toggle="tab">Profiles you've visited</a></li>
+		<li role="presentation"><a href="#profilesYouLiked" aria-controls="profilesYouLiked" role="tab" data-toggle="tab">Profiles you've liked</a></li>
+		<li role="presentation"><a href="#profilesLikedYou" aria-controls="profilesLikedYou" role="tab" data-toggle="tab">Profiles that liked you</a></li>
+		<li role="presentation"><a href="#profileLikesLog" aria-controls="profileLikesLog" role="tab" data-toggle="tab">Your profile "likes" log</a></li>
+		<li role="presentation"><a href="#profileDislikesLog" aria-controls="profileDislikesLog" role="tab" data-toggle="tab">Your profile "dislikes" log</a></li>
+		<li role="presentation"><a href="#yourLikingActivity" aria-controls="yourLikingActivity" role="tab" data-toggle="tab">Your liking activity</a></li>
+		<li role="presentation"><a href="#yourDislikingActivity" aria-controls="yourDislikingActivity" role="tab" data-toggle="tab">Your disliking activity</a></li>
+	</ul>
+</div>
+<div class="col-lg-9 col-md-9 col-sm-12">
+	<div class="tab-content">
+		<div role="tabpanel" class="tab-pane" id="yourPorfileVisits">
+			<div class="well">
+				<%user.visits.reverse().forEach(visit => { %>
+				<p><a href="/profile/<%=visit.visitor_id._id%>"><%=visit.visitor_id.username%></a> checked your profile
+					<%= moment(visit.createdAt).fromNow() %></p>
+				<%});%>
+			</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="profilesYouHaveVisited">
+				<div class="well">
+						<%user.myVisits.reverse().forEach(visit => { %>
+						<p>You've checked <a href="/profile/<%=visit.profile_id._id%>"><%=visit.profile_id.username%></a>'s profile
+							<%= moment(visit.createdAt).fromNow() %></p>
+						<%});%>
+					</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="profilesYouLiked">
+			<div class="well">
+			<%user.myLikes.reverse().forEach(like => {%>
+			<p><a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %></a></p>
+			<%});%>
+		</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="profilesLikedYou">
+				<div class="well">
+						<%user.likes.reverse().forEach(like => {%>
+						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a></p>
+						<%});%>
+					</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="profileLikesLog">
+				<div class="well">
+						<% user.likeslog.reverse().forEach((like) => { %>
+						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a> liked your profile
+							<%= moment(like.createdAt).fromNow() %></p>
+						<% }); %>
+					</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="profileDislikesLog">
+				<div class="well">
+						<% user.dislikeslog.reverse().forEach((dislike) => { %>
+						<p><a href="/profile/<%= dislike.disliker_id._id %>"><%= dislike.disliker_id.username %></a> disliked your
+							profile <%= moment(dislike.createdAt).fromNow() %></p>
+						<% }); %>
+					</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="yourLikingActivity">
+				<div class="well">
+						<% user.mylikeslog.reverse().forEach((like) => { %>
+						<p>You've liked <a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %>'s</a>
+							profile <%= moment(like.createdAt).fromNow() %></p>
+						<% }); %>
+					</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="yourDislikingActivity"><div class="well">
+				<% user.mydislikeslog.reverse().forEach((dislike) => { %>
+				<p>You've disliked <a
+						href="/profile/<%= dislike.disliked_one_id._id %>"><%= dislike.disliked_one_id.username %>'s</a>
+					profile <%= moment(dislike.createdAt).fromNow() %></p>
+				<% }); %>
+			</div>
+		</div>
+	</div>
+<script>
+$('#myTabs a').click((e) => {
+	e.preventDefault()
+	$(this).tab('show')
+});
+</script>
+		
+	</div>
 </div>
 
 <%include partials/footer%>
