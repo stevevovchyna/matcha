@@ -15,7 +15,9 @@ const io = require('socket.io')(server);
 const mainFileImport = require('../app.js');
 
 router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req, res) => {
-	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
+	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+	.populate('blockedUsers')
+	.exec((err, user) => {
 		if (req.user.pictures.length === 0) {
 			res.send({status: 'error', error: "Please add a picture to your profile first!"});
 		} else {
@@ -23,8 +25,12 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 				console.log(err);
 				res.send({status: 'error', error: err});
 			} else {
+				// checking if user has blocked us
+				var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
 				if (req.user._id.toString() === user._id.toString()) {
 					res.send({status: 'error', error: "You can't 'like' your own profile"});
+				} else if (blocked.length > 0) {
+					res.send({status: 'error', error: "You can't like this user as he/she has blocked you"});
 				} else {
 					User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
 						if (err) {
@@ -65,6 +71,7 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 															if (err) console.log(err);
 
 															// CREATING A NEW NOTIFICATION
+															
 															var users_info = {
 																visitor: req.user._id,
 																visited_one: req.params.id,
@@ -116,13 +123,19 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 });
 
 router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected, (req, res) => {
-	User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, user) => {
+	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+	.populate('blockedUsers')
+	.exec((err, user) => {
 		if (err) {
 			console.log(err);
 			res.send({status: 'error', error: err});
 		} else {
+			// checking if user has blocked us
+			var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
 			if (req.user._id.toString() === user._id.toString()) {
 				res.send({status: 'error', error: "Don't be so hard on yourself"});
+			} else if (blocked.length > 0) {
+				res.send({status: 'error', error: "You can't dislike this user as he/she has blocked you"});
 			} else {
 				User.findById(req.sanitize(req.params.id)).populate('likes').exec((err, userlikes) => {
 					if (err) {

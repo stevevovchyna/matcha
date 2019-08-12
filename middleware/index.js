@@ -126,61 +126,79 @@ middlewareObject.location = (req, res, next) => {
 }
 
 middlewareObject.isConnected = (req, res, next) => {
-	Conversations.find({}, (err, conversations) => {
-		var result = conversations.filter(
-			conversation => conversation.participants.includes(req.params.id.toString()) && 
-			conversation.participants.includes(req.user._id.toString()));
-		if (result.length > 0) {
-			Conversations.findByIdAndUpdate(result[0]._id, {isActive: "false"}, (err) => {
-				if (err) {
-					console.log(err);
-				} else {
-					console.log("It's inactive, Sir!!!");
-					res.locals.message = "mutual_dislike";
-					next();
-				}
-			})
-		} else {
-			next();
-		}
-	});
+	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+		.populate('blockedUsers')
+		.exec((err, user) => {
+			var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
+			if (blocked.length > 0) {
+				next();
+			} else {
+				Conversations.find({}, (err, conversations) => {
+					var result = conversations.filter(
+						conversation => conversation.participants.includes(req.params.id.toString()) && 
+						conversation.participants.includes(req.user._id.toString()));
+					if (result.length > 0) {
+						Conversations.findByIdAndUpdate(result[0]._id, {isActive: "false"}, (err) => {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log("It's inactive, Sir!!!");
+								res.locals.message = "mutual_dislike";
+								next();
+							}
+						})
+					} else {
+						next();
+					}
+				});
+			}
+		});
 }
 
 middlewareObject.haveLikedMe = (req, res, next) => {
 	User.findById(req.sanitize(req.user._id)).populate('likes').exec((err, user) => {
-		var result = user.likes.filter(like => like.liker_id.toString() === req.params.id.toString());
-		if (result.length > 0) {
-			Conversations.find({}, (err, conversations) => {
-				var conversationFound = conversations.filter(
-					conversation => conversation.participants.includes(req.params.id.toString()) && 
-					conversation.participants.includes(req.user._id.toString()));
-				if (conversationFound.length === 1) {
-					Conversations.findByIdAndUpdate(conversationFound[0]._id, {isActive: "true"}, (err) => {
-						if (err) {
-							console.log(err);
+		User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+		.populate('blockedUsers')
+		.exec((err, user) => {
+			var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
+			if (blocked.length > 0) {
+				next();
+			} else {
+				var result = user.likes.filter(like => like.liker_id.toString() === req.params.id.toString());
+				if (result.length > 0) {
+					Conversations.find({}, (err, conversations) => {
+						var conversationFound = conversations.filter(
+							conversation => conversation.participants.includes(req.params.id.toString()) && 
+							conversation.participants.includes(req.user._id.toString()));
+						if (conversationFound.length === 1) {
+							Conversations.findByIdAndUpdate(conversationFound[0]._id, {isActive: "true"}, (err) => {
+								if (err) {
+									console.log(err);
+								} else {
+									console.log("It's active again, Sir!!!");
+									res.locals.message = "That's a match! You can check the conversations list again!";
+									next();
+								}
+							});
 						} else {
-							console.log("It's active again, Sir!!!");
-							res.locals.message = "That's a match! You can check the conversations list again!";
-							next();
+							Conversations.create({}, (err, conversation) => {
+								conversation.participants.push(req.params.id);
+								conversation.participants.push(req.user._id);
+								conversation.lastMessage = "Start of your conversation!";
+								conversation.lastMessageAuthor = req.user._id;
+								conversation.save(() => {
+									console.log("New conversation was created!!!");
+									res.locals.message = "That's a match! You can check the conversations list!";
+									next();
+								});
+							});
 						}
 					});
 				} else {
-					Conversations.create({}, (err, conversation) => {
-						conversation.participants.push(req.params.id);
-						conversation.participants.push(req.user._id);
-						conversation.lastMessage = "Start of your conversation!";
-						conversation.lastMessageAuthor = req.user._id;
-						conversation.save(() => {
-							console.log("New conversation was created!!!");
-							res.locals.message = "That's a match! You can check the conversations list!";
-							next();
-						});
-					});
+					next();
 				}
-			});
-		} else {
-			next();
-		}
+			}
+		});
 	});
 }
 

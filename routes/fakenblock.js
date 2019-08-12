@@ -8,6 +8,7 @@ const Likeslog = require("../models/likeslog");
 const Visits = require("../models/visits");
 const FakeReports = require("../models/fake");
 const BlockedUsers = require("../models/blocked");
+const Conversations = require("../models/conversations");
 
 router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 	var id = req.sanitize(req.params.id); 
@@ -61,11 +62,26 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 						} else {
 							user.blockedUsers.pull(result._id);
 							user.save();
+							Conversations.find({participants: [req.params.id, req.user._id]}, (err, foundConversations) => {
+								if (err) {
+									console.log(err);
+									res.send({status: 'error', error: err});
+								} else {
+									if (foundConversations) {
+										Conversations.findByIdAndUpdate(foundConversations[0]._id, {isActive: true}, (err, conversation) => {
+											if (err) {
+												console.log(err);
+												res.send({status: 'error', error: err});
+											}
+										});
+									}
 							res.send({status: 'success',
 										message: "You've unblocked this user!",
 										user: user,
 										buttonText: "Block this user"
 									});
+								}
+							});
 						}
 					});
 				} else {
@@ -78,11 +94,26 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 							blockedUser.save();
 							user.blockedUsers.push(blockedUser);
 							user.save(() => {
-								res.send({status: 'success',
-											message: "You've blocked this user!",
-											user: user,
-											buttonText: "Unblock this user"
-										});
+								Conversations.find({participants: [req.params.id, req.user._id]}, (err, foundConversations) => {
+									if (err) {
+										console.log(err);
+										res.send({status: 'error', error: err});
+									} else {
+										if (foundConversations) {
+											Conversations.findByIdAndUpdate(foundConversations[0]._id, {isActive: false}, (err, conversation) => {
+												if (err) {
+													console.log(err);
+													res.send({status: 'error', error: err});
+												}
+											});
+										}
+										res.send({status: 'success',
+													message: "You've blocked this user!",
+													user: user,
+													buttonText: "Unblock this user"
+												});
+									}
+								});
 							});
 						}
 					});

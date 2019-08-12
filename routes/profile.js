@@ -46,28 +46,36 @@ cloudinary.config({
 });
 
 router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) => {
-	User.findById(req.sanitize(req.params.id), (err, user) => {
+	User.findById(req.sanitize(req.params.id))
+	.populate('blockedUsers')
+	.exec((err, user) => {
 		if (err) console.log(err);
 		else {
-			if (req.user._id.toString() !== req.params.id.toString()) {
-				Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
-					if (err) console.log(err);
-					user.visits.push(newVisit);
-					user.save((err) => {
+			var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
+			if (blocked.length == 0) {
+				if (req.user._id.toString() !== req.params.id.toString()) {
+					Visits.create({profile_id: req.params.id, visitor_id: req.user._id}, (err, newVisit) => {
 						if (err) console.log(err);
-						User.findById(req.user._id, (err, myuser) => {
-							myuser.myVisits.push(newVisit);
-							myuser.save((err) => {
-								if (err) console.log(err);
-								user.distance = parseInt(res.locals.distance);
-								res.render("profiles/profile", {user: user});
+						user.visits.push(newVisit);
+						user.save((err) => {
+							if (err) console.log(err);
+							User.findById(req.user._id, (err, myuser) => {
+								myuser.myVisits.push(newVisit);
+								myuser.save((err) => {
+									if (err) console.log(err);
+									user.distance = parseInt(res.locals.distance);
+									res.render("profiles/profile", {user: user, youAreBlocked: false});
+								});
+							});
 						});
-						})
 					});
-				});
+				} else {
+					user.distance = parseInt(res.locals.distance);
+					res.render("profiles/profile", { user: user, youAreBlocked: false });
+				}
 			} else {
 				user.distance = parseInt(res.locals.distance);
-				res.render("profiles/profile", { user: user });
+				res.render("profiles/profile", { user: user, youAreBlocked: true });
 			}
 		}
 	});

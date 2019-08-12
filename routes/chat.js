@@ -10,7 +10,7 @@ router.get("/chatik", (req, res) => {
 })
 
 router.get("/conversations", middleware.isLoggedIn, (req, res) => {
-	Conversations.find({participants: req.user._id})
+	Conversations.find({participants: req.user._id, isActive: true})
 		.populate('participants')
 		.populate('lastMessageAuthor')
 		.exec((err, conversations) => {
@@ -53,15 +53,20 @@ router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) 
 					if (err) {
 						console.log(err);
 					} else {
-						var sender_id = conversation.participants.filter(user => user._id.toString() !== req.user._id.toString());
-						Messages.updateMany({"isRead": false, "sentBy": sender_id[0]._id}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
-							if (err) {
-								console.log(err);
-							} else {
-								console.log(mess);
-							}
-						});
-						res.render('chat', {messages: messages, conversation: conversation});
+						if (conversation.isActive) {
+							var sender_id = conversation.participants.filter(user => user._id.toString() !== req.user._id.toString());
+							Messages.updateMany({"isRead": false, "sentBy": sender_id[0]._id}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
+								if (err) {
+									console.log(err);
+								} else {
+									console.log(mess);
+								}
+							});
+							res.render('chat', {messages: messages, conversation: conversation});
+						} else {
+							req.flash('error', "This conversation is not accessible as one of the users has blocked another one");
+							res.redirect('/conversations');
+						}
 					}
 				})
 			}

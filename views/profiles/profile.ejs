@@ -202,7 +202,7 @@ if (user.isVerified) { %>
 		<% } %>
 	</div>
 </div>
-
+<%if(!youAreBlocked) {%>
 <script>
 	(() => {
 		var currentUser = "<%=currentUser._id.toString()%>";
@@ -217,4 +217,5 @@ if (user.isVerified) { %>
 		});
 	})();
 </script>
+<%}%>
 <%include ../partials/footer%>
