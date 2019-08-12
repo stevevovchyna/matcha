@@ -21,64 +21,89 @@
 	<div class="tab-content">
 		<div role="tabpanel" class="tab-pane" id="yourPorfileVisits">
 			<div class="well">
+					<%if (user.visits.length == 0) {%>
+						<p>There's no info yet</p>
+						<% } else { %>
 				<%user.visits.reverse().forEach(visit => { %>
 				<p><a href="/profile/<%=visit.visitor_id._id%>"><%=visit.visitor_id.username%></a> checked your profile
 					<%= moment(visit.createdAt).fromNow() %></p>
-				<%});%>
+				<%});}%>
 			</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="profilesYouHaveVisited">
 				<div class="well">
+						<%if (user.myVisits.length == 0) {%>
+							<p>There's no info yet</p>
+							<% } else { %>
 						<%user.myVisits.reverse().forEach(visit => { %>
 						<p>You've checked <a href="/profile/<%=visit.profile_id._id%>"><%=visit.profile_id.username%></a>'s profile
 							<%= moment(visit.createdAt).fromNow() %></p>
-						<%});%>
+						<%});}%>
 					</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="profilesYouLiked">
 			<div class="well">
+					<%if (user.myLikes.length == 0) {%>
+						<p>There's no info yet</p>
+						<% } else { %>
 			<%user.myLikes.reverse().forEach(like => {%>
 			<p><a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %></a></p>
-			<%});%>
+			<%});}%>
 		</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="profilesLikedYou">
 				<div class="well">
+					<%if (user.likes.length == 0) {%>
+						<p>There's no info yet</p>
+						<% } else { %>
 						<%user.likes.reverse().forEach(like => {%>
 						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a></p>
-						<%});%>
+						<%});}%>
 					</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="profileLikesLog">
 				<div class="well">
+						<%if (user.likeslog.length == 0) {%>
+							<p>There's no info yet</p>
+							<% } else { %>
 						<% user.likeslog.reverse().forEach((like) => { %>
 						<p><a href="/profile/<%= like.liker_id._id %>"><%= like.liker_id.username %></a> liked your profile
 							<%= moment(like.createdAt).fromNow() %></p>
-						<% }); %>
+						<% }); }%>
 					</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="profileDislikesLog">
 				<div class="well">
+						<%if (user.dislikeslog.length == 0) {%>
+							<p>There's no info yet</p>
+							<% } else { %>
 						<% user.dislikeslog.reverse().forEach((dislike) => { %>
 						<p><a href="/profile/<%= dislike.disliker_id._id %>"><%= dislike.disliker_id.username %></a> disliked your
 							profile <%= moment(dislike.createdAt).fromNow() %></p>
-						<% }); %>
+						<% }); }%>
 					</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="yourLikingActivity">
 				<div class="well">
+						<%if (user.mylikeslog.length == 0) {%>
+							<p>There's no info yet</p>
+							<% } else { %>
 						<% user.mylikeslog.reverse().forEach((like) => { %>
 						<p>You've liked <a href="/profile/<%= like.liked_one_id._id %>"><%= like.liked_one_id.username %>'s</a>
 							profile <%= moment(like.createdAt).fromNow() %></p>
-						<% }); %>
+						<% }); }%>
 					</div>
 		</div>
-		<div role="tabpanel" class="tab-pane" id="yourDislikingActivity"><div class="well">
+		<div role="tabpanel" class="tab-pane" id="yourDislikingActivity">
+			<div class="well">
+					<%if (user.mydislikeslog.length == 0) {%>
+						<p>There's no info yet</p>
+						<% } else { %>
 				<% user.mydislikeslog.reverse().forEach((dislike) => { %>
 				<p>You've disliked <a
 						href="/profile/<%= dislike.disliked_one_id._id %>"><%= dislike.disliked_one_id.username %>'s</a>
 					profile <%= moment(dislike.createdAt).fromNow() %></p>
-				<% }); %>
+				<% }); }%>
 			</div>
 		</div>
 	</div>
@@ -87,6 +112,7 @@ $('#myTabs a').click((e) => {
 	e.preventDefault()
 	$(this).tab('show')
 });
+$('#myTabs a[href="#yourPorfileVisits"]').tab('show')
 </script>
 		
 	</div>
