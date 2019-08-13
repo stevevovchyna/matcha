@@ -52,7 +52,8 @@
 	margin-bottom: 1rem;
 }
 
-.showdescription h4, .showdescription p {
+.showdescription h4,
+.showdescription p {
 	padding-left: 1rem;
 	padding-right: 1rem;
 }
@@ -79,6 +80,7 @@
 .pull-right {
 	margin-top: 0;
 }
+
 .comments {
 	border: 1px solid lightgrey;
 	margin-top: 1rem;
@@ -128,17 +130,18 @@
 	width: 100%;
 }
 
-.newMessage, .myNewMessage {
+.newMessage,
+.myNewMessage {
 	background: lightblue;
 	transition: background 3s ease-in-out !important;
-    -webkit-transition: background 3s ease-in-out;
-    -moz-transition: background 3s ease-in-out;
+	-webkit-transition: background 3s ease-in-out;
+	-moz-transition: background 3s ease-in-out;
 }
 
 .scrollable-menu {
-    height: auto;
-    max-height: 200px;
-    overflow-x: hidden;
+	height: auto;
+	max-height: 200px;
+	overflow-x: hidden;
 }
 
 #image {
@@ -150,47 +153,47 @@
 	z-index: -1;
 }
 
-input.form-control, select.form-control, textarea.form-control {
-	background-color:#375a7f;
+input.form-control,
+select.form-control,
+textarea.form-control {
+	background-color: #375a7f;
 	color: white
-}
-
-textarea {
-	/* resize: none; */
 }
 
 ::-webkit-scrollbar {
 	width: 5px;
 }
- 
- /* Track */
+
+/* Track */
 ::-webkit-scrollbar-track {
-	background: #050505; 
+	background: #050505;
 }
-  
- /* Handle */
+
+/* Handle */
 ::-webkit-scrollbar-thumb {
-	background: rgb(46, 44, 44); 
+	background: rgb(46, 44, 44);
 }
- 
- /* Handle on hover */
+
+/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-	background: #555; 
+	background: #555;
 }
 
-.button-group-vertical > select.form-control {
+.button-group-vertical>select.form-control {
 	border: 1px solid white;
 }
 
-.button-group-vertical > input.form-control {
+.button-group-vertical>input.form-control {
 	border: 1px solid white;
 }
 
-#userparamsform > input.form-control, #sorting {
+#userparamsform>input.form-control,
+#sorting {
 	border: 1px solid white;
 }
 
-#possibility, #disability {
+#possibility,
+#disability {
 	display: block;
 }
 
