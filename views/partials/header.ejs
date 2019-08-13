@@ -28,6 +28,7 @@
 	<link rel="stylesheet" href="/app.css">
 	<link rel="stylesheet" href="/bootstrap.css">
 	<script type="text/javascript" src="/app.js"></script>
+	<script type="text/javascript" src="/moment.js"></script>
 
 	<title>Matcha</title>
 	<%if (currentUser) {%>
@@ -46,7 +47,7 @@
 </head>
 
 <body>
-	<nav class="navbar navbar-default" style="margin-bottom: 2rem">
+	<nav class="navbar navbar-default navbar-fixed-top" style="margin-bottom: 2rem">
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
@@ -94,7 +95,6 @@
 			<ul class="dropdown-menu scrollable-menu" id="notifications-button" role="menu">
 				<li id="check-all" class="position-sticky" onclick="checkAllNotifications('<%=currentUser._id%>')"><a
 						href="#">Check all notifications at once</a></li>
-				<!-- <li role="separator" class="divider" id="n-divider"></li> -->
 			</ul>
 		</li>
 		<li><a>wazzup, <%=currentUser.username%>?</a></li>
@@ -278,6 +278,7 @@
   </div><!-- /.container-fluid -->
 </nav>
 
+<div class="footerochek">
 	<div class="container" id="flash">
 		<%if (error && error.length > 0) { %>
 		<div class="alert alert-danger alert-dismissible"><%=error%></div>

@@ -19,10 +19,6 @@
 	margin-right: auto;
 }
 
-/* .thumbnail {
-	padding: 0;
-} */
-
 .thumbnail .caption {
 	padding: 0;
 }
@@ -130,9 +126,8 @@
 	width: 100%;
 }
 
-.newMessage,
-.myNewMessage {
-	background: lightblue;
+.newMessage, .myNewMessage {
+	background: #375a7f !important;
 	transition: background 3s ease-in-out !important;
 	-webkit-transition: background 3s ease-in-out;
 	-moz-transition: background 3s ease-in-out;
@@ -142,6 +137,31 @@
 	height: auto;
 	max-height: 200px;
 	overflow-x: hidden;
+}
+
+.scrollable-messages {
+	height: auto;
+	max-height: 70vh;
+	overflow-x: hidden;
+}
+
+.footerochek {
+	margin-bottom: 7rem;
+	margin-top: 7rem;
+}
+
+.footer {
+	background-color: #375a7f;
+	border-radius: 4px !important;
+}
+
+#form {
+	margin: 0% 0% 5% 0%;
+}
+
+input#message.form-control {
+	background-color: #555;
+	color: white;
 }
 
 #image {

@@ -7,47 +7,55 @@
 		<a href="/conversations/<%=conversation._id%>" id="<%=conversation._id%>" class="list-group-item">
 			<%var unreadMessages = unreadMessagesCounter.filter(el => el.conversation_id.toString() === conversation._id.toString());%>
 			<span class="badge"><%=unreadMessages[0].count%></span>
-			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%> <small><span class="label" id="online-<%=conversation.participants[userno]._id%>"></span></small></h4>
-				<script>
-					eventSocket.on('broadcast', function (data) {
-						var online = document.getElementById("online-<%=conversation.participants[userno]._id%>");
-						var curUserId = "<%=conversation.participants[userno]._id%>";
-						var newArr = data.filter(user => user._id.toString() === curUserId.toString());
-						if (newArr.length > 0) {
-							online.innerText = "Online";
-							online.classList.remove('label-default');
-							online.classList.add("label-success");
+			<h4 class="list-group-item-heading"><%=conversation.participants[userno].username%> <small><span
+						class="label" id="online-<%=conversation.participants[userno]._id%>"></span></small></h4>
+			<script>
+				eventSocket.on('broadcast', (data) => {
+					var online = document.getElementById("online-<%=conversation.participants[userno]._id%>");
+					var curUserId = "<%=conversation.participants[userno]._id%>";
+					var newArr = data.onlineUsers.filter(user => user._id.toString() === curUserId.toString());
+					if (newArr.length > 0) {
+						online.innerText = "Online";
+						online.classList.remove('label-default');
+						online.classList.add("label-success");
+					} else {
+						if (data.leftUser) {
+							var lastseentime = "Last seen: " + moment(data.leftUser.lastseen).fromNow();
 						} else {
-							online.innerText = "Last seen: <%= moment(conversation.participants[userno].lastseen).fromNow() %>";
-							online.classList.remove("label-success");
-							online.classList.add("label-default");
+							var lastseentime =
+								"Last seen: <%= moment(conversation.participants[userno].lastseen).fromNow() %>";
 						}
-					});
-				</script>
+						online.innerText = lastseentime;
+						online.classList.remove("label-success");
+						online.classList.add("label-default");
+					}
+				});
+			</script>
 
-			<p class="list-group-item-text"><%=conversation.lastMessageAuthor.username%>: <%=conversation.lastMessage%></p>
+			<p class="list-group-item-text"><%=conversation.lastMessageAuthor.username%>: <%=conversation.lastMessage%>
+			</p>
 		</a>
 		<% });%>
 	</div>
 </div>
 
 <script>
-
-var socket = io('/chat');
-var chats = document.getElementsByClassName('list-group-item');
-for (var i = 0; i < chats.length; i++) {
-	if (chats[i].querySelector('.badge').innerText > 0) {
-		chats[i].style.background = "lightblue";
+	var socket = io('/chat');
+	var chats = document.getElementsByClassName('list-group-item');
+	for (var i = 0; i < chats.length; i++) {
+		if (chats[i].querySelector('.badge').innerText > 0) {
+			chats[i].style.background = "#375a7f";
+		}
 	}
-}
-socket.on('connect', () => {
-	socket.on("new message notification", data => {
-		var unreadNumber = document.getElementById(data.conversationId);
-		$('#' + data.conversationId).children('span').text(Number($('#' + data.conversationId).children('span').text()) + 1);
-		$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
-		$('#' + data.conversationId).css('background', 'lightblue');
-	});
-})
+	socket.on('connect', () => {
+		socket.on("new message notification", data => {
+			var unreadNumber = document.getElementById(data.conversationId);
+			$('#' + data.conversationId).children('span').text(Number($('#' + data.conversationId)
+				.children('span').text()) + 1);
+			$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
+			$('#' + data.conversationId).css('background', '#375a7f');
+		});
+	})
 </script>
 
 <%include partials/footer%>

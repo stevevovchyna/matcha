@@ -4,26 +4,34 @@
 	if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }
 %>
 <div class="container">
-	<h3>Conversation with <a href="/profile/<%=conversation.participants[userno]._id%>"><%=conversation.participants[userno].username%></a> <small><span class="label" id="online-<%=conversation.participants[userno]._id%>"></span></small></h3>
+	<h3>Conversation with <a
+			href="/profile/<%=conversation.participants[userno]._id%>"><%=conversation.participants[userno].username%></a>
+		<small><span class="label" id="online-<%=conversation.participants[userno]._id%>"></span></small></h3>
 	<script>
-			eventSocket.on('broadcast', function (data) {
-				var online = document.getElementById("online-<%=conversation.participants[userno]._id%>");
-				var curUserId = "<%=conversation.participants[userno]._id%>";
-				var newArr = data.filter(user => user._id.toString() === curUserId.toString());
-				if (newArr.length > 0) {
-					online.innerText = "Online";
-					online.classList.remove('label-default');
-					online.classList.add("label-success");
+		eventSocket.on('broadcast', (data) => {
+			var online = document.getElementById("online-<%=conversation.participants[userno]._id%>");
+			var curUserId = "<%=conversation.participants[userno]._id%>";
+			var newArr = data.onlineUsers.filter(user => user._id.toString() === curUserId.toString());
+			if (newArr.length > 0) {
+				online.innerText = "Online";
+				online.classList.remove('label-default');
+				online.classList.add("label-success");
+			} else {
+				if (data.leftUser) {
+					var lastseentime = "Last seen: " + moment(data.leftUser.lastseen).fromNow();
 				} else {
-					online.innerText = "Last seen: <%= moment(conversation.participants[userno].lastseen).fromNow() %>";
-					online.classList.remove("label-success");
-					online.classList.add("label-default");
+					var lastseentime =
+						"Last seen: <%= moment(conversation.participants[userno].lastseen).fromNow() %>";
 				}
-			});
-		</script>
-	<div id="messages" class="list-group">
-		<%messages.forEach(message => {%>
-			<% var newMessageClass = ""; 
+				online.innerText = lastseentime;
+				online.classList.remove("label-success");
+				online.classList.add("label-default");
+			}
+		});
+	</script>
+	<div id="messages" class="list-group scrollable-messages">
+		<% var newMessageClass = ""; 
+		messages.forEach(message => {
 				if (!message.isRead) {
 					if (message.sentBy._id.toString() !== currentUser._id.toString()) {
 						newMessageClass = "myNewMessage";
@@ -32,11 +40,12 @@
 					}
 				}%>
 
-			<a class="list-group-item <%=newMessageClass%>" style="<%if(message.sentBy._id.toString() !== currentUser._id.toString()){%>padding-left:4%;<%}%>">
+		<%var padding = ""; if(message.sentBy._id.toString() !== currentUser._id.toString()){ padding = "padding-left:4%;" } %>
+		<a class="list-group-item <%=newMessageClass%>" style="<%=padding%>">
 				<h4 class="list-group-item-heading"><%=message.sentBy.username%><% if(message.sentBy._id.toString() === currentUser._id.toString()) { %> <small>(me)</small><%}%></h4>
 				<small class="pull-right"><%=moment(message.createdAt).fromNow()%></small>
-				<p class="list-group-item-text"><%=message.body%></p>
-			</a>
+				<p class=" list-group-item-text"><%=message.body%></p>
+		</a>
 		<%})%>
 	</div>
 	<form id="form">
@@ -51,50 +60,65 @@
 <script src="https://cdn.jsdelivr.net/gh/rexeze/formatTimeStamp/src/index-cdn.js"></script>
 
 <script>
-var socket = io('/chat');
-var room = "<%=conversation._id%>";
-var messages = document.getElementById("messages");
+	var socket = io('/chat');
+	var room = "<%=conversation._id%>";
+	var messages = document.getElementById("messages");
+	messages.scrollTo(0, 1000000000);
 
-socket.on('connect', () => {
-   // Connected, let's sign-up for to receive messages for this room
-   socket.emit('connectToRoom', room);
-});
+	socket.on('connect', () => {
+		// Connected, let's sign-up for to receive messages for this room
+		socket.emit('connectToRoom', room);
+	});
 
-(() => {
-	setTimeout(() => { $(".myNewMessage").removeClass("myNewMessage")}, 3000);
-	$("form").submit(e => {
-		e.preventDefault(); // prevents page reloading
-		socket.emit("chat message", room, {
-			message: $("#message").val(),
-			authorName: "<%=currentUser.username%>",
-			authorId: "<%=currentUser._id%>",
-			recipientID: "<%=conversation.participants[userno]._id%>"
-		}, (ret) => {
-			var a = document.createElement("a");
-			a.setAttribute('class', 'list-group-item newMessage');
-			a.innerHTML = '<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">'+$("#message").val()+'</p>';
-			messages.appendChild(a);
-			$("#message").val("");
-			if (ret) {
-				console.log(ret);
-				setTimeout(() => { $(".newMessage").toggleClass("newMessage");}, 2000);
-			}
+	(() => {
+		setTimeout(() => {
+			$(".myNewMessage").removeClass("myNewMessage")
+		}, 3000);
+		$("form").submit(e => {
+			e.preventDefault(); // prevents page reloading
+			socket.emit("chat message", room, {
+				message: $("#message").val(),
+				authorName: "<%=currentUser.username%>",
+				authorId: "<%=currentUser._id%>",
+				recipientID: "<%=conversation.participants[userno]._id%>"
+			}, (ret) => {
+				var a = document.createElement("a");
+				a.setAttribute('class', 'list-group-item newMessage');
+				a.innerHTML =
+					'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
+					$("#message").val() + '</p>';
+				messages.appendChild(a);
+				messages.scrollTo(0, 100000000);
+				$("#message").val("");
+				if (ret) {
+					console.log(ret);
+					setTimeout(() => {
+						$(".newMessage").toggleClass("newMessage");
+					}, 2000);
+				}
+			});
+			return false;
 		});
-		return false;
-	});
-	socket.on("received", data => {
-		var a = document.createElement("a");
-		var messages = document.getElementById("messages");
-		a.setAttribute('class', 'list-group-item newMessage');
-		a.setAttribute('style', 'padding-left:4%');
-		a.innerHTML = '<h4 class="list-group-item-heading">' + data.user + '</h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' + data.message + '</p>';
-		messages.appendChild(a);
-		setTimeout(() => { $(".newMessage").toggleClass("newMessage");}, 2000);
-	});
-	socket.on("read", data => {
-		console.log("sosi!");
-		setTimeout(() => { $(".newMessage").removeClass("newMessage");}, 2000);
-	})
-})();
+		socket.on("received", data => {
+			var a = document.createElement("a");
+			var messages = document.getElementById("messages");
+			a.setAttribute('class', 'list-group-item newMessage');
+			a.setAttribute('style', 'padding-left:4%');
+			a.innerHTML = '<h4 class="list-group-item-heading">' + data.user +
+				'</h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' + data
+				.message + '</p>';
+			messages.appendChild(a);
+			messages.scrollTo(0, 100000000);
+			setTimeout(() => {
+				$(".newMessage").toggleClass("newMessage");
+			}, 2000);
+		});
+		socket.on("read", data => {
+			console.log("sosi!");
+			setTimeout(() => {
+				$(".newMessage").removeClass("newMessage");
+			}, 2000);
+		})
+	})();
 </script>
 <%include partials/footer%>

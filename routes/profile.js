@@ -104,7 +104,7 @@ router.get("/:id/edit", middleware.checkProfileOwnership, (req, res) => {
 		if (!user || err) {
 			req.flash("error", "Invalid link!");
 			console.log(err);
-			return res.redirect("/feed/browse");
+			return res.redirect("back");
 		} else {
 			res.render("profiles/edit", {
 				user: user
@@ -328,7 +328,7 @@ router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('imag
 		}
 	], (err) => {
 		if (err) return next(err);
-		res.redirect("/profile/" + req.params.id);
+		res.redirect("back");
 	});
 });
 
@@ -337,7 +337,7 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 		if (err) {
 			req.flash("error", err.message);
 			console.log(err);
-			res.redirect("/profile/" + req.params.id);
+			res.redirect("back");
 		} else {
 			var url = user.pictures.id(req.params.pic_id);
 			var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
@@ -351,12 +351,12 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 						if (err) {
 							req.flash("error", err.message);
 							console.log(err);
-							res.redirect("/profile/" + req.params.id);
+							res.redirect("back");
 						}
 					});
 				}
 				req.flash("success", "Picture deleted!");
-				res.redirect("/profile/" + req.params.id);
+				res.redirect("back");
 			});
 		}
 	});
@@ -367,7 +367,7 @@ router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, re
 		if (err) {
 			req.flash("error", err.message);
 			console.log(err);
-			res.redirect("/profile/" + req.params.id);
+			res.redirect("back");
 		} else {
 			user.pictures.forEach(pic => {
 				pic.isProfile = false;
@@ -375,7 +375,7 @@ router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, re
 			user.pictures.id(req.params.pic_id).isProfile = true;
 			user.save(() => {
 				req.flash("success", "Profile picture set!");
-				res.redirect("/profile/" + req.params.id);
+				res.redirect("back");
 			});
 		}
 	});

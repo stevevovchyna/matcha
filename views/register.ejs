@@ -1,30 +1,43 @@
 <%include partials/header%>
 
 <div class="container">
-	<div class="newuser">
+		<div class="well bs-component">
 		<h1>You can register here!</h1>
 		<form action="/register" method="post">
-			<div class="form-group">
-				<input class="form-control" type="email" name="email" placeholder="email" autocomplete="off" pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Please enter a valid email address">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">Email</span>
+				<input aria-describedby="basic-addon1" class="form-control" type="email" name="email" placeholder="email" autocomplete="off" pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Please enter a valid email address">
 			</div>
-			<div class="form-group">
-				<input type="text" class="form-control" name="username" placeholder="username" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your username should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">Username</span>
+				<input aria-describedby="basic-addon1" type="text" class="form-control" name="username" placeholder="username" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your username should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
-			<div class="form-group">
-				<input type="text" class="form-control" name="firstname" placeholder="firstname" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your first name should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">First Name</span>
+				<input aria-describedby="basic-addon1" type="text" class="form-control" name="firstname" placeholder="firstname" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your first name should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
-			<div class="form-group">
-				<input type="text" class="form-control" name="lastname" placeholder="lastname" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your last name should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">Last Name</span>
+				<input aria-describedby="basic-addon1" type="text" class="form-control" name="lastname" placeholder="lastname" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your last name should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
-			<div class="form-group">
-				<input type="text" class="form-control" name="location" placeholder="location" autocomplete="off">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">Location</span>
+				<input aria-describedby="basic-addon1" type="text" class="form-control" name="location" placeholder="location" autocomplete="off">
 			</div>
-			<div class="form-group">
-				<input class="form-control" type="password" name="password" placeholder="password" autocomplete="off" pattern="(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$" title="Your password should be at least 6 symbols long and contain letters and numbers">
+			<div class="form-group input-group">
+				<span class="input-group-addon" id="basic-addon1">Password</span>
+				<input aria-describedby="basic-addon1" class="form-control" type="password" name="password" placeholder="password" autocomplete="off" pattern="(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$" title="Your password should be at least 6 symbols long and contain letters and numbers">
 			</div>
 			<div class="form-group">
 				<button class="btn btn-primary btn-block" type="submit">Submit</button>
 			</div>
+		</form>
+		<hr>
+		<form action="/auth/42" method="get">
+			<button class="btn btn-default btn-block">Intra 42 Sign Up</button>
+		</form>
+		<form action="/auth/twitter" method="get">
+			<button class="btn btn-info btn-block">Sign Up with Twitter</button>
 		</form>
 	</div>
 </div>

@@ -265,7 +265,7 @@ eventSocket.on('connection', (socket) => {
 		onlineUsers.push(socket.request.user);
 		console.log(socket.request.user.username + " connected");
 	}	
-	eventSocket.emit('broadcast', onlineUsers);
+	eventSocket.emit('broadcast', {onlineUsers: onlineUsers});
 
 	socket.on('connectToRoom', socketId => {
 		console.log(socket.request.user.username + " connected to the socket: " + socketId);
@@ -312,6 +312,7 @@ eventSocket.on('connection', (socket) => {
 	});
 
 	socket.on('disconnect', () => {
+		var leftUser = {};
 		for (var i = 0; i < onlineUsers.length; i++) {
 			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
 				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
@@ -319,12 +320,13 @@ eventSocket.on('connection', (socket) => {
 						console.log(err);
 					} else {
 						console.log(socket.request.user.username + " disconnected");
+						leftUser = user;
 					}
 				});
 				onlineUsers.splice(i, 1);
 			}
 		}
-		eventSocket.emit('broadcast', onlineUsers);
+		eventSocket.emit('broadcast', {onlineUsers: onlineUsers, leftUser: leftUser});
 	});
 });
 

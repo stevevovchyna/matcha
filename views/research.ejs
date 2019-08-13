@@ -123,16 +123,21 @@
 								<span class="label" id="online-<%=user._id%>"></span>
 							</small>
 							<script>
-								eventSocket.on('broadcast', function (data) {
+								eventSocket.on('broadcast', (data) => {
 									var online = document.getElementById("online-<%=user._id%>");
 									var curUserId = "<%=user._id%>";
-									var newArr = data.filter(user => user._id.toString() === curUserId.toString());
+									var newArr = data.onlineUsers.filter(user => user._id.toString() === curUserId.toString());
 									if (newArr.length > 0) {
 										online.innerText = "Online";
 										online.classList.remove('label-default');
 										online.classList.add("label-success");
 									} else {
-										online.innerText = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+										if (data.leftUser) {
+											var lastseentime = "Last seen: " + moment(data.leftUser.lastseen).fromNow();
+										} else {
+											var lastseentime = "Last seen: <%= moment(user.lastseen).fromNow() %>";
+										}
+										online.innerText = lastseentime;
 										online.classList.remove("label-success");
 										online.classList.add("label-default");
 									}
