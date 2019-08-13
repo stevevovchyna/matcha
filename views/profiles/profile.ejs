@@ -33,7 +33,7 @@ if (user.isVerified) { %>
 <div class="container">
 	<div class="row">
 		<div class="col-sm-12 col-md-6 col-lg-6">
-			
+
 			<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
 				<!-- Indicators -->
 				<ol class="carousel-indicators">
@@ -46,33 +46,35 @@ if (user.isVerified) { %>
 				<!-- Wrapper for slides -->
 				<div class="carousel-inner" role="listbox">
 					<div class="item active">
-					<%	user.pictures.forEach((pic) => {
+						<%	user.pictures.forEach((pic) => {
 						if (pic.isProfile) {
 							url = pic.url;
 					}});
 					if (url == "") { %>
-						<img style="margin:auto;" src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg" alt="">
-					<% } else { %>
+						<img style="margin:auto;"
+							src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg"
+							alt="">
+						<% } else { %>
 						<img style="margin:auto;" src="<%= url %>" alt="">
-					<% } %>
-				</div>
-				<% if (user.pictures) { for (var i = 0; i < user.pictures.length; i++) { if (!user.pictures[i].isProfile) {%>
+						<% } %>
+					</div>
+					<% if (user.pictures) { for (var i = 0; i < user.pictures.length; i++) { if (!user.pictures[i].isProfile) {%>
 					<div class="item">
 						<img src="<%=user.pictures[i].url%>" alt="">
 					</div>
-				<% }}} %>
-					
+					<% }}} %>
+
 
 				</div>
 
 
 				<!-- Controls -->
 				<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
-					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+					<span class="icon-prev"></span>
 					<span class="sr-only">Previous</span>
 				</a>
 				<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
-					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+					<span class="icon-next"></span>
 					<span class="sr-only">Next</span>
 				</a>
 			</div>
@@ -103,42 +105,40 @@ if (user.isVerified) { %>
 							}
 						});
 					</script>
-					<h1><%=user.username%></h1>
+					<h2><%=user.username%></h2>
 					<hr>
 					<!-- LIKES AND FAMERATE -->
 
 					<div class="btn-group btn-group-justified">
-						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-heart"
-								aria-hidden="true"></span>
+						<div class="btn" style="font-size: 3rem !important;"><i class="fas fa-heart"></i>
 							<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
-						<div class="btn" style="font-size: 4rem !important;"><span class="glyphicon glyphicon-star"
-								aria-hidden="true"></span> <span
+						<div class="btn" style="font-size: 3rem !important;"><i class="fas fa-star"></i> <span
 								id="fame-badge-<%=user._id%>"><%= user.visits.length + user.likes.length %></span>
 						</div>
 					</div>
 					<!-- EMAIL AND VISITS FOR THE USER ONLY -->
 					<% if (currentUser._id.toString() == user._id.toString()) { %>
-					<h2><i class="fas fa-eye"></i> <%= user.visits.length %></h2>
-					<h2><span class="glyphicon glyphicon-envelope"></span> <%= user.email %></h2>
+					<h4><i class="fas fa-eye"></i> <%= user.visits.length %></h4>
+					<h4><i class="fas fa-envelope"></i> <%= user.email %></h4>
 					<%}%>
 
 					<!-- BIRTHDATE -->
 
-					<h2><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h2>
+					<h4><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h4>
 
 					<!-- SEX AND INTERESTS -->
 
-					<h2><i class="<%=sex%>"></i> <i class="fas fa-arrow-right"></i> <i class="<%=interest%>"></i><i
-							class="<%=binterest%>"></i></h2>
+					<h4><i class="<%=sex%>"></i> <i class="fas fa-arrow-right"></i> <i class="<%=interest%>"></i><i
+							class="<%=binterest%>"></i></h4>
 
 					<!-- USER LOCATION -->
 
-					<h2><i class="fas fa-compass"></i> <%= user.locationname %></h2>
+					<h4><i class="fas fa-compass"></i> <%= user.locationname %></h4>
 
 					<!-- USER'S DISTANCE -->
 					<% if (currentUser._id.toString() !== user._id.toString()) { %>
-					<h2><i class="fas fa-map-signs"></i> <%=user.distance%> kilometers from
-						you!</h2>
+					<h4><i class="fas fa-map-signs"></i> <%=user.distance%> kilometers from
+						you!</h4>
 					<%}%>
 
 					<!-- HIDDEN STUFF FOR PURPOSE -->
@@ -148,13 +148,13 @@ if (user.isVerified) { %>
 
 					<!-- USER'S BIO -->
 
-					<h2> <i class="fas fa-info"></i> <%= user.bio %></h2>
+					<h4> <i class="fas fa-info"></i> <%= user.bio %></h4>
 
 					<!-- USER'S INTERESTS AKA TAGS -->
 
 					<p4>
 						<% user.interests.forEach((tags) => { %>
-						<button class="btn btn-primary btn-lg">#<%= tags.text %></button>
+						<button class="btn btn-success">#<%= tags.text %></button>
 						<% }); %>
 					</p4>
 
@@ -163,18 +163,16 @@ if (user.isVerified) { %>
 					<% if(user._id.toString() !== currentUser._id.toString()) { %>
 					<% if (currentUser.pictures.length > 0) { %>
 					<hr>
-					<div id="possibility">
-						<%
-									var likeStatus = user.likes.filter(like => like.id.toString() !== currentUser._id.toString());
-									if (likeStatus.length > 0) {
+					<div id="possibilities-labels">
+						<span class="label label-primary" id="possibility"><%
+							var likeStatus = user.likes.filter(like => like.id.toString() !== currentUser._id.toString());
+							if (likeStatus.length > 0) {
 									%> This person already knows about your sympathy <%
 									} else {
 									%> You can like this profile!!! <%
-									}
-								%>
-					</div>
-					<div id="disability">
-						<%
+								}
+								%></span>
+						<span class="label label-danger" id="disability"><%
 									var idArr = currentUser.blockedUsers.map(userid => userid.id.toString());
 									var blockButtonText = "";
 									if (idArr.includes(user._id.toString())) {
@@ -183,16 +181,17 @@ if (user.isVerified) { %>
 									} else {
 										blockButtonText = "Block this user";
 									}
-								%>
+									%></span>
 					</div>
+					<hr>
 					<button class="btn btn-danger btn-block"
 						onclick="likeUser('<%=user._id.toString()%>', 'yes')">Like</button>
-					<button class="btn btn-danger btn-block"
+					<button class="btn btn-primary btn-block"
 						onclick="dislikeUser('<%=user._id.toString()%>', 'yes')">Dislike</button>
 					<button class="btn btn-default btn-block" onclick="fake('<%=user._id.toString()%>')">Report
 						as
 						Fake</button>
-					<button id="block-button" class="btn btn-default btn-block"
+					<button id="block-button" class="btn btn-warning btn-block"
 						onclick="block('<%=user._id.toString()%>')"><%=blockButtonText%></button>
 					<% } %>
 					<% } %>

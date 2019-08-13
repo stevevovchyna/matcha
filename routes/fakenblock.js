@@ -62,13 +62,14 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 						} else {
 							user.blockedUsers.pull(result._id);
 							user.save();
-							Conversations.find({participants: [req.params.id, req.user._id]}, (err, foundConversations) => {
+							Conversations.find({}, (err, foundConversations) => {
+								var neededConversation = foundConversations.filter(conversation => conversation.participants.includes(req.params.id) && conversation.participants.includes(req.user._id));
 								if (err) {
 									console.log(err);
 									res.send({status: 'error', error: err});
 								} else {
-									if (foundConversations) {
-										Conversations.findByIdAndUpdate(foundConversations[0]._id, {isActive: true}, (err, conversation) => {
+									if (neededConversation.length > 0) {
+										Conversations.findByIdAndUpdate(neededConversation[0]._id, {isActive: true}, (err, conversation) => {
 											if (err) {
 												console.log(err);
 												res.send({status: 'error', error: err});
@@ -94,13 +95,14 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 							blockedUser.save();
 							user.blockedUsers.push(blockedUser);
 							user.save(() => {
-								Conversations.find({participants: [req.params.id, req.user._id]}, (err, foundConversations) => {
+								Conversations.find({}, (err, foundConversations) => {
+									var neededConversation = foundConversations.filter(conversation => conversation.participants.includes(req.params.id) && conversation.participants.includes(req.user._id));
 									if (err) {
 										console.log(err);
 										res.send({status: 'error', error: err});
 									} else {
-										if (foundConversations) {
-											Conversations.findByIdAndUpdate(foundConversations[0]._id, {isActive: false}, (err, conversation) => {
+										if (neededConversation.length > 0) {
+											Conversations.findByIdAndUpdate(neededConversation[0]._id, {isActive: false}, (err, conversation) => {
 												if (err) {
 													console.log(err);
 													res.send({status: 'error', error: err});

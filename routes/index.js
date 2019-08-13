@@ -12,7 +12,7 @@ const NodeGeocoder = require("node-geocoder");
 const iplocate = require('node-iplocate');
 
 const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
-const emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$");
+const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
 const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
 
 var options = {
@@ -27,17 +27,6 @@ var geocoder = NodeGeocoder(options);
 router.get("/", (req, res) => {
 	res.render("landing");
 });
-
-router.put('/password', (req, res) => {
-	var loginRegExp = RegExp("^[a-z0-9_-]{3,16}$");
-	var emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$")
-	var passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
-	// re.test(req.body.password);
-	console.log(passwordRegExp.test(req.body.password.toString()))
-	console.log(req.body.password);
-	res.redirect('/feed/browse');
-});
-
 
 router.get("/gettags", middleware.isLoggedIn, (req, res) => {
 	Tags.find((err, tags) => {
@@ -98,7 +87,12 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 				reallocation: {
 					type: "Point",
 					coordinates: [reallongitude, reallatitude]
-				}
+				},
+				interests: [
+					{
+						text: "dating"
+					}
+				]
 			});
 		} else {
 			if (err) {
@@ -124,7 +118,12 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 				location: {
 					type: "Point",
 					coordinates: [coords.lng, coords.lat]
-				}
+				},
+				interests: [
+					{
+						text: "dating"
+					}
+				]
 			});
 		}
 
@@ -330,8 +329,8 @@ router.post('/reset/:token', function (req, res) {
 					return res.redirect('back');
 				}
 				if (req.sanitize(req.body.password) === req.sanitize(req.body.confirm)) {
-					var pass = req.sanitize(req.body.passsord);
-					user.setPassword(pass, function (err) {
+					var pass = req.sanitize(req.body.password);
+					user.setPassword(pass, (err) => {
 						user.passwordResetToken = undefined;
 						user.passwordResetExpires = undefined;
 						user.save(function (err) {
@@ -343,7 +342,7 @@ router.post('/reset/:token', function (req, res) {
 					return res.redirect('back');
 				}
 			});
-		}, function (user, done) {
+		}, (user, done) => {
 			var transporter = nodemailer.createTransport({ service: 'sendgrid', auth: { user: "steve.vovchyna@gmail.com", pass: "omtMovBe7sEwdz_6KCHz" } });
 			var mailOptions = {
 				to: req.sanitize(user.email),
@@ -352,7 +351,7 @@ router.post('/reset/:token', function (req, res) {
 				text: 'Hello,\n\n' +
 					'This is a confirmation that the password for your account ' + req.sanitize(user.email) + ' has just been changed.\n'
 			};
-			transporter.sendMail(mailOptions, function (err) {
+			transporter.sendMail(mailOptions, (err) => {
 				req.flash('success', 'Success! Your password has been changed.');
 				done(err);
 			});

@@ -139,7 +139,15 @@ passport.use(new FortyTwoStrategy({
 						location: {
 							type: "Point",
 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
-						}
+						},
+						interests: [
+							{
+								text: "dating"
+							},
+							{
+								text: 'coding'
+							}
+						]
 					});
 					user.save((err) => {
 						if (err) console.log(err);

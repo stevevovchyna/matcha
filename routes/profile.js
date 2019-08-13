@@ -13,7 +13,8 @@ const xss = require("xss");
 const mongoose = require('mongoose');
 const DateOnly = require('mongoose-dateonly')(mongoose);
 const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
-const emailRegExp = RegExp("^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@(([0-9a-zA-Z][-\w])*[0-9a-zA-Z]\.)+[a-zA-Z]{1,9})$");
+const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
+const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
 
 var options = {
 	provider: 'google',
@@ -25,6 +26,7 @@ var options = {
 var geocoder = NodeGeocoder(options);
 
 var multer = require('multer');
+
 var storage = multer.diskStorage({
 	filename: function (req, file, callback) {
 		callback(null, Date.now() + file.originalname);
@@ -280,7 +282,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 });
 
 
-router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('image'), (req, res) => {
+router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('image'), middleware.pictureIsPresent, (req, res) => {
 	async.waterfall([
 		(done) => {
 			User.findById(req.params.id, (err, user) => {
@@ -378,5 +380,36 @@ router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, re
 		}
 	});
 });
+
+router.put("/:id/setpassword", middleware.checkProfileOwnership, (req, res) => {
+	if (!req.body.password || !req.body.confirm) {
+		req.flash("error", "Empty fields! Please, fill in both fields!");
+		return res.redirect('back');
+	} else if (!passwordRegExp.test(req.body.password) && !passwordRegExp.test(req.body.confirm)) {
+		req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
+		return res.redirect("back");
+	} else {
+		User.findById(req.sanitize(req.params.id), (err, foundUser) => {
+			if (err) {
+				console.log(err);
+				req.flash('error', err.message);
+			} else {
+				if (req.sanitize(req.body.password) === req.sanitize(req.body.confirm)) {
+					var pass = req.sanitize(req.body.password);
+					foundUser.setPassword(pass, (err) => {
+						foundUser.save((err) => {
+							req.flash('success', "You password has been changed");
+							res.redirect('back');
+						});
+					})
+				} else {
+					req.flash("error", "Passwords do not match.");
+					return res.redirect('back');
+				}
+			}
+		});
+	}
+});
+
 
 module.exports = router;

@@ -16,7 +16,7 @@
 	<div class="row">
 		<div class="col-lg-3 col-md-3 col-sm-4">
 			<div class="col-lg-12 form-group">
-				<form action="/feed/research/result?_method=PUT" method="POST">
+				<form action="/feed/research/result?_method=PUT" method="POST" id="userparamsform">
 					<span class="label label-default">Age</span>
 					<input class="form-control" type="number" name="userparams[agemin]" value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>0<% } %>" id="userparams[agemin]" minlength="0" maxlength="100">
 					<input class="form-control" type="number" name="userparams[agemax]" value="<% if(locals.userparams){%><%=userparams.agemax%><% } else { %>100<% } %>" id="userparams[agemax]"minlength="0" maxlength="100">
@@ -58,7 +58,7 @@
 								Descending</option>
 						</select>
 					</div>
-					<button class="btn btn-primary btn-block" type="submit">Search</button>
+					<button class="btn btn-default btn-block" type="submit">Search</button>
 				</form>
 			</div>
 			<div class="col-lg-12 form-group">
@@ -116,7 +116,7 @@
 						<div class="caption" id="<%=user._id%>">
 							<hr>
 							<div>
-								<a href="/profile/<%= user._id %>" class="btn btn-primary btn-block"
+								<a href="/profile/<%= user._id %>" class="btn btn-default btn-block"
 									role="button"><%= user.username %>'s profile</a>
 							</div>
 							<small>
@@ -142,9 +142,9 @@
 							<!-- LIKES AND FAMERATE -->
 
 							<div class="btn-group btn-group-justified">
-								<div class="btn"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+								<div class="btn"><i class="fas fa-heart"></i>
 									<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
-								<div class="btn"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
+								<div class="btn"><i class="fas fa-star"></i> <span
 										id="fame-badge-<%=user._id%>"><%= user.famerate %></span></div>
 							</div>
 
@@ -159,7 +159,7 @@
 
 							<!-- USER LOCATION -->
 
-							<h4><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+							<h4><i class="fas fa-location-arrow"></i>
 								<%= user.locationname %></h4>
 
 							<!-- USER'S DISTANCE -->
@@ -182,7 +182,7 @@
 
 							<p4>
 								<% user.interests.forEach((tags) => { %>
-								<button class="btn btn-primary btn-sm">#<%= tags.text %></button>
+								<button class="btn btn-success btn-sm">#<%= tags.text %></button>
 								<% }); %>
 							</p4>
 							<hr>
@@ -193,7 +193,7 @@
 							<% if (currentUser.pictures.length > 0) { %>
 							<button class="btn btn-danger btn-block"
 								onclick="likeUser('<%=user._id.toString()%>')">Like</button>
-							<button class="btn btn-danger btn-block"
+							<button class="btn btn-primary btn-block"
 								onclick="dislikeUser('<%=user._id.toString()%>')">Dislike</button>
 							<% } %>
 							<% } %>

@@ -11,6 +11,15 @@ const moment = require('moment');
 
 var middlewareObject = {};
 
+middlewareObject.pictureIsPresent = (req, res, next) => {
+	if (req.file == undefined) {
+		req.flash('error', "Please choose a picture first!");
+		res.redirect('back');
+	} else {
+		next();
+	}
+}
+
 middlewareObject.countDistance = (req, res, next) => {
 	if (req.user._id !== req.params.id) {
 		User.findById(req.params.id, (err, foundUser) => {
@@ -155,7 +164,7 @@ middlewareObject.isConnected = (req, res, next) => {
 }
 
 middlewareObject.haveLikedMe = (req, res, next) => {
-	User.findById(req.sanitize(req.user._id)).populate('likes').exec((err, user) => {
+	User.findById(req.sanitize(req.user._id)).populate('likes').exec((err, myuser) => {
 		User.findByIdAndUpdate(req.sanitize(req.params.id), {})
 		.populate('blockedUsers')
 		.exec((err, user) => {
@@ -163,7 +172,7 @@ middlewareObject.haveLikedMe = (req, res, next) => {
 			if (blocked.length > 0) {
 				next();
 			} else {
-				var result = user.likes.filter(like => like.liker_id.toString() === req.params.id.toString());
+				var result = myuser.likes.filter(like => like.liker_id.toString() === req.params.id.toString());
 				if (result.length > 0) {
 					Conversations.find({}, (err, conversations) => {
 						var conversationFound = conversations.filter(

@@ -55,6 +55,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 				req.flash("error", err.message);
 				res.redirect("back");
 			} else {
+				if (user.length > 1) {
 				User.aggregate([{
 					$geoNear: {
 						near: {
@@ -64,28 +65,24 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						key: 'location',
 						distanceField: "dist.calculated",
 						maxDistance: 1000000000,
-						minDistance: 10,
+						minDistance: 0,
 						spherical: true
 					}
-				}], (err, user) => {
+				}], (err, foundUsers) => {
 					if (err) {
 						console.log(err);
 						req.flash("error", err.message);
 						res.redirect("back");
 					} else {
-						for (var i = 0; i < user.length; i++) {
-							if (user[i]._id.toString() === req.user._id.toString()) {
-								user.splice(i, 1);
-								i--;
-							}
-						}
+						console.log(user);
+						var usersWithoutMe = foundUsers.filter(foundUser => foundUser._id.toString() !== req.user._id.toString());
 						var ret = [];
 
 						if (req.user.sexPreferences.toString() !== "Bi-Sexual") {
 
 							// GAY USER PATTERN
 							if (req.user.gender.toString() === req.user.sexPreferences.toString()) {
-								user.forEach(oneuser => {
+								usersWithoutMe.forEach(oneuser => {
 									if (req.user.gender.toString() === oneuser.gender.toString() &&
 										req.user.sexPreferences.toString() === oneuser.sexPreferences.toString() &&
 										oneuser.sexPreferences.toString() !== "Bi-Sexual") {
@@ -97,6 +94,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 								});
 
 								var ret = _.sortBy(ret, sort);
+								ret = _.sortBy(ret, sort);
 								res.render("browse", {
 									user: order === 'asc' ? ret : ret.reverse(),
 									currUser: req.user,
@@ -104,7 +102,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 								});
 							} else {
 								// GETEROSEXUAL USER PATTERN
-								user.forEach(oneuser => {
+								usersWithoutMe.forEach(oneuser => {
 									if (req.user.gender.toString() !== oneuser.gender.toString() &&
 										req.user.sexPreferences.toString() !== oneuser.sexPreferences.toString() &&
 										oneuser.sexPreferences.toString() !== "Bi-Sexual") {
@@ -114,7 +112,6 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 											ret.push(oneuser);
 									}
 								});
-
 								var ret = _.sortBy(ret, sort);
 								res.render("browse", {
 									user: order === 'asc' ? ret : ret.reverse(),
@@ -143,7 +140,11 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						}
 					}
 				});
+			} else {
+				req.flash('error', "Oops, there are still no users apart from you!");
+				res.redirect('back');
 			}
+		}
 		});
 	}
 });
@@ -200,6 +201,10 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 					req.flash("error", err.message);
 					res.redirect("back");
 				} else {
+					if (user.length < 2) {
+						req.flash('error', "Oops, there are still no users apart from you!");
+						res.redirect('back');
+					} else {
 					User.aggregate([{
 						$geoNear: {
 							near: {
@@ -249,6 +254,7 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 							});
 						}
 					});
+				}
 				}
 			});
 		}

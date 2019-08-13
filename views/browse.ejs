@@ -49,54 +49,65 @@
 						Descending
 					</option>
 				</select>
-				<button type="submit" class="btn btn-info btn-block"
+				<button type="submit" class="btn btn-default btn-block"
 					onclick="location.href = 'http:\/\/localhost:3000/feed/browse/' + document.getElementById('sorting').value;">Sort</button>
 			</div>
-			<div class="col-lg-12 form-group">
+			<hr>
+			<div class="col-lg-12">
+				<a class="btn btn-default btn-block" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Filters</a>
+			</div>
+			<hr>
+			<div class="col-lg-12 collapse" id="collapseExample">
+			<div class=" form-group">
 				<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
 					<div class="button-group-vertical">
 						<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
 							minlength="0" maxlength="20000">
 						<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
 							minlength="0" maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Distance</button>
+						<button class="btn btn-default btn-block" type="submit">Filter by Distance</button>
 					</div>
 				</form>
 			</div>
-			<div class="col-lg-12 form-group">
+			<div class=" form-group">
 				<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
 					<div class="button-group-vertical">
 						<input class="form-control" type="number" name="minfame" value="0" id="minfame" minlength="0"
 							maxlength="20000">
 						<input class="form-control" type="number" name="maxfame" value="1000" id="maxfame" minlength="0"
 							maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Famerate</button>
+						<button class="btn btn-default btn-block" type="submit">Filter by Famerate</button>
 					</div>
 				</form>
 			</div>
-			<div class="col-lg-12 form-group">
+			<div class=" form-group">
 				<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
 					<div class="button-group-vertical">
 						<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
 							minlength="0" maxlength="20000">
 						<input class="form-control" type="number" name="maxcommontags" value="100" id="maxcommontags"
 							minlength="0" maxlength="20000">
-						<button class="btn btn-info btn-block" type="submit">Filter by Common Tags</button>
+						<button class="btn btn-default btn-block" type="submit">Filter by Common Tags</button>
 					</div>
 				</form>
 			</div>
-			<div class="col-lg-12 form-group">
+			<div class=" form-group">
 				<form action="javascript:filterBy(minage.value, maxage.value, 'age')">
 					<div class="button-group-vertical">
 						<input class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
 							maxlength="100">
 						<input class="form-control" type="number" name="maxage" value="100" id="maxage" minlength="0"
 							maxlength="100">
-						<button class="btn btn-info btn-block" type="submit">Filter by Age</button>
+						<button class="btn btn-default btn-block" type="submit">Filter by Age</button>
 					</div>
 				</form>
 			</div>
 		</div>
+		<div class="col-lg-12 form-group">
+			<a class="btn btn-block btn-danger" href="/feed/browse">Reset</a>
+		</div>
+	</div>
+		<%if (user.length > 0) { %>
 		<div class="col-lg-9 col-md-9 col-sm-8">
 			<div class="row" style="display: flex; flex-wrap: wrap;">
 
@@ -144,7 +155,7 @@
 						<div class="caption" id="<%=user._id%>">
 							<hr>
 							<div>
-								<a href="/profile/<%= user._id %>" class="btn btn-primary btn-block"
+								<a href="/profile/<%= user._id %>" class="btn btn-default btn-block"
 									role="button"><%= user.username %>'s profile</a>
 							</div>
 							<small>
@@ -170,17 +181,15 @@
 							<!-- LIKES AND FAMERATE -->
 
 							<div class="btn-group btn-group-justified">
-								<div class="btn"><span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+								<div class="btn"><i class="fas fa-heart"></i>
 									<span id="like-badge-<%=user._id%>"><%= user.likes.length %></span></div>
-								<div class="btn"><span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span
+								<div class="btn"><i class="fas fa-star"></i> <span
 										id="fame-badge-<%=user._id%>"><%= user.famerate %></span></div>
 							</div>
 
 							<!-- BIRTHDATE -->
 
 							<h4><i class="fas fa-baby-carriage"></i> <%= moment(user.birthday).toNow(true) %> old</h4>
-							<h4><i class="fas fa-baby-carriage"></i>
-								<%= moment(Date.now()).diff(moment(user.birthday), 'days') %></h4>
 
 							<!-- SEX AND INTERESTS -->
 
@@ -189,7 +198,7 @@
 
 							<!-- USER LOCATION -->
 
-							<h4><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+							<h4><i class="fas fa-location-arrow"></i>
 								<%= user.locationname %></h4>
 
 							<!-- USER'S DISTANCE -->
@@ -202,7 +211,7 @@
 
 							<p class="hidden distance"><%=Math.round(user.dist.calculated/1000)%></p>
 							<p class="hidden commontags"><%if (user.commontags) {%> user.commontags<%} else {%>0<%}%></p>
-						<p class="hidden famerate"><%=user.famerate%></p>
+							<p class="hidden famerate"><%=user.famerate%></p>
 							<p class="hidden age"><%= moment(Date.now()).diff(moment(user.birthday), 'days') %></p>
 
 							<!-- USER'S BIO -->
@@ -213,7 +222,7 @@
 
 							<p4>
 								<% user.interests.forEach((tags) => { %>
-								<button class="btn btn-primary btn-sm">#<%= tags.text %></button>
+								<button class="btn btn-success btn-sm">#<%= tags.text %></button>
 								<% }); %>
 							</p4>
 							<hr>
@@ -224,7 +233,7 @@
 							<% if (currentUser.pictures.length > 0) { %>
 							<button class="btn btn-danger btn-block"
 								onclick="likeUser('<%=user._id.toString()%>')">Like</button>
-							<button class="btn btn-danger btn-block"
+							<button class="btn btn-primary btn-block"
 								onclick="dislikeUser('<%=user._id.toString()%>')">Dislike</button>
 							<% } %>
 							<% } %>
@@ -234,6 +243,15 @@
 				<% }}) %>
 			</div>
 		</div>
+		<%} else {%>
+			<div class="col-lg-9 col-md-9 col-sm-8">
+					<div class="row" style="display: flex; flex-wrap: wrap;">
+						<div class="col-sm-12 col-md-12 col-lg-12">
+							<h1 class="page-header">We've got no suggestions for you right now :(</h1>
+						</div>
+					</div>
+				</div>
+			<%}%>
 	</div>
 
 	<%include partials/footer%>
