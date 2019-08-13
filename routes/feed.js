@@ -74,7 +74,8 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						req.flash("error", err.message);
 						res.redirect("back");
 					} else {
-						console.log(user);
+						// console.log(user);
+						// console.log(foundUsers)
 						var usersWithoutMe = foundUsers.filter(foundUser => foundUser._id.toString() !== req.user._id.toString());
 						var ret = [];
 
@@ -122,7 +123,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 						} else {
 
 							// BI-SEXUAL USER PATTERN
-							user.forEach(oneuser => {
+							usersWithoutMe.forEach(oneuser => {
 								if (oneuser.sexPreferences.toString() === "Bi-Sexual") {
 									oneuser.age = moment(Date.now()).diff(moment(oneuser.birthday), 'days');
 									oneuser.famerate = oneuser.likes.length + oneuser.visits.length;
