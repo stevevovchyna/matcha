@@ -379,30 +379,34 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 			console.log(err);
 			res.redirect("back");
 		} else {
-			var url = user.pictures.id(req.params.pic_id)
-			var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
-			console.log(url);
-			console.log(deletedPicture);
-			user.pictures.pull(req.params.pic_id);
-			if (user.pictures[0]) {
-				user.pictures[0].isProfile = true;
-			}
-			if (user.location.coordinates.length != 2) {
-				user.location = undefined;
-			}
-			user.save(() => {
-				if (deletedPicture[0].naked_url) {
-					cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
-						if (err) {
-							req.flash("error", err.message);
-							console.log(err);
-							res.redirect("back");
-						}
-					});
+			// getting picture object without possibility to modify it as mongoose object
+			var url = user.pictures.id(req.sanitize(req.params.pic_id));
+			if (url) {
+				var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
+				user.pictures.pull(req.params.pic_id);
+				if (user.pictures[0]) {
+					user.pictures[0].isProfile = true;
 				}
-				req.flash("success", "Picture deleted!");
-				res.redirect("back");
-			});
+				if (user.location.coordinates.length != 2) {
+					user.location = undefined;
+				}
+				user.save(() => {
+					if (deletedPicture[0].naked_url) {
+						cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
+							if (err) {
+								req.flash("error", err.message);
+								console.log(err);
+								res.redirect("back");
+							}
+						});
+					}
+					req.flash("success", "Picture deleted!");
+					res.redirect("back");
+				});
+			} else {
+				req.flash('error', "Picture not found");
+				res.redirect('back');
+			}
 		}
 	});
 });
