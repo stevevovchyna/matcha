@@ -30,9 +30,9 @@ router.get("/", (req, res) => {
 
 router.get("/gettags", middleware.isLoggedIn, (req, res) => {
 	Tags.find((err, tags) => {
-		if(err) {
+		if (err) {
 			console.log(err);
-		}else{
+		} else {
 			var ret = [];
 			tags.forEach((tag) => {
 				ret.push(tag.text);
@@ -74,7 +74,7 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 	var reallocationname = "Kyiv";
 	var reallatitude = 50.4501;
 	var reallongitude = 30.5234;
-	
+
 	var coords = {};
 	geocoder.geocode(req.body.location, (err, data) => {
 		if (!data) {
@@ -88,52 +88,51 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 					type: "Point",
 					coordinates: [reallongitude, reallatitude]
 				},
-				interests: [
-					{
-						text: "dating"
-					}
-				]
+				interests: [{
+					text: "dating"
+				}]
 			});
+			newUser.location = undefined;
+			console.log(newUser);
 		} else {
 			if (err) {
 				console.log(err);
 				req.flash("error", "Invalid address");
 				return res.redirect("back");
-			}
-			coords.lat = data[0].latitude;
-			coords.lng = data[0].longitude;
-			coords.location = data[0].formattedAddress;
-			console.log(coords);
-			var newUser = new User({
-				username: username,
-				email: email,
-				lastname: lastname,
-				firstname: firstname,
-				reallocationname: reallocationname,
-				reallocation: {
-					type: "Point",
-					coordinates: [reallongitude, reallatitude]
-				},
-				locationname: coords.location,
-				location: {
-					type: "Point",
-					coordinates: [coords.lng, coords.lat]
-				},
-				interests: [
-					{
+			} else {
+				coords.lat = data[0].latitude;
+				coords.lng = data[0].longitude;
+				coords.location = data[0].formattedAddress;
+				console.log("Darova" + coords);
+				var newUser = new User({
+					username: username,
+					email: email,
+					lastname: lastname,
+					firstname: firstname,
+					reallocationname: reallocationname,
+					reallocation: {
+						type: "Point",
+						coordinates: [reallongitude, reallatitude]
+					},
+					locationname: coords.location,
+					location: {
+						type: "Point",
+						coordinates: [coords.lng, coords.lat]
+					},
+					interests: [{
 						text: "dating"
-					}
-				]
-			});
+					}]
+				});
+			}
 		}
 
-		User.findOne({email: email}, (err, user) => {
+		User.findOne({
+			email: email
+		}, (err, user) => {
 			if (user) {
 				req.flash("error", "User with this email already exists! Please provide a different email address.");
 				return res.redirect("/register");
 			}
-			// var re = new RegExp('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,16}$/g');
-			// re.test(req.body.password);
 			User.register(newUser, req.body.password, (err, user) => {
 				if (err) {
 					console.log(err.message);
@@ -149,7 +148,13 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 						req.flash("error", err.message);
 						return res.redirect("/register");
 					}
-					var transporter = nodemailer.createTransport({ service: 'sendgrid', auth: { user: "steve.vovchyna@gmail.com", pass: "omtMovBe7sEwdz_6KCHz" } });
+					var transporter = nodemailer.createTransport({
+						service: 'sendgrid',
+						auth: {
+							user: "steve.vovchyna@gmail.com",
+							pass: "omtMovBe7sEwdz_6KCHz"
+						}
+					});
 					var mailOptions = {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
@@ -173,12 +178,16 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 
 //VERIFICATION ROUTE
 router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
-	Token.findOne({token: req.sanitize(req.params.token)}, (err, token) => {
+	Token.findOne({
+		token: req.sanitize(req.params.token)
+	}, (err, token) => {
 		if (!token) {
 			req.flash("error", "Invalid link! Please recheck your email");
 			return res.redirect("/login");
 		}
-		User.findOne({_id: token._userId}, (err, user) => {
+		User.findOne({
+			_id: token._userId
+		}, (err, user) => {
 			if (!user) {
 				req.flash("error", "There's no user with the corresponding token - please check your link again!");
 				return res.redirect("/login");
@@ -188,6 +197,9 @@ router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 				return res.redirect("/login");
 			}
 			user.isVerified = true;
+			if (user.location.coordinates.length != 2) {
+				user.location = undefined;
+			}
 			user.save((err) => {
 				if (err) {
 					req.flash("error", err.message);
@@ -210,24 +222,26 @@ router.get("/login", middleware.checkIfLogged, (req, res) => {
 router.get('/auth/42', middleware.checkIfLogged, passport.authenticate('42'));
 
 router.get('/auth/42/callback', middleware.location,
-	passport.authenticate('42', { failureRedirect: '/login' }), (req, res) => {
-	// Successful authentication, redirect home.
-		res.redirect('/feed/browse/default.asc');
-});
+	passport.authenticate('42', {
+		failureRedirect: '/login'
+	}), (req, res) => {
+		// Successful authentication, redirect home.
+		res.redirect('/feed/research');
+	});
 
 // TWITTER AUTH ROUTES
-router.get('/auth/twitter', middleware.checkIfLogged, passport.authenticate('twitter'));
+// router.get('/auth/twitter', middleware.checkIfLogged, passport.authenticate('twitter'));
 
-router.get('/auth/twitter/callback', middleware.location,
-	passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
-	// Successful authentication, redirect home.
-		res.redirect('/feed/browse/default.asc');
-});
+// router.get('/auth/twitter/callback', middleware.location,
+// 	passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
+// 	// Successful authentication, redirect home.
+// 		res.redirect('/feed/research');
+// });
 
 
 //AUTH ROUTE
-router.post("/login", middleware.checkIfLogged, middleware.additionalCheck, middleware.location, passport.authenticate("local", {
-	successRedirect: "/feed/browse/default.asc",
+router.post("/login", middleware.checkIfLogged, middleware.ifVerified, middleware.location, passport.authenticate("local", {
+	successRedirect: "/feed/research",
 	failureRedirect: "/login",
 	failureFlash: true
 }));
@@ -246,32 +260,48 @@ router.get("/forgot", (req, res) => {
 
 router.post('/forgot', (req, res, next) => {
 	async.waterfall([
-		function (done) {
-			crypto.randomBytes(20, function (err, buf) {
+		(done) => {
+			crypto.randomBytes(20, (err, buf) => {
 				var token = buf.toString('hex');
 				done(err, token);
 			});
 		},
-		function (token, done) {
+		(token, done) => {
 			if (!req.body.email) {
 				req.flash('error', 'Please fill in the field.');
 				return res.redirect('/forgot');
 			}
-			User.findOne({ email: req.sanitize(req.body.email) }, function (err, user) {
+			User.findOneAndUpdate({
+				email: req.sanitize(req.body.email)
+			}, {}, (err, user) => {
 				if (!user) {
 					req.flash('error', 'No account with that email address exists.');
 					return res.redirect('/forgot');
 				}
 				user.passwordResetToken = token;
 				user.passwordResetExpires = Date.now() + 3600000; // 1 hour
-
-				user.save(function (err) {
-					done(err, token, user);
+				if (user.location.coordinates.length != 2) {
+					user.location = undefined;
+				}
+				user.save((err) => {
+					if (err) {
+						console.log(err);
+						req.flash('error', err.message);
+						return res.redirect('/forgot');
+					} else {
+						done(err, token, user);
+					}
 				});
 			});
 		},
-		function (token, user, done) {
-			var transporter = nodemailer.createTransport({ service: 'sendgrid', auth: { user: "steve.vovchyna@gmail.com", pass: "omtMovBe7sEwdz_6KCHz" } });
+		(token, user, done) => {
+			var transporter = nodemailer.createTransport({
+				service: 'sendgrid',
+				auth: {
+					user: "steve.vovchyna@gmail.com",
+					pass: "omtMovBe7sEwdz_6KCHz"
+				}
+			});
 			var mailOptions = {
 				to: req.sanitize(req.sanitize(user.email)),
 				from: 'matcha.42.svovchyn@gmail.com',
@@ -281,35 +311,37 @@ router.post('/forgot', (req, res, next) => {
 					'http://localhost:3000/reset/' + token + '\n\n' +
 					'If you did not request this, please ignore this email and your password will remain unchanged.\n'
 			};
-			transporter.sendMail(mailOptions, function (err) {
+			transporter.sendMail(mailOptions, (err) => {
 				req.flash('success', 'An e-mail has been sent to ' + req.sanitize(user.email) + ' with further instructions.');
 				done(err, 'done');
 			});
 		}
-	], function (err) {
+	], (err) => {
 		if (err) return next(err);
 		res.redirect('/forgot');
 	});
 });
 
-router.get('/reset/:token', function (req, res) {
+router.get('/reset/:token', (req, res) => {
 	User.findOne({
 		passwordResetToken: req.sanitize(req.params.token),
 		passwordResetExpires: {
 			$gt: Date.now()
 		}
-	}, function (err, user) {
+	}, (err, user) => {
 		if (!user) {
 			req.flash('error', 'Password reset token is invalid or has expired.');
 			return res.redirect('/forgot');
 		}
-		res.render('reset', { token: req.sanitize(req.params.token) });
+		res.render('reset', {
+			token: req.sanitize(req.params.token)
+		});
 	});
 });
 
-router.post('/reset/:token', function (req, res) {
+router.post('/reset/:token', (req, res) => {
 	async.waterfall([
-		function (done) {
+		(done) => {
 			if (!req.body.password || !req.body.confirm) {
 				req.flash("error", "Empty fields! Please, fill in both fields!");
 				return res.redirect('back');
@@ -323,7 +355,7 @@ router.post('/reset/:token', function (req, res) {
 				passwordResetExpires: {
 					$gt: Date.now()
 				}
-			}, function (err, user) {
+			}, (err, user) => {
 				if (!user) {
 					req.flash('error', 'Password reset token is invalid or has expired.');
 					return res.redirect('back');
@@ -333,7 +365,10 @@ router.post('/reset/:token', function (req, res) {
 					user.setPassword(pass, (err) => {
 						user.passwordResetToken = undefined;
 						user.passwordResetExpires = undefined;
-						user.save(function (err) {
+						if (user.location.coordinates.length != 2) {
+							user.location = undefined;
+						}
+						user.save((err) => {
 							done(err, user);
 						});
 					})
@@ -343,7 +378,13 @@ router.post('/reset/:token', function (req, res) {
 				}
 			});
 		}, (user, done) => {
-			var transporter = nodemailer.createTransport({ service: 'sendgrid', auth: { user: "steve.vovchyna@gmail.com", pass: "omtMovBe7sEwdz_6KCHz" } });
+			var transporter = nodemailer.createTransport({
+				service: 'sendgrid',
+				auth: {
+					user: "steve.vovchyna@gmail.com",
+					pass: "omtMovBe7sEwdz_6KCHz"
+				}
+			});
 			var mailOptions = {
 				to: req.sanitize(user.email),
 				from: 'matcha.42.svovchyn@gmail.com',

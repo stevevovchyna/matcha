@@ -55,8 +55,11 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 	User.findById(req.sanitize(req.params.id))
 		.populate('blockedUsers')
 		.exec((err, user) => {
-			if (err) console.log(err);
-			else {
+			if (err || !user) {
+				console.log(err);
+				req.flash('error', "Invalid address! Please make sure you've entered a correct one!");
+				res.redirect('/feed/research');
+			} else {
 				var blocked = user.blockedUsers.filter(user => user.id.toString() === req.user._id.toString());
 				if (blocked.length == 0) {
 					if (req.user._id.toString() !== req.params.id.toString()) {
@@ -66,10 +69,16 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 						}, (err, newVisit) => {
 							if (err) console.log(err);
 							user.visits.push(newVisit);
+							if (user.location.coordinates.length != 2) {
+								user.location = undefined;
+							}
 							user.save((err) => {
 								if (err) console.log(err);
 								User.findById(req.user._id, (err, myuser) => {
 									myuser.myVisits.push(newVisit);
+									if (myuser.location.coordinates.length != 2) {
+										myuser.location = undefined;
+									}
 									myuser.save((err) => {
 										if (err) console.log(err);
 										user.distance = parseInt(res.locals.distance);
@@ -134,30 +143,40 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 				newArr.forEach((tag) => {
 					user.interests.push(tag);
 				});
-				user.save();
-				var uniqueArr = new Object();
-				Tags.find((err, dbtags) => {
-					if (dbtags) {
-						for (var i = 0; i < arr.length; i++) {
-							for (let dbtag of dbtags) {
-								if (dbtag.text.toString() === arr[i].toString()) {
-									arr.splice(i, 1);
-									i--;
-									break;
+				if (user.location.coordinates.length != 2) {
+					user.location = undefined;
+				}
+				user.save((err) => {
+					if (err) {
+						console.log(err);
+						req.flash('error', "Something is wrong with your tag saving!");
+						res.redirect('back');
+					} else {
+						var uniqueArr = new Object();
+						Tags.find((err, dbtags) => {
+							if (dbtags) {
+								for (var i = 0; i < arr.length; i++) {
+									for (let dbtag of dbtags) {
+										if (dbtag.text.toString() === arr[i].toString()) {
+											arr.splice(i, 1);
+											i--;
+											break;
+										}
+									}
 								}
+								uniqueArr = arr.map(function (value) {
+									return {
+										text: value
+									};
+								});
+								Tags.insertMany(uniqueArr, (err, tags) => {
+									if (err) {
+										console.log(err);
+									};
+									req.flash("success", "Tags added!");
+									return res.redirect("/profile/" + req.params.id + "/edit");
+								});
 							}
-						}
-						uniqueArr = arr.map(function (value) {
-							return {
-								text: value
-							};
-						});
-						Tags.insertMany(uniqueArr, (err, tags) => {
-							if (err) {
-								console.log(err);
-							};
-							req.flash("success", "Tags added!");
-							return res.redirect("/profile/" + req.params.id + "/edit");
 						});
 					}
 				});
@@ -179,6 +198,9 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 			});
 		} else {
 			user.interests.pull(req.params.tag_id);
+			if (user.location.coordinates.length != 2) {
+				user.location = undefined;
+			}
 			user.save((err) => {
 				if (err) {
 					console.log(err);
@@ -213,67 +235,65 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 	var gender = req.sanitize(req.body.user.gender);
 	var sexPreferences = req.sanitize(req.body.user.sexPreferences);
 	var birthDate = new DateOnly(xss(req.body.user.birthdate));
-	if (req.body.location) {
+	if (req.body.location !== "") {
 		var location = req.sanitize(req.body.location);
+	} else {
+		var location = "";
 	}
 	if ((gender.toString() === "Male" || gender.toString() === "Female") &&
-		(sexPreferences.toString() === "Male" || sexPreferences.toString() === "Female" || sexPreferences.toString() === "Bi-Sexual")) {
+		(sexPreferences.toString() === "Male" ||
+		sexPreferences.toString() === "Female" ||
+		sexPreferences.toString() === "Bi-Sexual")) {
 		User.findByIdAndUpdate(req.params.id, {}, (err, userdata) => {
-			if (userdata.location) {
-				userdata.location = undefined;
-				userdata.lat = undefined;
-				userdata.lng = undefined;
-				userdata.save();
-			}
-		});
-		var coords = {};
-		geocoder.geocode(location, (err, data) => {
-			if (!data) {
-				var newUser = {
-					username: username,
-					email: email,
-					lastname: lastname,
-					firstname: firstname,
-					gender: gender,
-					sexPreferences: sexPreferences,
-					bio: bio,
-					birthday: birthDate.toDate()
-				};
+			if (err) {
+				console.log(err);
+				req.flash("error", err.message);
+				return res.redirect("back");
 			} else {
-				if (err) {
-					console.log(err);
-					req.flash("error", "Invalid address");
-					return res.redirect("back");
-				}
-				coords.lat = data[0].latitude;
-				coords.lng = data[0].longitude;
-				coords.location = data[0].formattedAddress;
-				var newUser = {
-					username: username,
-					email: email,
-					lastname: lastname,
-					firstname: firstname,
-					gender: gender,
-					sexPreferences: sexPreferences,
-					bio: bio,
-					locationname: coords.location,
-					location: {
-						type: "Point",
-						coordinates: [coords.lng, coords.lat]
-					},
-					birthday: birthDate.toDate()
-				};
-			}
-			User.findByIdAndUpdate(req.params.id, newUser, (err, user) => {
-				if (err) {
-					req.flash("error", "Something went wrong while editing your data!");
-					console.log(err);
-					res.redirect("back");
+				userdata.username = username;
+				userdata.email = email;
+				userdata.lastname = lastname;
+				userdata.firstname = firstname;
+				userdata.gender = gender;
+				userdata.sexPreferences = sexPreferences;
+				userdata.bio = bio;
+				userdata.birthday = birthDate.toDate();
+				if (location != "") {
+					geocoder.geocode(location, (err, data) => {
+						if (err || data.length == 0 || data == undefined) {
+							console.log(err);
+							req.flash("error", "Invalid address");
+							return res.redirect("back");
+						} else {
+							userdata.locationname = data[0].formattedAddress;
+							userdata.location = { type: "Point", coordinates: [data[0].longitude, data[0].latitude]};
+							userdata.save((err) => {
+								if (err) {
+									console.log(err);
+									req.flash("error", err.message);
+									res.redirect("back");
+								} else {
+									req.flash("success", "Profile info updated!");
+									res.redirect("/profile/" + req.params.id + "/edit");
+								}
+							});
+						}
+					});
 				} else {
-					req.flash("success", "Profile info updated!");
-					return res.redirect("/profile/" + req.params.id + "/edit");
+					userdata.location = undefined;
+					userdata.locationname = undefined;
+					userdata.save((err) => {
+						if (err) {
+							console.log(err);
+							req.flash("error", err.message);
+							res.redirect("back");
+						} else {
+							req.flash("success", "Profile info updated!");
+							res.redirect("/profile/" + req.params.id + "/edit");
+						}
+					});
 				}
-			});
+			}
 		});
 	} else {
 		req.flash("error", "This network is created for male-female users only. No disrespect, amigo :*");
@@ -318,9 +338,18 @@ router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('imag
 								naked_url: result.public_id
 							});
 						}
-						user.save(() => {
-							req.flash("success", "Picture was added!");
-							res.redirect("/profile/" + req.params.id + "/edit");
+						if (user.location.coordinates.length != 2) {
+							user.location = undefined;
+						}
+						user.save((err) => {
+							if (err) {
+								console.log(err);
+								req.flash("error", err.message);
+								res.redirect('back');
+							} else {
+								req.flash("success", "Picture was added!");
+								res.redirect("/profile/" + req.params.id + "/edit");
+							}
 						});
 					}
 				});
@@ -345,6 +374,9 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 			if (user.pictures[0]) {
 				user.pictures[0].isProfile = true;
 			}
+			if (user.location.coordinates.length != 2) {
+				user.location = undefined;
+			}
 			user.save(() => {
 				if (deletedPicture[0].naked_url) {
 					cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
@@ -364,24 +396,34 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 
 router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, res) => {
 	User.findById(req.params.id, (err, user) => {
-		if (err) {
-			req.flash("error", err.message);
+		if (err || !user) {
+			req.flash("error", "User not found");
 			console.log(err);
 			res.redirect("back");
 		} else {
-			user.pictures.forEach(pic => {
-				pic.isProfile = false;
-			});
-			user.pictures.id(req.params.pic_id).isProfile = true;
-			user.save(() => {
-				req.flash("success", "Profile picture set!");
-				res.redirect("back");
-			});
+			var pictureIDChecker = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
+			if (pictureIDChecker.length > 0) {
+
+				user.pictures.forEach(pic => {
+					pic.isProfile = false;
+				});
+				user.pictures.id(req.params.pic_id).isProfile = true;
+				if (user.location.coordinates.length != 2) {
+					user.location = undefined;
+				}
+				user.save(() => {
+					req.flash("success", "Profile picture set!");
+					res.redirect("back");
+				});
+			} else {
+				req.flash('error', 'Picture not found');
+				res.redirect('back');
+			}
 		}
 	});
 });
 
-router.put("/:id/setpassword", middleware.checkProfileOwnership, (req, res) => {
+router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileOwnership, (req, res) => {
 	if (!req.body.password || !req.body.confirm) {
 		req.flash("error", "Empty fields! Please, fill in both fields!");
 		return res.redirect('back');
@@ -389,18 +431,34 @@ router.put("/:id/setpassword", middleware.checkProfileOwnership, (req, res) => {
 		req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
 		return res.redirect("back");
 	} else {
-		User.findById(req.sanitize(req.params.id), (err, foundUser) => {
+		User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, foundUser) => {
 			if (err) {
 				console.log(err);
 				req.flash('error', err.message);
+				res.redirect('/profile/' + req.user._id + '/edit')
 			} else {
 				if (req.sanitize(req.body.password) === req.sanitize(req.body.confirm)) {
 					var pass = req.sanitize(req.body.password);
 					foundUser.setPassword(pass, (err) => {
-						foundUser.save((err) => {
-							req.flash('success', "You password has been changed");
-							res.redirect('back');
-						});
+						if (err) {
+							console.log(err);
+							req.flash('error', err.message);
+							res.redirect('/profile/' + req.user._id + '/edit');
+						} else {
+							if (foundUser.location.coordinates.length != 2) {
+								foundUser.location = undefined;
+							}
+							foundUser.save((err) => {
+								if (err) {
+									console.log(err);
+									req.flash('error', err.message);
+									res.redirect('/profile/' + req.user._id + '/edit');
+								} else {
+									req.flash('success', "You password has been changed");
+									res.redirect('back');
+								}
+							});
+						}
 					})
 				} else {
 					req.flash("error", "Passwords do not match.");

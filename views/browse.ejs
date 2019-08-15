@@ -54,60 +54,62 @@
 			</div>
 			<hr>
 			<div class="col-lg-12">
-				<a class="btn btn-default btn-block" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Filters</a>
+				<a class="btn btn-default btn-block" role="button" data-toggle="collapse" href="#collapseExample"
+					aria-expanded="false" aria-controls="collapseExample">Filters</a>
 			</div>
 			<hr>
 			<div class="col-lg-12 collapse" id="collapseExample">
-			<div class=" form-group">
-				<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
-							minlength="0" maxlength="20000">
-						<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
-							minlength="0" maxlength="20000">
-						<button class="btn btn-default btn-block" type="submit">Filter by Distance</button>
-					</div>
-				</form>
+				<div class=" form-group">
+					<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
+						<div class="button-group-vertical">
+							<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
+								minlength="0" maxlength="20000">
+							<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
+								minlength="0" maxlength="20000">
+							<button class="btn btn-default btn-block" type="submit">Filter by Distance</button>
+						</div>
+					</form>
+				</div>
+				<div class=" form-group">
+					<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
+						<div class="button-group-vertical">
+							<input class="form-control" type="number" name="minfame" value="0" id="minfame"
+								minlength="0" maxlength="20000">
+							<input class="form-control" type="number" name="maxfame" value="1000" id="maxfame"
+								minlength="0" maxlength="20000">
+							<button class="btn btn-default btn-block" type="submit">Filter by Famerate</button>
+						</div>
+					</form>
+				</div>
+				<div class=" form-group">
+					<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
+						<div class="button-group-vertical">
+							<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
+								minlength="0" maxlength="20000">
+							<input class="form-control" type="number" name="maxcommontags" value="100"
+								id="maxcommontags" minlength="0" maxlength="20000">
+							<button class="btn btn-default btn-block" type="submit">Filter by Common Tags</button>
+						</div>
+					</form>
+				</div>
+				<div class=" form-group">
+					<form action="javascript:filterBy(minage.value, maxage.value, 'age')">
+						<div class="button-group-vertical">
+							<input class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
+								maxlength="100">
+							<input class="form-control" type="number" name="maxage" value="100" id="maxage"
+								minlength="0" maxlength="100">
+							<button class="btn btn-default btn-block" type="submit">Filter by Age</button>
+						</div>
+					</form>
+				</div>
 			</div>
-			<div class=" form-group">
-				<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="minfame" value="0" id="minfame" minlength="0"
-							maxlength="20000">
-						<input class="form-control" type="number" name="maxfame" value="1000" id="maxfame" minlength="0"
-							maxlength="20000">
-						<button class="btn btn-default btn-block" type="submit">Filter by Famerate</button>
-					</div>
-				</form>
-			</div>
-			<div class=" form-group">
-				<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
-							minlength="0" maxlength="20000">
-						<input class="form-control" type="number" name="maxcommontags" value="100" id="maxcommontags"
-							minlength="0" maxlength="20000">
-						<button class="btn btn-default btn-block" type="submit">Filter by Common Tags</button>
-					</div>
-				</form>
-			</div>
-			<div class=" form-group">
-				<form action="javascript:filterBy(minage.value, maxage.value, 'age')">
-					<div class="button-group-vertical">
-						<input class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
-							maxlength="100">
-						<input class="form-control" type="number" name="maxage" value="100" id="maxage" minlength="0"
-							maxlength="100">
-						<button class="btn btn-default btn-block" type="submit">Filter by Age</button>
-					</div>
-				</form>
+			<div class="col-lg-12 form-group">
+				<a class="btn btn-block btn-danger" href="/feed/browse">Reset</a>
 			</div>
 		</div>
-		<div class="col-lg-12 form-group">
-			<a class="btn btn-block btn-danger" href="/feed/browse">Reset</a>
-		</div>
-	</div>
 		<%if (user.length > 0) { %>
+
 		<div class="col-lg-9 col-md-9 col-sm-8">
 			<div class="row" style="display: flex; flex-wrap: wrap;">
 
@@ -202,9 +204,13 @@
 									class="<%=interest%>"></i><i class="<%=binterest%>"></i></h4>
 
 							<!-- USER LOCATION -->
-
+							<% if (user.locationname) { %>
 							<h4><i class="fas fa-location-arrow"></i>
 								<%= user.locationname %></h4>
+								<%} else if (user.reallocation) {%>
+									<h4><i class="fas fa-location-arrow"></i>
+										<%= user.reallocationname %></h4>
+									<%}%>
 
 							<!-- USER'S DISTANCE -->
 
@@ -249,14 +255,19 @@
 			</div>
 		</div>
 		<%} else {%>
-			<div class="col-lg-9 col-md-9 col-sm-8">
-					<div class="row" style="display: flex; flex-wrap: wrap;">
-						<div class="col-sm-12 col-md-12 col-lg-12">
-							<h1 class="page-header">We've got no suggestions for you right now :(</h1>
-						</div>
+		<div class="col-lg-9 col-md-9 col-sm-8">
+			<div class="row" style="display: flex; flex-wrap: wrap;">
+				<div class="col-sm-12 col-md-12 col-lg-12">
+					<div class="jumbotron">
+						<h1>You're very close!</h1>
+						<p>We've got no suggestions for you right now :( Don's hesitate to give it a shot on the
+							research page</p>
+						<p><a class="btn btn-primary" href="/feed/research" role="button">Research!</a></p>
 					</div>
 				</div>
-			<%}%>
+			</div>
+		</div>
+		<%}%>
 	</div>
 
 	<%include partials/footer%>

@@ -20,15 +20,14 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 		req.flash("error", "Invalid link!!!");
 		res.redirect("/feed/browse/default.asc");
 	} else {
-		if (req.user.location) {
-			var long = req.user.location.coordinates[0];
-			var lat = req.user.location.coordinates[1];
-		} else if (req.user.reallocation) {
-			var long = req.user.reallocation.coordinates[0];
-			var lat = req.user.reallocation.coordinates[1];
-		} else {
-			var long = 30.5234;
-			var lat = 50.4501;
+		var long = 30.5234;
+		var lat = 50.4501;
+		if (req.user.location.coordinates.length == 2) {
+			long = req.user.location.coordinates[0];
+			lat = req.user.location.coordinates[1];
+		} else if (req.user.reallocation.coordinates[0] != null) {
+			long = req.user.reallocation.coordinates[0];
+			lat = req.user.reallocation.coordinates[1];
 		}
 		switch(sortType) {
 			case 'default':
@@ -150,12 +149,12 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 	}
 });
 
-router.get('/research', middleware.isLoggedIn, (req, res) => {
+router.get('/research', middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
 	res.render('research');
 });
 
 
-router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, (req, res) => {
+router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, middleware.haveFilled, (req, res) => {
 	var sortType = req.sanitize(req.body.userparams.sorttype.toString());
 	var order = req.sanitize(req.body.userparams.sortorder.toString());
 
@@ -166,18 +165,17 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 		sortType.toString() !== "famerate" &&
 		sortType.toString() !== "tags"  && sortType.toString() !== 'age' ||
 		(order.toString() !== "asc" && order.toString() !== "desc")) {
-		req.flash("error", "Invalid link!!!");
-		res.redirect("/feed/browse/default.asc");
+		req.flash("error", "Invalid search parameters!");
+		res.redirect("/research");
 	} else {
-		if (req.user.location) {
-			var long = req.user.location.coordinates[0];
-			var lat = req.user.location.coordinates[1];
-		} else if (req.user.reallocation) {
-			var long = req.user.reallocation.coordinates[0];
-			var lat = req.user.reallocation.coordinates[1];
-		} else {
-			var long = 30.5234;
-			var lat = 50.4501;
+		var long = 30.5234;
+		var lat = 50.4501;
+		if (req.user.location.coordinates.length == 2) {
+			long = req.user.location.coordinates[0];
+			lat = req.user.location.coordinates[1];
+		} else if (req.user.reallocation.coordinates[0] != null) {
+			long = req.user.reallocation.coordinates[0];
+			lat = req.user.reallocation.coordinates[1];
 		}
 		switch(sortType) {
 			case 'default':
@@ -199,6 +197,7 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 		User.find({}).populate("blockedUsers").populate('likes').populate('visits')
 			.exec((err, user) => {
 				if (err) {
+					console.log(err);
 					req.flash("error", err.message);
 					res.redirect("back");
 				} else {

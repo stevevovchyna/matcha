@@ -137,8 +137,9 @@ if (user.isVerified) { %>
 							class="<%=binterest%>"></i></h4>
 
 					<!-- USER LOCATION -->
-
+						<% if (user.locationname) { %>
 					<h4><i class="fas fa-compass"></i> <%= user.locationname %></h4>
+					<%}%>
 
 					<!-- USER'S DISTANCE -->
 					<% if (currentUser._id.toString() !== user._id.toString()) { %>

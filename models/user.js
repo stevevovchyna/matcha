@@ -1,6 +1,6 @@
 const mongoose = require("mongoose"),
-DateOnly = 				require('mongoose-dateonly')(mongoose),
-passportLocalMongoose = require("passport-local-mongoose");
+	DateOnly = require('mongoose-dateonly')(mongoose),
+	passportLocalMongoose = require("passport-local-mongoose");
 const findOrCreate = require('mongoose-findorcreate');
 
 var UserSchema = new mongoose.Schema({
@@ -11,7 +11,9 @@ var UserSchema = new mongoose.Schema({
 		type: Date,
 		default: '1995-01-01T00:00:00.000Z'
 	},
-	lastseen: {type: Date},
+	lastseen: {
+		type: Date
+	},
 	firstname: String,
 	gender: {
 		type: String,
@@ -20,31 +22,34 @@ var UserSchema = new mongoose.Schema({
 	locationname: String,
 	location: {
 		type: {
-			type: String,
-			default: "Point"
+			type: String, // Don't do `{ location: { type: String } }`
+			enum: ['Point'] // 'location.type' must be 'Point'
 		},
-		coordinates: [Number],
+		coordinates: {
+			type: [Number]
+		}
 	},
 	reallocationname: String,
 	reallocation: {
 		type: {
-			type: String,
-			default: "Point"
+			type: String, // Don't do `{ location: { type: String } }`
+			enum: ['Point'] // 'location.type' must be 'Point'
 		},
-		coordinates: [Number],
+		coordinates: {
+			type: [Number]
+		}
 	},
 	sexPreferences: {
 		type: String,
 		default: "Bi-Sexual"
 	},
-	bio: { type: String,
+	bio: {
+		type: String,
 		default: "I'm a very interesting person!"
 	},
-	interests: [
-		{
-			text: String
-		}
-	],
+	interests: [{
+		text: String
+	}],
 	pictures: [{
 		url: String,
 		naked_url: String,
@@ -53,78 +58,65 @@ var UserSchema = new mongoose.Schema({
 			default: false
 		}
 	}],
-	email: { type: String, unique: true },
-	filledFields: { type: Boolean, default: false }, 
-	isVerified: { type: Boolean, default: false },
+	email: {
+		type: String,
+		unique: true
+	},
+	filledFields: {
+		type: Boolean,
+		default: false
+	},
+	isVerified: {
+		type: Boolean,
+		default: false
+	},
 	password: String,
 	passwordResetToken: String,
 	passwordResetExpires: Date,
-	visits: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Visits"
-		}
-	],
-	myVisits: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Visits"
-		}
-	],
-	likes: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Likes"
-		}
-	],
-	myLikes: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Likes"
-		}
-	],
-	likeslog: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Likeslog"
-		}
-	],
-	mylikeslog: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Likeslog"
-		}
-	],
-	fakeReports: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "FakeReports"
-		}
-	],
-	blockedUsers: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "BlockedUsers"
-		}
-	],
-	dislikeslog: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Dislikeslog"
-		}
-	],
-	mydislikeslog: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Dislikeslog"
-		}
-	],
-	notifications: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Notifications"
-		}
-	],
+	visits: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Visits"
+	}],
+	myVisits: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Visits"
+	}],
+	likes: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Likes"
+	}],
+	myLikes: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Likes"
+	}],
+	likeslog: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Likeslog"
+	}],
+	mylikeslog: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Likeslog"
+	}],
+	fakeReports: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "FakeReports"
+	}],
+	blockedUsers: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "BlockedUsers"
+	}],
+	dislikeslog: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Dislikeslog"
+	}],
+	mydislikeslog: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Dislikeslog"
+	}],
+	notifications: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Notifications"
+	}],
 	createdAt: {
 		type: Date,
 		required: true,
@@ -134,13 +126,18 @@ var UserSchema = new mongoose.Schema({
 
 UserSchema.plugin(passportLocalMongoose, {
 	usernameUnique: false,
-	findByUsername: function(model, queryParameters) {
+	findByUsername: function (model, queryParameters) {
 		queryParameters.isVerified = true;
 		return model.findOne(queryParameters);
 	}
 });
 
-UserSchema.index( { "location" : "2dsphere" } );
+UserSchema.index({
+	"location": "2dsphere"
+});
+UserSchema.index({
+	"reallocation": "2dsphere"
+});
 UserSchema.plugin(findOrCreate);
 
 //exporting model to the db

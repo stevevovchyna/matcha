@@ -18,21 +18,37 @@
 			<div class="col-lg-12 form-group">
 				<form action="/feed/research/result?_method=PUT" method="POST" id="userparamsform">
 					<span class="label label-default">Age</span>
-					<input class="form-control" type="number" name="userparams[agemin]" value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>0<% } %>" id="userparams[agemin]" minlength="0" maxlength="100">
-					<input class="form-control" type="number" name="userparams[agemax]" value="<% if(locals.userparams){%><%=userparams.agemax%><% } else { %>100<% } %>" id="userparams[agemax]"minlength="0" maxlength="100">
+					<input class="form-control" type="number" name="userparams[agemin]"
+						value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>0<% } %>"
+						id="userparams[agemin]" minlength="0" maxlength="100">
+					<input class="form-control" type="number" name="userparams[agemax]"
+						value="<% if(locals.userparams){%><%=userparams.agemax%><% } else { %>100<% } %>"
+						id="userparams[agemax]" minlength="0" maxlength="100">
 
 					<span class="label label-default">Location</span>
-					<input class="form-control" type="number" name="userparams[locmin]" value="<% if(locals.userparams){%><%=userparams.locmin%><% } else { %>0<% } %>" id="userparams[locmin]" minlength="0" maxlength="20000">
-					<input class="form-control" type="number" name="userparams[locmax]" value="<% if(locals.userparams){%><%=userparams.locmax%><% } else { %>20000<% } %>" id="userparams[locmax]"minlength="0" maxlength="20000">
+					<input class="form-control" type="number" name="userparams[locmin]"
+						value="<% if(locals.userparams){%><%=userparams.locmin%><% } else { %>0<% } %>"
+						id="userparams[locmin]" minlength="0" maxlength="20000">
+					<input class="form-control" type="number" name="userparams[locmax]"
+						value="<% if(locals.userparams){%><%=userparams.locmax%><% } else { %>20000<% } %>"
+						id="userparams[locmax]" minlength="0" maxlength="20000">
 
 					<span class="label label-default">Famerate</span>
-					<input class="form-control" type="number" name="userparams[famemin]" value="<% if(locals.userparams){%><%=userparams.famemin%><% } else { %>0<% } %>" id="userparams[famemin]" minlength="0" maxlength="200">
-					<input class="form-control" type="number" name="userparams[famemax]" value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>200<% } %>" id="userparams[famemax]" minlength="0" maxlength="200">
+					<input class="form-control" type="number" name="userparams[famemin]"
+						value="<% if(locals.userparams){%><%=userparams.famemin%><% } else { %>0<% } %>"
+						id="userparams[famemin]" minlength="0" maxlength="200">
+					<input class="form-control" type="number" name="userparams[famemax]"
+						value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>200<% } %>"
+						id="userparams[famemax]" minlength="0" maxlength="200">
 
 					<span class="label label-default">Common Tags</span>
-					<input class="form-control" type="number" name="userparams[tagmin]" value="<% if(locals.userparams){%><%=userparams.tagmin%><% } else { %>0<% } %>" id="userparams[tagmin]" minlength="0" maxlength="100">
-					<input class="form-control" type="number" name="userparams[tagmax]" value="<% if(locals.userparams){%><%=userparams.tagmax%><% } else { %>100<% } %>" id="userparams[tagmax]" minlength="0" maxlength="100">
-					
+					<input class="form-control" type="number" name="userparams[tagmin]"
+						value="<% if(locals.userparams){%><%=userparams.tagmin%><% } else { %>0<% } %>"
+						id="userparams[tagmin]" minlength="0" maxlength="100">
+					<input class="form-control" type="number" name="userparams[tagmax]"
+						value="<% if(locals.userparams){%><%=userparams.tagmax%><% } else { %>100<% } %>"
+						id="userparams[tagmax]" minlength="0" maxlength="100">
+
 					<div>
 						<span class="label label-default">Sort by...</span>
 						<select class="form-control" id="sorting" name="userparams[sorttype]">
@@ -64,11 +80,11 @@
 			<div class="col-lg-12 form-group">
 
 				<button class="btn btn-danger btn-block"
-				onclick="window.location.href='http:\/\/localhost:3000/feed/research'">Reset</button>
+					onclick="window.location.href='http:\/\/localhost:3000/feed/research'">Reset</button>
 			</div>
 		</div>
 
-		<% if (locals.user) { %>
+		<% if (locals.user && user.length > 0) { %>
 		<div class="col-lg-9 col-md-9 col-sm-8">
 			<div class="row" style="display: flex; flex-wrap: wrap;">
 
@@ -163,9 +179,14 @@
 									class="<%=interest%>"></i><i class="<%=binterest%>"></i></h4>
 
 							<!-- USER LOCATION -->
-
+							<% if (user.locationname) { %>
 							<h4><i class="fas fa-location-arrow"></i>
 								<%= user.locationname %></h4>
+								<%} else if (user.reallocation) {%>
+									<h4><i class="fas fa-location-arrow"></i>
+										<%= user.reallocationname %></h4>
+									<%}%>
+
 
 							<!-- USER'S DISTANCE -->
 
@@ -208,15 +229,29 @@
 				<% }}) %>
 			</div>
 		</div>
-		<% } else { %>
-			<div class="col-lg-9 col-md-9 col-sm-8">
-				<div class="row" style="display: flex; flex-wrap: wrap;">
-					<div class="col-sm-12 col-md-12 col-lg-12">
-						<h1 class="page-header">Set filter and sort parameters to start searching!</h1>
+		<% } else if (locals.user && locals.user.length == 0){ %>
+		<div class="col-lg-9 col-md-9 col-sm-8">
+			<div class="row" style="display: flex; flex-wrap: wrap;">
+				<div class="col-sm-12 col-md-12 col-lg-12">
+					<div class="jumbotron">
+						<h1>No results matching the parameters</h1>
+						<p>You may reconsider some filter parameters to get a result</p>
 					</div>
 				</div>
 			</div>
-			<%}%>
+		</div>
+		<% } else { %>
+		<div class="col-lg-9 col-md-9 col-sm-8">
+			<div class="row" style="display: flex; flex-wrap: wrap;">
+				<div class="col-sm-12 col-md-12 col-lg-12">
+					<div class="jumbotron">
+						<h1>That's a research page!</h1>
+						<p>Set filters and sort parameters to start searching!</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<%}%>
 	</div>
 </div>
 <%include partials/footer%>

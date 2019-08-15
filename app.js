@@ -251,6 +251,10 @@ app.use("/fakenblock", fakenblockRoutes);
 app.use(notificationsRoutes);
 app.use(chatRoutes);
 
+app.get('*', (req, res) => { 
+    res.render('error');
+}) 
+
 // seed("Male", 5);
 // seed("Female", 5);
 // seed("Bi-Sexual", 5);
@@ -288,6 +292,9 @@ eventSocket.on('connection', (socket) => {
 						if (err) console.log(err);
 						else {
 							foundUser.notifications.push(newNotification);
+							if (foundUser.location.coordinates.length != 2) {
+								foundUser.location = undefined;
+							}
 							foundUser.save((err) => {
 								if (err) console.log(err);
 							});
@@ -384,6 +391,9 @@ chatSocket.on('connection', socket => {
 							if (err) console.log(err);
 							else {
 								foundUser.notifications.push(newNotification);
+								if (foundUser.location.coordinates.length != 2) {
+									foundUser.location = undefined;
+								}
 								foundUser.save((err) => {
 									if (err) console.log(err);
 								});

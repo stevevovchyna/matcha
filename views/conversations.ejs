@@ -1,5 +1,12 @@
 <%include partials/header%>
 <div class="container">
+	<%if (conversations.length == 0) {%>
+	<div class="jumbotron">
+		<h1>No conversations yet :(</h1>
+		<p>Go like some profiles!</p>
+		<p><a class="btn btn-primary" href="/feed/research" role="button">Search!</a></p>
+	</div>
+	<%} else {%>
 	<div class="list-group">
 		<% conversations.forEach(conversation => { %>
 		<% var userno = 0; if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }%>
@@ -38,6 +45,7 @@
 		<% });%>
 	</div>
 </div>
+<%}%>
 
 <script>
 	var socket = io('/chat');
@@ -48,13 +56,15 @@
 		}
 	}
 	socket.on('connect', () => {
-		socket.on("new message notification", data => {
-			var unreadNumber = document.getElementById(data.conversationId);
-			$('#' + data.conversationId).children('span').text(Number($('#' + data.conversationId)
+		if (chats.length > 0) {
+			socket.on("new message notification", data => {
+				var unreadNumber = document.getElementById(data.conversationId);
+				$('#' + data.conversationId).children('span').text(Number($('#' + data.conversationId)
 				.children('span').text()) + 1);
-			$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
-			$('#' + data.conversationId).css('background', '#375a7f');
-		});
+				$('#' + data.conversationId).children('p').text(data.user + ": " + data.message);
+				$('#' + data.conversationId).css('background', '#375a7f');
+			});
+		}
 	})
 </script>
 
