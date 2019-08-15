@@ -194,26 +194,34 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 			console.log(err);
 			res.send({
 				status: "error",
-				error: err
+				error: err.message
 			});
 		} else {
-			user.interests.pull(req.params.tag_id);
-			if (user.location.coordinates.length != 2) {
-				user.location = undefined;
-			}
-			user.save((err) => {
-				if (err) {
-					console.log(err);
-					res.send({
-						status: "error",
-						error: err.message
-					});
-				} else {
-					res.send({
-						status: "success"
-					});
+			var tagToDelete = user.interests.filter(tag => tag._id.toString() === req.sanitize(req.params.tag_id));
+			if (tagToDelete.length == 1) {
+				user.interests.pull(req.params.tag_id);
+				if (user.location.coordinates.length != 2) {
+					user.location = undefined;
 				}
-			});
+				user.save((err) => {
+					if (err) {
+						console.log(err);
+						res.send({
+							status: "error",
+							error: err.message
+						});
+					} else {
+						res.send({
+							status: "success"
+						});
+					}
+				});
+			} else {
+				res.send({
+					status: "error",
+					error: "Tag not found"
+				});
+			}
 		}
 	});
 });
@@ -242,8 +250,8 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 	}
 	if ((gender.toString() === "Male" || gender.toString() === "Female") &&
 		(sexPreferences.toString() === "Male" ||
-		sexPreferences.toString() === "Female" ||
-		sexPreferences.toString() === "Bi-Sexual")) {
+			sexPreferences.toString() === "Female" ||
+			sexPreferences.toString() === "Bi-Sexual")) {
 		User.findByIdAndUpdate(req.params.id, {}, (err, userdata) => {
 			if (err) {
 				console.log(err);
@@ -266,7 +274,10 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 							return res.redirect("back");
 						} else {
 							userdata.locationname = data[0].formattedAddress;
-							userdata.location = { type: "Point", coordinates: [data[0].longitude, data[0].latitude]};
+							userdata.location = {
+								type: "Point",
+								coordinates: [data[0].longitude, data[0].latitude]
+							};
 							userdata.save((err) => {
 								if (err) {
 									console.log(err);
@@ -302,7 +313,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 });
 
 
-router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('image'), middleware.pictureIsPresent, (req, res) => {
+router.put("/:id/addpic", middleware.checkProfileOwnership, upload.single('image'), middleware.pictureIsPresent, (req, res) => {
 	async.waterfall([
 		(done) => {
 			User.findById(req.params.id, (err, user) => {
@@ -363,13 +374,15 @@ router.put("/:id/editpic", middleware.checkProfileOwnership, upload.single('imag
 
 router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res) => {
 	User.findById(req.params.id, (err, user) => {
-		if (err) {
+		if (err || !user) {
 			req.flash("error", err.message);
 			console.log(err);
 			res.redirect("back");
 		} else {
-			var url = user.pictures.id(req.params.pic_id);
+			var url = user.pictures.id(req.params.pic_id)
 			var deletedPicture = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
+			console.log(url);
+			console.log(deletedPicture);
 			user.pictures.pull(req.params.pic_id);
 			if (user.pictures[0]) {
 				user.pictures[0].isProfile = true;
