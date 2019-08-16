@@ -81,7 +81,7 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 												} else {
 													user.likeslog.push(likelog);
 													user.likes.push(like);
-													if (user.location.coordinates.length != 2) {
+													if (!user.hasLocation) {
 														user.location = undefined;
 													}
 													// liked user gets  a new like in the Likes array and new likelog entry in the Likelogs
@@ -103,57 +103,65 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 																res.locals.message = "";
 															}
 															User.findById(req.user._id, (err, liker_user) => {
-																liker_user.mylikeslog.push(likelog);
-																liker_user.myLikes.push(like);
-																if (likerUser.location.coordinates.length != 2) {
-																	likerUser.location = undefined;
-																}
-																// user who liked gets an entry in the 'myLikes' field and in the 'mylikeslog' field
-																liker_user.save((err) => {
-																	if (err) console.log(err);
-
-																	// CREATING A NEW NOTIFICATION
-
-																	var users_info = {
-																		visitor: req.user._id,
-																		visited_one: req.params.id,
-																		n_type: n_type,
-																	}
-																	Notifications.create({
-																		n_type: users_info.n_type,
-																		for_who: users_info.visited_one,
-																		from_whom: users_info.visitor,
-																	}, (err, newNotification) => {
-																		if (err) console.log(err);
-																		else {
-																			// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
-																			User.findById(users_info.visited_one, (err, foundUser) => {
-																				if (err) console.log(err);
-																				else {
-																					foundUser.notifications.push(newNotification);
-																					if (foundUser.location.coordinates.length != 2) {
-																						foundUser.location = undefined;
-																					}
-																					foundUser.save((err) => {
-																						if (err) console.log(err);
-																						// EMITING A NOTIFICATION TO THE USER
-																						mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
-																							foundVisitorID: req.user._id,
-																							foundVisitorUsername: req.user.username,
-																							notificationID: newNotification._id,
-																							n_type: users_info.n_type
-																						});
-																						res.send({
-																							status: 'success',
-																							user: user,
-																							message: message
-																						});
-																					});
-																				}
-																			});
-																		}
+																if (err || !liker_user) {
+																	console.log(err);
+																	res.send({
+																		status: 'error',
+																		error: err.message
 																	});
-																});
+																} else {
+																	liker_user.mylikeslog.push(likelog);
+																	liker_user.myLikes.push(like);
+																	if (!liker_user.hasLocation) {
+																		liker_user.location = undefined;
+																	}
+																	// user who liked gets an entry in the 'myLikes' field and in the 'mylikeslog' field
+																	liker_user.save((err) => {
+																		if (err) console.log(err);
+
+																		// CREATING A NEW NOTIFICATION
+
+																		var users_info = {
+																			visitor: req.user._id,
+																			visited_one: req.params.id,
+																			n_type: n_type,
+																		}
+																		Notifications.create({
+																			n_type: users_info.n_type,
+																			for_who: users_info.visited_one,
+																			from_whom: users_info.visitor,
+																		}, (err, newNotification) => {
+																			if (err) console.log(err);
+																			else {
+																				// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
+																				User.findById(users_info.visited_one, (err, foundUser) => {
+																					if (err) console.log(err);
+																					else {
+																						foundUser.notifications.push(newNotification);
+																						if (!foundUser.hasLocation) {
+																							foundUser.location = undefined;
+																						}
+																						foundUser.save((err) => {
+																							if (err) console.log(err);
+																							// EMITING A NOTIFICATION TO THE USER
+																							mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
+																								foundVisitorID: req.user._id,
+																								foundVisitorUsername: req.user.username,
+																								notificationID: newNotification._id,
+																								n_type: users_info.n_type
+																							});
+																							res.send({
+																								status: 'success',
+																								user: user,
+																								message: message
+																							});
+																						});
+																					}
+																				});
+																			}
+																		});
+																	});
+																}
 															});
 														}
 													});

@@ -69,14 +69,14 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 						}, (err, newVisit) => {
 							if (err) console.log(err);
 							user.visits.push(newVisit);
-							if (user.location.coordinates.length != 2) {
+							if (!user.hasLocation) {
 								user.location = undefined;
 							}
 							user.save((err) => {
 								if (err) console.log(err);
 								User.findById(req.user._id, (err, myuser) => {
 									myuser.myVisits.push(newVisit);
-									if (myuser.location.coordinates.length != 2) {
+									if (!user.hasLocation) {
 										myuser.location = undefined;
 									}
 									myuser.save((err) => {
@@ -143,7 +143,7 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 				newArr.forEach((tag) => {
 					user.interests.push(tag);
 				});
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save((err) => {
@@ -200,7 +200,7 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 			var tagToDelete = user.interests.filter(tag => tag._id.toString() === req.sanitize(req.params.tag_id));
 			if (tagToDelete.length == 1) {
 				user.interests.pull(req.params.tag_id);
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save((err) => {
@@ -278,6 +278,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 								type: "Point",
 								coordinates: [data[0].longitude, data[0].latitude]
 							};
+							userdata.hasLocation = true;
 							userdata.save((err) => {
 								if (err) {
 									console.log(err);
@@ -293,6 +294,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 				} else {
 					userdata.location = undefined;
 					userdata.locationname = undefined;
+					userdata.hasLocation = false;
 					userdata.save((err) => {
 						if (err) {
 							console.log(err);
@@ -349,7 +351,7 @@ router.put("/:id/addpic", middleware.checkProfileOwnership, upload.single('image
 								naked_url: result.public_id
 							});
 						}
-						if (user.location.coordinates.length != 2) {
+						if (!user.hasLocation) {
 							user.location = undefined;
 						}
 						user.save((err) => {
@@ -387,7 +389,7 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 				if (user.pictures[0]) {
 					user.pictures[0].isProfile = true;
 				}
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save(() => {
@@ -420,12 +422,11 @@ router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, re
 		} else {
 			var pictureIDChecker = user.pictures.filter(picture => picture._id.toString() === req.params.pic_id.toString());
 			if (pictureIDChecker.length > 0) {
-
 				user.pictures.forEach(pic => {
 					pic.isProfile = false;
 				});
 				user.pictures.id(req.params.pic_id).isProfile = true;
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save(() => {
@@ -462,7 +463,7 @@ router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileO
 							req.flash('error', err.message);
 							res.redirect('/profile/' + req.user._id + '/edit');
 						} else {
-							if (foundUser.location.coordinates.length != 2) {
+							if (!user.hasLocation) {
 								foundUser.location = undefined;
 							}
 							foundUser.save((err) => {

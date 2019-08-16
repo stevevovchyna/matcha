@@ -10,6 +10,7 @@ const async = require("async");
 const middleware = require("../middleware");
 const NodeGeocoder = require("node-geocoder");
 const iplocate = require('node-iplocate');
+const mongoose = require('mongoose');
 
 const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
 const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
@@ -90,10 +91,10 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 				},
 				interests: [{
 					text: "dating"
-				}]
+				}],
+				hasLocation: false
 			});
 			newUser.location = undefined;
-			console.log(newUser);
 		} else {
 			if (err) {
 				console.log(err);
@@ -102,8 +103,7 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 			} else {
 				coords.lat = data[0].latitude;
 				coords.lng = data[0].longitude;
-				coords.location = data[0].formattedAddress;
-				console.log("Darova" + coords);
+				coords.location = data[0].city;
 				var newUser = new User({
 					username: username,
 					email: email,
@@ -121,7 +121,8 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 					},
 					interests: [{
 						text: "dating"
-					}]
+					}],
+					hasLocation: true
 				});
 			}
 		}
@@ -155,6 +156,8 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 							pass: "omtMovBe7sEwdz_6KCHz"
 						}
 					});
+					User.schema.index({location: "2dsphere"});
+					User.schema.index({reallocation: "2dsphere"});
 					var mailOptions = {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
@@ -197,7 +200,7 @@ router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 				return res.redirect("/login");
 			}
 			user.isVerified = true;
-			if (user.location.coordinates.length != 2) {
+			if (!user.hasLocation) {
 				user.location = undefined;
 			}
 			user.save((err) => {
@@ -215,6 +218,7 @@ router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 
 //LOGIN PAGE ROUTE
 router.get("/login", middleware.checkIfLogged, (req, res) => {
+	mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, autoIndex: true});
 	res.render("login");
 });
 
@@ -280,7 +284,7 @@ router.post('/forgot', (req, res, next) => {
 				}
 				user.passwordResetToken = token;
 				user.passwordResetExpires = Date.now() + 3600000; // 1 hour
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save((err) => {
@@ -365,7 +369,7 @@ router.post('/reset/:token', (req, res) => {
 					user.setPassword(pass, (err) => {
 						user.passwordResetToken = undefined;
 						user.passwordResetExpires = undefined;
-						if (user.location.coordinates.length != 2) {
+						if (!user.hasLocation) {
 							user.location = undefined;
 						}
 						user.save((err) => {

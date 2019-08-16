@@ -19,6 +19,7 @@ var UserSchema = new mongoose.Schema({
 		type: String,
 		default: "Female"
 	},
+	hasLocation: Boolean,
 	locationname: String,
 	location: {
 		type: {
@@ -26,7 +27,8 @@ var UserSchema = new mongoose.Schema({
 			enum: ['Point'] // 'location.type' must be 'Point'
 		},
 		coordinates: {
-			type: [Number]
+			type: [Number],
+			index: true
 		}
 	},
 	reallocationname: String,
@@ -36,7 +38,8 @@ var UserSchema = new mongoose.Schema({
 			enum: ['Point'] // 'location.type' must be 'Point'
 		},
 		coordinates: {
-			type: [Number]
+			type: [Number],
+			index: true
 		}
 	},
 	sexPreferences: {
@@ -132,12 +135,8 @@ UserSchema.plugin(passportLocalMongoose, {
 	}
 });
 
-UserSchema.index({
-	"location": "2dsphere"
-});
-UserSchema.index({
-	"reallocation": "2dsphere"
-});
+UserSchema.index({ location: "2dsphere"});
+UserSchema.index({ reallocation: "2dsphere"});
 UserSchema.plugin(findOrCreate);
 
 //exporting model to the db

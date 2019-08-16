@@ -30,7 +30,7 @@ middlewareObject.countDistance = (req, res, next) => {
 			} else {
 				res.locals.distance = 0;
 				// getting user's location
-				if (req.user.location != "null" || req.user.location != "undefined" || req.user.location) {
+				if (req.user.hasLocation) {
 					var lon1 = req.user.location.coordinates[0];
 					var lat1 = req.user.location.coordinates[1];
 				} else if (req.user.reallocation != "null" || req.user.reallocation != "undefined" || req.user.reallocation) {
@@ -117,19 +117,61 @@ middlewareObject.checkDate = (req, res, next) => {
 	}
 }
 
+middlewareObject.locationForChosen = (req, res, next) => {
+	User.findById(req.user._id, (err, foundUser) => {
+		if (err || !foundUser) {
+			console.log(err);
+			next();
+		} else {
+			if (foundUser.intra_id) {
+				let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
+				iplocate(ip).then((results) => {
+					if (results.latitude == null) {
+						var latitude = 0;
+						var longitude = 0;
+					} else {
+						var latitude = results.latitude;
+						var longitude = results.longitude;
+					}
+					// foundUser.reallocationname = results.city;
+					foundUser.reallocationname = "Kyiv";
+					foundUser.reallocation.type = "Point";
+					foundUser.reallocation.coordinates = [30.52, 50.45];
+					// foundUser.reallocation.coordinates = [longitude, latitude];
+					if (!foundUser.hasLocation) {
+						foundUser.location = undefined;
+					}
+					foundUser.save((err) => {
+						if (err) {
+							console.log(err);
+							next();
+						} else {
+							console.log("Location from intra user obtained");
+							next();
+						}
+					});
+				});
+			} else {
+				next();
+			}
+		}
+	})
+}
+
 middlewareObject.location = (req, res, next) => {
 	let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 	iplocate(ip).then((results) => {
 		User.findOneAndUpdate({
 			username: req.sanitize(req.body.username)
 		}, {
-			reallocationname: results.city,
+			reallocationname: "Kyiv",
 			reallocation: {
 				type: "Point",
-				coordinates: [results.longitude, results.latitude]
+				coordinates: [30.52, 50.45]
+				// coordinates: [results.longitude, results.latitude]
 			},
 		}, (err, user) => {
-			if (err) {
+			if (err || !user || user.length < 1) {
 				console.log(err);
 				next();
 			} else {
@@ -254,7 +296,7 @@ middlewareObject.haveFilled = (req, res, next) => {
 				return next();
 			} else {
 				user.filledFields = true;
-				if (user.location.coordinates.length != 2) {
+				if (!user.hasLocation) {
 					user.location = undefined;
 				}
 				user.save((err) => {

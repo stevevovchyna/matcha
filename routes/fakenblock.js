@@ -46,7 +46,7 @@ router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 							fakeReport.id = req.user._id;
 							fakeReport.save();
 							user.fakeReports.push(fakeReport);
-							if (user.location.coordinates.length != 2) {
+							if (!user.hasLocation) {
 								user.location = undefined;
 							}
 							user.save(() => {
@@ -65,7 +65,7 @@ router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 
 router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 	var id = req.sanitize(req.params.id);
-	User.findByIdAndUpdate(req.user._id.toString(), {}).populate('blockedUsers').exec((err, user) => {
+	User.findById(req.user._id.toString()).populate('blockedUsers').exec((err, user) => {
 		if (err || !user) {
 			console.log(err);
 			res.send({
@@ -90,7 +90,7 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 							});
 						} else {
 							user.blockedUsers.pull(result._id);
-							if (user.location.coordinates.length != 2) {
+							if (!user.hasLocation) {
 								user.location = undefined;
 							}
 							user.save((err) => {
@@ -147,14 +147,17 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 							blockedUser.id = id.toString();
 							blockedUser.save();
 							user.blockedUsers.push(blockedUser);
+							if (!user.hasLocation) {
+								user.location = undefined;
+							}
 							user.save((err) => {
 								if (err) {
 									console.log(err);
-								} else {
 									res.send({
 										status: 'error',
 										error: err.message
 									});
+								} else {
 									Conversations.find({}, (err, foundConversations) => {
 										var neededConversation = foundConversations.filter(conversation => conversation.participants.includes(req.params.id) && conversation.participants.includes(req.user._id));
 										if (err) {

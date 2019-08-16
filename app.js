@@ -19,7 +19,6 @@ methodOverride = 		require("method-override"),
 flash = 				require("connect-flash"),
 moment =        		require("moment"),
 expressSanitizer = 		require('express-sanitizer'),
-assert = 				require('assert'),
 nodemailer = 			require("nodemailer"),
 crypto = 				require("crypto"),
 async = 				require("async"),
@@ -37,9 +36,7 @@ io = 					socketio(server),
 redisClient = 			redis.createClient(),
 xss = 					require("xss"),
 FortyTwoStrategy = 		require('passport-42').Strategy,
-TwitterStrategy = 		require('passport-twitter').Strategy;
-
-const NodeGeocoder = 	require('node-geocoder');
+NodeGeocoder = 			require('node-geocoder');
 
 var options = {
 	provider: 'google',
@@ -65,7 +62,7 @@ notificationsRoutes = require("./routes/notifications");
 chatRoutes = require("./routes/chat");
 
 // databse connection
-mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true});
+mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, autoIndex: true});
 
 app.set("view engine", "ejs"); //no need to write .ejs in the end of the file name
 app.use(bodyParser.urlencoded({extended: true}));
@@ -140,6 +137,7 @@ passport.use(new FortyTwoStrategy({
 							type: "Point",
 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
 						},
+						hasLocation: true,
 						interests: [
 							{
 								text: "dating"
@@ -151,6 +149,8 @@ passport.use(new FortyTwoStrategy({
 					});
 					user.save((err) => {
 						if (err) console.log(err);
+						User.schema.index({location: "2dsphere"});
+						User.schema.index({reallocation: "2dsphere"});
 						return cb(err, user)
 					});
 				});
@@ -161,66 +161,6 @@ passport.use(new FortyTwoStrategy({
 		});
 	}
 ));
-// TWITTER AUTH STRATEGY
-// passport.use(new TwitterStrategy({
-// 		clientID: '',
-// 		clientSecret: '',
-// 		callbackURL: "http://localhost:3000/auth/twitter/callback"
-// 	},
-// 	function (accessToken, refreshToken, profile, cb) {
-// 		User.find({twitter_id: profile._json.id}, (err, user) => {
-// 			if (err) {
-// 				console.log(err);
-// 				return cb(err);
-// 			}
-// 			//user is not found
-// 			if (user.length == 0) {
-// 				var userLocation = {
-// 					latitude: "",
-// 					longitude: "",
-// 					city: ""
-// 				};
-// 				//getting a location of the user!!!
-// 				geocoder.geocode(profile.<possible-location-data>, (err, res) => {
-// 					userLocation = {
-// 						latitude: res[0].latitude,
-// 						longitude: res[0].longitude,
-// 						city: res[0].city
-// 					}
-// 					user = new User({
-// 						twitter_id: profile._json.id,
-// 						isVerified: true,
-// 						username: profile._json.login,
-// 						email: profile._json.email,
-// 						lastname: profile._json.last_name,
-// 						firstname: profile._json.first_name,
-// 						pictures: [{
-// 							url: profile._json.image_url,
-// 							isProfile: true
-// 						}],
-// 						reallocationname: userLocation.city,
-// 						reallocation: {
-// 							type: "Point",
-// 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
-// 						},
-// 						locationname: userLocation.city,
-// 						location: {
-// 							type: "Point",
-// 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
-// 						}
-// 					});
-// 					user.save((err) => {
-// 						if (err) console.log(err);
-// 						return cb(err, user)
-// 					});
-// 				});
-// 			} else {
-// 				//user is found!!!
-// 				return cb(err, user[0]);
-// 			}
-// 		});
-// 	}
-// ));
 
 passport.serializeUser((user, done) => {
 	done(null, user);
@@ -278,7 +218,6 @@ eventSocket.on('connection', (socket) => {
 	});
 
 	socket.on('new income notification', (socketId, users_info) => {
-		console.log("Ther's some movement in the " + socketId);
 		if (users_info.visitor !== users_info.visited_one) {
 			Notifications.create({
 				n_type: users_info.n_type,
@@ -292,7 +231,7 @@ eventSocket.on('connection', (socket) => {
 						if (err) console.log(err);
 						else {
 							foundUser.notifications.push(newNotification);
-							if (foundUser.location.coordinates.length != 2) {
+							if (!foundUser.hasLocation) {
 								foundUser.location = undefined;
 							}
 							foundUser.save((err) => {
@@ -391,7 +330,7 @@ chatSocket.on('connection', socket => {
 							if (err) console.log(err);
 							else {
 								foundUser.notifications.push(newNotification);
-								if (foundUser.location.coordinates.length != 2) {
+								if (!foundUser.hasLocation) {
 									foundUser.location = undefined;
 								}
 								foundUser.save((err) => {
