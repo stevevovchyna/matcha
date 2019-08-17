@@ -1,42 +1,43 @@
 require("dotenv").config();
 
-const express = 		require('express'),
-app =		 			express(),
-bodyParser = 			require("body-parser"),
-mongoose = 				require("mongoose"),
-DateOnly = 				require('mongoose-dateonly')(mongoose),
-User = 					require("./models/user"),
-Likes = 				require("./models/likes"),
-Messages = 				require("./models/message"),
-Notifications = 		require("./models/notifications"),
-Conversations = 		require("./models/conversations"),
-Dislikeslog = 			require("./models/dislikeslog"),
-Token = 				require("./models/token"),
-passport = 				require("passport"),
-localStrategy = 		require("passport-local"),
-passportLocalMongoose = require("passport-local-mongoose"),
-methodOverride = 		require("method-override"),
-flash = 				require("connect-flash"),
-moment =        		require("moment"),
-expressSanitizer = 		require('express-sanitizer'),
-nodemailer = 			require("nodemailer"),
-crypto = 				require("crypto"),
-async = 				require("async"),
-iplocate = 				require('node-iplocate'),
-seed = 					require("./seed"),
-http = 					require('http'),
-socketio = 				require('socket.io'),
-passportSocketIo = 		require('passport.socketio'),
-cookieParser = 			require('cookie-parser'),
-session = 				require('express-session'),
-redis = 				require('redis'),
-redisStore = 			require('connect-redis')(session),
-server = 				http.Server(app),
-io = 					socketio(server),
-redisClient = 			redis.createClient(),
-xss = 					require("xss"),
-FortyTwoStrategy = 		require('passport-42').Strategy,
-NodeGeocoder = 			require('node-geocoder');
+const express = require('express'),
+	app = express(),
+	bodyParser = require("body-parser"),
+	mongoose = require("mongoose"),
+	DateOnly = require('mongoose-dateonly')(mongoose),
+	User = require("./models/user"),
+	Likes = require("./models/likes"),
+	Messages = require("./models/message"),
+	Notifications = require("./models/notifications"),
+	Conversations = require("./models/conversations"),
+	Dislikeslog = require("./models/dislikeslog"),
+	Token = require("./models/token"),
+	passport = require("passport"),
+	localStrategy = require("passport-local"),
+	passportLocalMongoose = require("passport-local-mongoose"),
+	methodOverride = require("method-override"),
+	flash = require("connect-flash"),
+	moment = require("moment"),
+	expressSanitizer = require('express-sanitizer'),
+	nodemailer = require("nodemailer"),
+	crypto = require("crypto"),
+	async = require("async"),
+		iplocate = require('node-iplocate'),
+		seed = require("./seed"),
+		http = require('http'),
+		socketio = require('socket.io'),
+		passportSocketIo = require('passport.socketio'),
+		cookieParser = require('cookie-parser'),
+		session = require('express-session'),
+		redis = require('redis'),
+		redisStore = require('connect-redis')(session),
+		server = http.Server(app),
+		io = socketio(server),
+		redisClient = redis.createClient(),
+		xss = require("xss"),
+		FortyTwoStrategy = require('passport-42').Strategy,
+		NodeGeocoder = require('node-geocoder'),
+		GitHubStrategy = require('passport-github').Strategy;
 
 var options = {
 	provider: 'google',
@@ -46,7 +47,12 @@ var options = {
 };
 var geocoder = NodeGeocoder(options);
 
-const sessionStore = new redisStore({ host: 'localhost', port: 6379, client: redisClient, ttl: 86400 });
+const sessionStore = new redisStore({
+	host: 'localhost',
+	port: 6379,
+	client: redisClient,
+	ttl: 86400
+});
 
 redisClient.on('error', (err) => {
 	console.log('Redis error: ', err);
@@ -54,22 +60,31 @@ redisClient.on('error', (err) => {
 
 // requiring routes from ./routes folder
 const authRoutes = require("./routes/index"),
-feedRoutes = require("./routes/feed"),
-likesRoutes = require("./routes/likes"),
-profileRoutes = require("./routes/profile");
+	feedRoutes = require("./routes/feed"),
+	likesRoutes = require("./routes/likes"),
+	profileRoutes = require("./routes/profile");
 fakenblockRoutes = require("./routes/fakenblock");
 notificationsRoutes = require("./routes/notifications");
 chatRoutes = require("./routes/chat");
 
 // databse connection
-mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, autoIndex: true});
+mongoose.connect("mongodb://localhost/matcha", {
+	useNewUrlParser: true,
+	useFindAndModify: false,
+	useCreateIndex: true,
+	autoIndex: true
+});
 
 app.set("view engine", "ejs"); //no need to write .ejs in the end of the file name
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 
 app.use(session({ //session initializer
 	store: sessionStore,
-	cookie: { secure: false },
+	cookie: {
+		secure: false
+	},
 	secret: "I love Kate",
 	resave: false,
 	saveUninitialized: true
@@ -98,7 +113,9 @@ passport.use(new FortyTwoStrategy({
 		callbackURL: "http://localhost:3000/auth/42/callback"
 	},
 	function (accessToken, refreshToken, profile, cb) {
-		User.find({intra_id: profile._json.id}, (err, user) => {
+		User.find({
+			intra_id: profile._json.id
+		}, (err, user) => {
 			if (err) {
 				console.log(err);
 				return cb(err);
@@ -138,8 +155,7 @@ passport.use(new FortyTwoStrategy({
 							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
 						},
 						hasLocation: true,
-						interests: [
-							{
+						interests: [{
 								text: "dating"
 							},
 							{
@@ -149,10 +165,75 @@ passport.use(new FortyTwoStrategy({
 					});
 					user.save((err) => {
 						if (err) console.log(err);
-						User.schema.index({location: "2dsphere"});
-						User.schema.index({reallocation: "2dsphere"});
+						User.schema.index({
+							location: "2dsphere"
+						});
+						User.schema.index({
+							reallocation: "2dsphere"
+						});
 						return cb(err, user)
 					});
+				});
+			} else {
+				//user is found!!!
+				return cb(err, user[0]);
+			}
+		});
+	}
+));
+
+passport.use(new GitHubStrategy({
+		clientID: '80cee925b555c7029656',
+		clientSecret: 'dd9f33503027e4ffe1b0bcf775997975269cf5d5',
+		callbackURL: "http://localhost:3000/auth/github/callback"
+	},
+	function (accessToken, refreshToken, profile, cb) {
+		// console.log(profile);
+		// return cb(err);
+		User.find({
+			github_id: profile._json.id
+		}, (err, user) => {
+			if (err) {
+				console.log(err);
+				return cb(err);
+			}
+			//user is not found
+			if (user.length == 0) {
+				var userLocation = {
+					latitude: "",
+					longitude: "",
+					city: ""
+				};
+				user = new User({
+					github_id: profile.id,
+					isVerified: true,
+					username: profile._json.login,
+					lastname: profile._json.name,
+					firstname: profile._json.name,
+					pictures: [{
+						url: profile._json.avatar_url ? profile._json.avatar_url : "https://image.flaticon.com/icons/svg/25/25231.svg",
+						isProfile: true
+					}],
+					hasLocation: false,
+					interests: [{
+							text: "dating"
+						},
+						{
+							text: 'coding'
+						}
+					],
+				});
+				user.location = undefined;
+				user.reallocation = undefined;
+				user.save((err) => {
+					if (err) console.log(err);
+					// User.schema.index({
+					// 	location: "2dsphere"
+					// });
+					// User.schema.index({
+					// 	reallocation: "2dsphere"
+					// });
+					return cb(err, user)
 				});
 			} else {
 				//user is found!!!
@@ -191,9 +272,9 @@ app.use("/fakenblock", fakenblockRoutes);
 app.use(notificationsRoutes);
 app.use(chatRoutes);
 
-app.get('*', (req, res) => { 
-    res.render('error');
-}) 
+app.get('*', (req, res) => {
+	res.render('error');
+})
 
 // seed("Male", 5);
 // seed("Female", 5);
@@ -208,8 +289,10 @@ eventSocket.on('connection', (socket) => {
 	if (socket.request.user && socket.request.user.logged_in) {
 		onlineUsers.push(socket.request.user);
 		console.log(socket.request.user.username + " connected");
-	}	
-	eventSocket.emit('broadcast', {onlineUsers: onlineUsers});
+	}
+	eventSocket.emit('broadcast', {
+		onlineUsers: onlineUsers
+	});
 
 	socket.on('connectToRoom', socketId => {
 		console.log(socket.request.user.username + " connected to the socket: " + socketId);
@@ -261,7 +344,9 @@ eventSocket.on('connection', (socket) => {
 		var leftUser = {};
 		for (var i = 0; i < onlineUsers.length; i++) {
 			if (onlineUsers[i]._id.toString() === socket.request.user._id.toString()) {
-				User.findByIdAndUpdate(socket.request.user._id, { lastseen: Date.now() }, (err, user) => {
+				User.findByIdAndUpdate(socket.request.user._id, {
+					lastseen: Date.now()
+				}, (err, user) => {
 					if (err) {
 						console.log(err);
 					} else {
@@ -272,7 +357,10 @@ eventSocket.on('connection', (socket) => {
 				onlineUsers.splice(i, 1);
 			}
 		}
-		eventSocket.emit('broadcast', {onlineUsers: onlineUsers, leftUser: leftUser});
+		eventSocket.emit('broadcast', {
+			onlineUsers: onlineUsers,
+			leftUser: leftUser
+		});
 	});
 });
 
@@ -363,11 +451,23 @@ chatSocket.on('connection', socket => {
 		});
 
 		//save chat to the database
-		Messages.create({ conversationId: currentRoom, body: message, sentBy: authorId, isRead: onlineToggle},
-			err => { if (err) console.log(err); });
+		Messages.create({
+				conversationId: currentRoom,
+				body: message,
+				sentBy: authorId,
+				isRead: onlineToggle
+			},
+			err => {
+				if (err) console.log(err);
+			});
 		// SAVING LAST MESSAGE AUTHOR AND THE MESAGE ITSELF RO THE CONVERSATION TO DISPLAY IT ON THE CONVERSATIONS PAGE
-		Conversations.findByIdAndUpdate(currentRoom, { lastMessage: message, lastMessageAuthor: authorId },
-			err => { if (err) console.log(err);	});
+		Conversations.findByIdAndUpdate(currentRoom, {
+				lastMessage: message,
+				lastMessageAuthor: authorId
+			},
+			err => {
+				if (err) console.log(err);
+			});
 	});
 });
 

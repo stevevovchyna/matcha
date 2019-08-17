@@ -176,12 +176,6 @@ router.get('/research', middleware.isLoggedIn, middleware.haveFilled, middleware
 
 
 router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, middleware.haveFilled, (req, res) => {
-	mongoose.connect("mongodb://localhost/matcha", {
-		useNewUrlParser: true,
-		useFindAndModify: false,
-		useCreateIndex: true,
-		autoIndex: true
-	});
 	var sortType = req.sanitize(req.body.userparams.sorttype.toString());
 	var order = req.sanitize(req.body.userparams.sortorder.toString());
 

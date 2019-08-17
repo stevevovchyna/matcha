@@ -299,11 +299,16 @@ middlewareObject.haveFilled = (req, res, next) => {
 				if (!user.hasLocation) {
 					user.location = undefined;
 				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
+				}
 				user.save((err) => {
 					if (err) {
+						console.log(err);
 						req.flash("error", err.message);
 						res.redirect("/login");
 					} else {
+						console.log('idi suda!');
 						req.flash('error', "Don't forget to update your profile info!");
 						res.redirect("/profile/" + user._id + "/edit");
 					}

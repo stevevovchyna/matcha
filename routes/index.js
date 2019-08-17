@@ -233,14 +233,14 @@ router.get('/auth/42/callback', middleware.location,
 		res.redirect('/feed/research');
 	});
 
-// TWITTER AUTH ROUTES
-// router.get('/auth/twitter', middleware.checkIfLogged, passport.authenticate('twitter'));
+// GITHUB AUTH ROUTES
+router.get('/auth/github', middleware.checkIfLogged, passport.authenticate('github'));
 
-// router.get('/auth/twitter/callback', middleware.location,
-// 	passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
-// 	// Successful authentication, redirect home.
-// 		res.redirect('/feed/research');
-// });
+router.get('/auth/github/callback', middleware.location,
+	passport.authenticate('github', { failureRedirect: '/login' }), (req, res) => {
+	// Successful authentication, redirect home.
+		res.redirect('/feed/research');
+});
 
 
 //AUTH ROUTE
