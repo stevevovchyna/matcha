@@ -60,11 +60,12 @@ router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) 
 							Messages.updateMany({"isRead": false, "sentBy": sender_id[0]._id}, {"$set":{"isRead": true}}, {"multi": true}, (err, mess) => {
 								if (err) {
 									console.log(err);
+									req.flash('error', "Something went wrong!");
+									res.redirect("conversations");
 								} else {
-									console.log(mess);
+									res.render('chat', {messages: messages, conversation: conversation});
 								}
 							});
-							res.render('chat', {messages: messages, conversation: conversation});
 						} else {
 							req.flash('error', "This conversation is not accessible as one of the users has blocked or disliked another one");
 							res.redirect('/conversations');

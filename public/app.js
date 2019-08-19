@@ -30,8 +30,6 @@ function filterBy(min, max, param) {
 		f_max *= 365;
 		maxRange = 36500;
 	}
-	console.log(f_min);
-	console.log(f_max);
 	if ((f_min < 0) || (f_max > maxRange) || (f_min > f_max)) {
 		$('div.modal-body > p').text('Incorrect filter parameters');
 		$('#myModal').modal('show');

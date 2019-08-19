@@ -36,7 +36,7 @@
 		var mySocketId = "<%=currentUser._id%>";
 		var eventSocket = io('/events');
 		eventSocket.on('broadcast', (data) => {
-			console.log(data);
+			// console.log(data);
 		});
 		eventSocket.on('connect', () => {
 			// Connected, let's sign-up for to receive messages for this room
@@ -155,7 +155,6 @@
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						var resp = JSON.parse(xmlhttp.responseText);
 						if (resp.status === 'success') {
-							console.log(resp.foundNotifications);
 							resp.foundNotifications = resp.foundNotifications.reverse();
 							for (let newNotification of resp.foundNotifications) {
 								var newNotificationElement = document.createElement('li');

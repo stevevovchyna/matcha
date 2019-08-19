@@ -67,34 +67,57 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 							profile_id: req.params.id,
 							visitor_id: req.user._id
 						}, (err, newVisit) => {
-							if (err) console.log(err);
-							user.visits.push(newVisit);
-							if (!user.hasLocation) {
-								user.location = undefined;
-							}
-							if (!user.reallocation.coordinates[0]) {
-								user.reallocation = undefined;
-							}
-							user.save((err) => {
-								if (err) console.log(err);
-								User.findById(req.user._id, (err, myuser) => {
-									myuser.myVisits.push(newVisit);
-									if (!myuser.hasLocation) {
-										myuser.location = undefined;
-									}
-									if (!myuser.reallocation.coordinates[0]) {
-										myuser.reallocation = undefined;
-									}
-									myuser.save((err) => {
-										if (err) console.log(err);
-										user.distance = parseInt(res.locals.distance);
-										res.render("profiles/profile", {
-											user: user,
-											youAreBlocked: false
+							if (err) {
+								console.log(err);
+								req.flash('error', err.message);
+								res.redirect('/feed/research');
+							} else {
+
+
+								user.visits.push(newVisit);
+								if (!user.hasLocation) {
+									user.location = undefined;
+								}
+								if (!user.reallocation.coordinates[0]) {
+									user.reallocation = undefined;
+								}
+								user.save((err) => {
+									if (err) {
+										console.log(err);
+										req.flash('error', err.message);
+										res.redirect('/feed/research');
+									} else {
+										User.findById(req.user._id, (err, myuser) => {
+											if (err) {
+												console.log(err);
+												req.flash('error', err.message);
+												res.redirect('/feed/research');
+											} else {
+												myuser.myVisits.push(newVisit);
+												if (!myuser.hasLocation) {
+													myuser.location = undefined;
+												}
+												if (!myuser.reallocation.coordinates[0]) {
+													myuser.reallocation = undefined;
+												}
+												myuser.save((err) => {
+													if (err) {
+														console.log(err);
+														req.flash('error', err.message);
+														res.redirect('/feed/research');
+													} else {
+														user.distance = parseInt(res.locals.distance);
+														res.render("profiles/profile", {
+															user: user,
+															youAreBlocked: false
+														});
+													}
+												});
+											}
 										});
-									});
+									}
 								});
-							});
+							}
 						});
 					} else {
 						user.distance = parseInt(res.locals.distance);

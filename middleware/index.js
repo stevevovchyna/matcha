@@ -233,7 +233,6 @@ middlewareObject.isConnected = (req, res, next) => {
 								if (err) {
 									console.log(err);
 								} else {
-									console.log("It's inactive, Sir!!!");
 									res.locals.message = "mutual_dislike";
 									next();
 								}
@@ -299,7 +298,6 @@ middlewareObject.haveLikedMe = (req, res, next) => {
 											if (err) {
 												console.log(err);
 											} else {
-												console.log("It's active again, Sir!!!");
 												res.locals.message = "That's a match! You can check the conversations list again!";
 												next();
 											}
@@ -311,7 +309,6 @@ middlewareObject.haveLikedMe = (req, res, next) => {
 											conversation.lastMessage = "Start of your conversation!";
 											conversation.lastMessageAuthor = req.user._id;
 											conversation.save(() => {
-												console.log("New conversation was created!!!");
 												res.locals.message = "That's a match! You can check the conversations list!";
 												next();
 											});
@@ -351,7 +348,6 @@ middlewareObject.haveFilled = (req, res, next) => {
 						req.flash("error", err.message);
 						res.redirect("/login");
 					} else {
-						console.log('idi suda!');
 						req.flash('error', "Don't forget to update your profile info!");
 						res.redirect("/profile/" + user._id + "/edit");
 					}

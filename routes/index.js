@@ -136,7 +136,7 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 			}
 			User.register(newUser, req.body.password, (err, user) => {
 				if (err) {
-					console.log(err.message);
+					console.log(err);
 					req.flash("error", err.message);
 					return res.redirect("/register");
 				}

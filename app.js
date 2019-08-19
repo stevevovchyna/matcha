@@ -166,14 +166,12 @@ passport.use(new FortyTwoStrategy({
 						]
 					});
 					user.save((err) => {
-						if (err) console.log(err);
-						// User.schema.index({
-						// 	location: "2dsphere"
-						// }, {sparse: true});
-						// User.schema.index({
-						// 	reallocation: "2dsphere"
-						// }, {sparse: true});
-						return cb(err, user)
+						if (err) {
+							console.log(err);
+							return cb(err);
+						} else {
+							return cb(err, user)
+						}
 					});
 				});
 			} else {
@@ -226,14 +224,12 @@ passport.use(new GitHubStrategy({
 				user.location = undefined;
 				user.reallocation = undefined;
 				user.save((err) => {
-					if (err) console.log(err);
-					// User.schema.index({
-					// 	location: "2dsphere"
-					// }, {sparse: true});
-					// User.schema.index({
-					// 	reallocation: "2dsphere"
-					// }, {sparse: true});
-					return cb(err, user)
+					if (err) {
+						console.log(err);
+						return cb(err);
+					} else {
+						return cb(err, user)
+					}
 				});
 			} else {
 				//user is found!!!
@@ -336,9 +332,9 @@ eventSocket.on('connection', (socket) => {
 										n_type: users_info.n_type
 									});
 								}
-							})
+							});
 						}
-					})
+					});
 				}
 			});
 		}
