@@ -285,8 +285,6 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 															error: err.message
 														});
 													} else {
-
-
 														// user that dislikes gets his data updated
 														User.findById(req.user._id, (err, disliking_user) => {
 															if (err) {
@@ -296,8 +294,6 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 																	error: err.message
 																});
 															} else {
-
-
 																disliking_user.mydislikeslog.push(dislikelog);
 																disliking_user.myLikes.pull(id);
 																if (!disliking_user.hasLocation) {

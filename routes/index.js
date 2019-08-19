@@ -156,8 +156,6 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 							pass: "omtMovBe7sEwdz_6KCHz"
 						}
 					});
-					// User.schema.index({location: "2dsphere"}, {sparse: true});
-					// User.schema.index({reallocation: "2dsphere"}, {sparse: true});
 					var mailOptions = {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
@@ -343,7 +341,8 @@ router.get('/reset/:token', (req, res) => {
 			$gt: Date.now()
 		}
 	}, (err, user) => {
-		if (!user) {
+		if (!user || err) {
+			console.log(err);
 			req.flash('error', 'Password reset token is invalid or has expired.');
 			return res.redirect('/forgot');
 		}
@@ -370,7 +369,7 @@ router.post('/reset/:token', (req, res) => {
 					$gt: Date.now()
 				}
 			}, (err, user) => {
-				if (!user) {
+				if (!user || err) {
 					req.flash('error', 'Password reset token is invalid or has expired.');
 					return res.redirect('back');
 				}

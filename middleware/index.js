@@ -440,7 +440,7 @@ middlewareObject.checkOwnership = (req, res, next) => {
 
 middlewareObject.checkNotificationRecipient = (req, res, next) => {
 	Notifications.findById(req.params.notification_id, (err, foundNotification) => {
-		if (err) {
+		if (err || !foundNotification) {
 			console.log(err);
 			req.flash("error", "No notifications found as per this request");
 			res.redirect("back");

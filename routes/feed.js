@@ -110,9 +110,7 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 										oneuser.commmontags = _.intersection(_.map(req.user.interests, 'text'), _.map(oneuser.interests, 'text')).length;
 									});
 									var ret = [];
-
 									if (req.user.sexPreferences.toString() !== "Bi-Sexual") {
-
 										// GAY USER PATTERN
 										if (req.user.gender.toString() === req.user.sexPreferences.toString()) {
 											usersWithoutMe.forEach(oneuser => {
@@ -122,7 +120,6 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 													ret.push(oneuser);
 												}
 											});
-
 											var ret = _.sortBy(ret, sort);
 											ret = _.sortBy(ret, sort);
 											res.render("browse", {
@@ -147,14 +144,12 @@ router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFi
 											});
 										}
 									} else {
-
 										// BI-SEXUAL USER PATTERN
 										usersWithoutMe.forEach(oneuser => {
 											if (oneuser.sexPreferences.toString() === "Bi-Sexual") {
 												ret.push(oneuser);
 											}
 										});
-
 										var ret = _.sortBy(ret, sort);
 										res.render("browse", {
 											user: order === 'asc' ? ret : ret.reverse(),
@@ -308,7 +303,6 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 									var zapasikIds = zapasik.blockedUsers.map(userid => userid.id.toString());
 									// filtering those blocked dudes
 									var userret = ret.filter(finaluser => !zapasikIds.includes(finaluser._id.toString()));
-
 									var orderOut = {
 										'sorttype': sortType,
 										'order': order
@@ -323,7 +317,6 @@ router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput,
 								}
 							});
 						}
-
 					});
 				}
 			}

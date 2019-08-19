@@ -511,7 +511,7 @@ router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileO
 		req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
 		return res.redirect("back");
 	} else {
-		User.findByIdAndUpdate(req.sanitize(req.params.id), {}, (err, foundUser) => {
+		User.findById(req.sanitize(req.params.id), (err, foundUser) => {
 			if (err) {
 				console.log(err);
 				req.flash('error', err.message);
