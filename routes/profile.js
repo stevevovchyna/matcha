@@ -72,8 +72,6 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 								req.flash('error', err.message);
 								res.redirect('/feed/research');
 							} else {
-
-
 								user.visits.push(newVisit);
 								if (!user.hasLocation) {
 									user.location = undefined;
@@ -196,7 +194,7 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 										}
 									}
 								}
-								uniqueArr = arr.map(function (value) {
+								uniqueArr = arr.map((value) => {
 									return {
 										text: value
 									};
@@ -327,14 +325,6 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIf
 									req.flash("error", err.message);
 									res.redirect("back");
 								} else {
-
-									// User.schema.index({
-									// 	location: "2dsphere"
-									// }, {sparse: true});
-									// User.schema.index({
-									// 	reallocation: "2dsphere"
-									// }, {sparse: true});
-
 									req.flash("success", "Profile info updated!");
 									res.redirect("/profile/" + req.params.id + "/edit");
 								}
@@ -551,6 +541,5 @@ router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileO
 		});
 	}
 });
-
 
 module.exports = router;
