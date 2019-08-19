@@ -10,11 +10,16 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 
 router.get("/browse", middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
-	console.log("tut takozh gotovo!!");
 	res.redirect("/feed/browse/default.asc");
 });
 
 router.get("/browse/:sort_type.:order", middleware.isLoggedIn, middleware.haveFilled, (req, res) => {
+	mongoose.connect("mongodb://localhost/matcha", {
+	useNewUrlParser: true,
+	useFindAndModify: false,
+	useCreateIndex: true,
+	autoIndex: true
+});
 	var sortType = req.sanitize(req.params.sort_type.toString());
 	var order = req.sanitize(req.params.order.toString());
 	if (sortType.toString() !== "default" && sortType.toString() !== "location" &&
@@ -176,6 +181,12 @@ router.get('/research', middleware.isLoggedIn, middleware.haveFilled, middleware
 
 
 router.put('/research/result', middleware.isLoggedIn, middleware.checkSortInput, middleware.haveFilled, (req, res) => {
+	mongoose.connect("mongodb://localhost/matcha", {
+		useNewUrlParser: true,
+		useFindAndModify: false,
+		useCreateIndex: true,
+		autoIndex: true
+	});
 	var sortType = req.sanitize(req.body.userparams.sorttype.toString());
 	var order = req.sanitize(req.body.userparams.sortorder.toString());
 

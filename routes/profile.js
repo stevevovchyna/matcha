@@ -72,12 +72,18 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 							if (!user.hasLocation) {
 								user.location = undefined;
 							}
+							if (!user.reallocation.coordinates[0]) {
+								user.reallocation = undefined;
+							}
 							user.save((err) => {
 								if (err) console.log(err);
 								User.findById(req.user._id, (err, myuser) => {
 									myuser.myVisits.push(newVisit);
-									if (!user.hasLocation) {
+									if (!myuser.hasLocation) {
 										myuser.location = undefined;
+									}
+									if (!myuser.reallocation.coordinates[0]) {
+										myuser.reallocation = undefined;
 									}
 									myuser.save((err) => {
 										if (err) console.log(err);
@@ -108,7 +114,7 @@ router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) =
 		});
 });
 
-router.get("/:id/edit", middleware.checkProfileOwnership, (req, res) => {
+router.get("/:id/edit", middleware.checkProfileOwnership, middleware.locationForChosen, (req, res) => {
 	User.findById(req.params.id).populate("tags").exec((err, user) => {
 		if (!user || err) {
 			req.flash("error", "Invalid link!");
@@ -145,6 +151,9 @@ router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
 				});
 				if (!user.hasLocation) {
 					user.location = undefined;
+				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
 				}
 				user.save((err) => {
 					if (err) {
@@ -203,6 +212,9 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 				if (!user.hasLocation) {
 					user.location = undefined;
 				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
+				}
 				user.save((err) => {
 					if (err) {
 						console.log(err);
@@ -226,16 +238,18 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 	});
 });
 
-router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDate, (req, res) => {
+router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIfOAuth, middleware.checkDate, (req, res) => {
 	if (!loginRegExp.test(req.body.user.firstname) || !loginRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
 		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
 		return res.redirect("back");
 	}
-	if (!emailRegExp.test(req.body.user.email)) {
-		req.flash("error", "Please make sure you've entered a correct email address!");
-		return res.redirect("back");
+	if (!res.locals.oauth) {
+		if (!emailRegExp.test(req.body.user.email)) {
+			req.flash("error", "Please make sure you've entered a correct email address!");
+			return res.redirect("back");
+		}
+		var email = req.sanitize(req.body.user.email);
 	}
-	var email = req.sanitize(req.body.user.email);
 	var username = req.sanitize(req.body.user.username);
 	var firstname = req.sanitize(req.body.user.firstname);
 	var lastname = req.sanitize(req.body.user.lastname);
@@ -259,7 +273,9 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 				return res.redirect("back");
 			} else {
 				userdata.username = username;
-				userdata.email = email;
+				if (!res.locals.oauth) {
+					userdata.email = email;
+				}
 				userdata.lastname = lastname;
 				userdata.firstname = firstname;
 				userdata.gender = gender;
@@ -278,6 +294,9 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 								type: "Point",
 								coordinates: [data[0].longitude, data[0].latitude]
 							};
+							if (!userdata.reallocation.coordinates[0]) {
+								userdata.reallocation = undefined;
+							}
 							userdata.hasLocation = true;
 							userdata.save((err) => {
 								if (err) {
@@ -285,6 +304,14 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 									req.flash("error", err.message);
 									res.redirect("back");
 								} else {
+
+									// User.schema.index({
+									// 	location: "2dsphere"
+									// }, {sparse: true});
+									// User.schema.index({
+									// 	reallocation: "2dsphere"
+									// }, {sparse: true});
+
 									req.flash("success", "Profile info updated!");
 									res.redirect("/profile/" + req.params.id + "/edit");
 								}
@@ -295,6 +322,9 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkDa
 					userdata.location = undefined;
 					userdata.locationname = undefined;
 					userdata.hasLocation = false;
+					if (!userdata.reallocation.coordinates[0]) {
+						userdata.reallocation = undefined;
+					}
 					userdata.save((err) => {
 						if (err) {
 							console.log(err);
@@ -354,6 +384,9 @@ router.put("/:id/addpic", middleware.checkProfileOwnership, upload.single('image
 						if (!user.hasLocation) {
 							user.location = undefined;
 						}
+						if (!user.reallocation.coordinates[0]) {
+							user.reallocation = undefined;
+						}
 						user.save((err) => {
 							if (err) {
 								console.log(err);
@@ -392,6 +425,9 @@ router.delete("/:id/:pic_id/picdel", middleware.checkProfileOwnership, (req, res
 				if (!user.hasLocation) {
 					user.location = undefined;
 				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
+				}
 				user.save(() => {
 					if (deletedPicture[0].naked_url) {
 						cloudinary.v2.api.delete_resources([url.naked_url], (err, result) => {
@@ -429,6 +465,9 @@ router.put("/:id/:pic_id/setprofile", middleware.checkProfileOwnership, (req, re
 				if (!user.hasLocation) {
 					user.location = undefined;
 				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
+				}
 				user.save(() => {
 					req.flash("success", "Profile picture set!");
 					res.redirect("back");
@@ -463,8 +502,11 @@ router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileO
 							req.flash('error', err.message);
 							res.redirect('/profile/' + req.user._id + '/edit');
 						} else {
-							if (!user.hasLocation) {
+							if (!foundUser.hasLocation) {
 								foundUser.location = undefined;
+							}
+							if (!foundUser.reallocation.coordinates[0]) {
+								foundUser.reallocation = undefined;
 							}
 							foundUser.save((err) => {
 								if (err) {

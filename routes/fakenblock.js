@@ -14,7 +14,7 @@ const Conversations = require("../models/conversations");
 
 router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 	var id = req.sanitize(req.params.id);
-	User.findByIdAndUpdate(id, {}).populate('fakeReports').exec((err, user) => {
+	User.findById(id).populate('fakeReports').exec((err, user) => {
 		if (err || !user) {
 			console.log(err);
 			res.send({
@@ -35,6 +35,7 @@ router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 						error: "You have already reported this profile"
 					});
 				} else {
+					// fake report is being created
 					FakeReports.create({}, (err, fakeReport) => {
 						if (err) {
 							console.log(err);
@@ -49,6 +50,10 @@ router.put("/:id/ajaxfakeaccount", middleware.isLoggedIn, (req, res) => {
 							if (!user.hasLocation) {
 								user.location = undefined;
 							}
+							if (!user.reallocation.coordinates[0]) {
+								user.reallocation = undefined;
+							}
+							// now in your profile you have a list of users you've marked as fake
 							user.save(() => {
 								res.send({
 									status: 'success',
@@ -89,9 +94,12 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 								error: err.message
 							});
 						} else {
-							user.blockedUsers.pull(result._id);
+							user.blockedUsers.pull(result[0]._id);
 							if (!user.hasLocation) {
 								user.location = undefined;
+							}
+							if (!user.reallocation.coordinates[0]) {
+								user.reallocation = undefined;
 							}
 							user.save((err) => {
 								if (err) {
@@ -136,7 +144,7 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 						}
 					});
 				} else {
-					BlockedUsers.create({}, (err, blockedUser) => {
+					BlockedUsers.create({id: id.toString()}, (err, blockedUser) => {
 						if (err) {
 							console.log(err);
 							res.send({
@@ -144,11 +152,12 @@ router.put("/:id/ajaxblockaccount", middleware.isLoggedIn, (req, res) => {
 								error: err.message
 							});
 						} else {
-							blockedUser.id = id.toString();
-							blockedUser.save();
 							user.blockedUsers.push(blockedUser);
 							if (!user.hasLocation) {
 								user.location = undefined;
+							}
+							if (!user.reallocation.coordinates[0]) {
+								user.reallocation = undefined;
 							}
 							user.save((err) => {
 								if (err) {

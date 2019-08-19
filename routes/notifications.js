@@ -16,7 +16,12 @@ router.get('/notifications/:user_id', middleware.isLoggedIn, middleware.checkOwn
 	.sort('-createdAt')
 	.limit(100)
 	.exec((err, foundNotifications) => {
-		res.send({ status: "success", foundNotifications: foundNotifications });
+		if (err) {
+			console.log(err);
+		} else {
+			// console.log(foundNotifications);
+			res.send({ status: "success", foundNotifications: foundNotifications });
+		}
 	})
 });
 
@@ -25,7 +30,7 @@ router.put('/notifications/:notification_id/check', middleware.isLoggedIn, middl
 		if (err) {
 			res.send({status: "error"});
 		} else {
-			console.log(updatedNotification);
+			// console.log(updatedNotification);
 			res.send({status: "success", updatedNotification: updatedNotification});
 		}
 	});
@@ -36,7 +41,7 @@ router.put('/notifications/:user_id/checkall', middleware.isLoggedIn, middleware
 		if (err) {
 			res.send({status: "error"});
 		} else {
-			console.log(updatedNotifications)
+			// console.log(updatedNotifications)
 			res.send({status: "success", updatedNotification: updatedNotifications});
 		}
 	});

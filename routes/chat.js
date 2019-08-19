@@ -42,7 +42,7 @@ router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) 
 		.populate('sentBy')
 		.populate('conversationId')
 		.exec((err, messages) => {
-			if (err || !messages) {
+			if (err) {
 				console.log(err);
 				req.flash('error', "Conversation not found!");
 				res.redirect("/conversations");
@@ -50,7 +50,7 @@ router.get("/conversations/:conversation_id", middleware.isLoggedIn, (req, res) 
 				Conversations.findById(req.params.conversation_id)
 				.populate('participants')
 				.exec((err, conversation) => {
-					if (err || conversation) {
+					if (err || !conversation) {
 						console.log(err);
 						req.flash('error', "Conversation not found!");
 						res.redirect("conversations");

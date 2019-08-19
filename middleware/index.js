@@ -123,23 +123,28 @@ middlewareObject.locationForChosen = (req, res, next) => {
 			console.log(err);
 			next();
 		} else {
-			if (foundUser.intra_id) {
+			if (foundUser.intra_id || foundUser.github_id) {
 				let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 				iplocate(ip).then((results) => {
 					if (results.latitude == null) {
 						var latitude = 0;
 						var longitude = 0;
+						var city = "Knowhere";
 					} else {
 						var latitude = results.latitude;
 						var longitude = results.longitude;
+						var city = results.city;
 					}
-					// foundUser.reallocationname = results.city;
-					foundUser.reallocationname = "Kyiv";
 					foundUser.reallocation.type = "Point";
+					foundUser.reallocationname = "Kyiv";
 					foundUser.reallocation.coordinates = [30.52, 50.45];
 					// foundUser.reallocation.coordinates = [longitude, latitude];
+					// foundUser.reallocationname = city;
 					if (!foundUser.hasLocation) {
 						foundUser.location = undefined;
+					}
+					if (!foundUser.reallocation.coordinates[0]) {
+						foundUser.reallocation = undefined;
 					}
 					foundUser.save((err) => {
 						if (err) {
@@ -161,29 +166,49 @@ middlewareObject.locationForChosen = (req, res, next) => {
 middlewareObject.location = (req, res, next) => {
 	let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 	iplocate(ip).then((results) => {
-		User.findOneAndUpdate({
+		if (results.latitude == null) {
+			var latitude = 0;
+			var longitude = 0;
+			var city = "Knowhere";
+		} else {
+			var latitude = results.latitude;
+			var longitude = results.longitude;
+			var city = results.city;
+		}
+		User.findOne({
 			username: req.sanitize(req.body.username)
-		}, {
-			reallocationname: "Kyiv",
-			reallocation: {
-				type: "Point",
-				coordinates: [30.52, 50.45]
-				// coordinates: [results.longitude, results.latitude]
-			},
 		}, (err, user) => {
 			if (err || !user || user.length < 1) {
 				console.log(err);
 				next();
 			} else {
-				console.log('got some location info about this buddy!');
-				next();
+					user.reallocationname = "Kyiv";
+					user.reallocation.type = "Point";
+					user.reallocation.coordinates = [30.52, 50.45];
+					// user.reallocation.coordinates = [longitude, latitude];
+					// user.reallocationname = reults.city;
+					if (!user.hasLocation) {
+						user.location = undefined;
+					}
+					if (!user.reallocation.coordinates[0]) {
+						user.reallocation = undefined;
+					}
+					user.save((err) => {
+						if (err) {
+							console.log(err);
+							next();
+						} else {
+							console.log('got some location info about this buddy!');
+							next();
+						}
+					});
 			}
 		})
 	});
 }
 
 middlewareObject.isConnected = (req, res, next) => {
-	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+	User.findById(req.sanitize(req.params.id))
 		.populate('blockedUsers')
 		.exec((err, user) => {
 			if (err || !user) {
@@ -220,6 +245,24 @@ middlewareObject.isConnected = (req, res, next) => {
 				}
 			}
 		});
+}
+
+middlewareObject.checkIfOAuth = (req, res, next) => {
+	User.findById(req.params.id, (err, foundUser) => {
+		if (err) {
+			console.log(err);
+			req.flash('error', err.message);
+			res.redirect('back');
+		} else {
+			if (foundUser.intra_id || foundUser.github_id) {
+				res.locals.oauth = true;
+				next();
+			} else {
+				res.locals.oauth = false;
+				next();
+			}
+		}
+	});
 }
 
 middlewareObject.haveLikedMe = (req, res, next) => {
@@ -401,7 +444,11 @@ middlewareObject.checkOwnership = (req, res, next) => {
 
 middlewareObject.checkNotificationRecipient = (req, res, next) => {
 	Notifications.findById(req.params.notification_id, (err, foundNotification) => {
-		if (foundNotification.for_who.toString() === req.user._id.toString()) {
+		if (err) {
+			console.log(err);
+			req.flash("error", "No notifications found as per this request");
+			res.redirect("back");
+		} else if (foundNotification.for_who.toString() === req.user._id.toString()) {
 			next();
 		} else {
 			req.flash("error", "You don't have permission to do that");

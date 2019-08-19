@@ -156,8 +156,8 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 							pass: "omtMovBe7sEwdz_6KCHz"
 						}
 					});
-					User.schema.index({location: "2dsphere"});
-					User.schema.index({reallocation: "2dsphere"});
+					// User.schema.index({location: "2dsphere"}, {sparse: true});
+					// User.schema.index({reallocation: "2dsphere"}, {sparse: true});
 					var mailOptions = {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
@@ -203,6 +203,9 @@ router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 			if (!user.hasLocation) {
 				user.location = undefined;
 			}
+			if (!user.reallocation.coordinates[0]) {
+				user.reallocation = undefined;
+			}
 			user.save((err) => {
 				if (err) {
 					req.flash("error", err.message);
@@ -225,7 +228,7 @@ router.get("/login", middleware.checkIfLogged, (req, res) => {
 // 42 AUTH ROUTES
 router.get('/auth/42', middleware.checkIfLogged, passport.authenticate('42'));
 
-router.get('/auth/42/callback', middleware.location,
+router.get('/auth/42/callback',
 	passport.authenticate('42', {
 		failureRedirect: '/login'
 	}), (req, res) => {
@@ -236,7 +239,7 @@ router.get('/auth/42/callback', middleware.location,
 // GITHUB AUTH ROUTES
 router.get('/auth/github', middleware.checkIfLogged, passport.authenticate('github'));
 
-router.get('/auth/github/callback', middleware.location,
+router.get('/auth/github/callback',
 	passport.authenticate('github', { failureRedirect: '/login' }), (req, res) => {
 	// Successful authentication, redirect home.
 		res.redirect('/feed/research');
@@ -275,17 +278,24 @@ router.post('/forgot', (req, res, next) => {
 				req.flash('error', 'Please fill in the field.');
 				return res.redirect('/forgot');
 			}
-			User.findOneAndUpdate({
+			User.findOne({
 				email: req.sanitize(req.body.email)
-			}, {}, (err, user) => {
+			}, (err, user) => {
 				if (!user) {
 					req.flash('error', 'No account with that email address exists.');
+					return res.redirect('/forgot');
+				}
+				if (user.intra_id) {
+					req.flash('error', 'Unfortunately, this feature is for non-OAuth users only');
 					return res.redirect('/forgot');
 				}
 				user.passwordResetToken = token;
 				user.passwordResetExpires = Date.now() + 3600000; // 1 hour
 				if (!user.hasLocation) {
 					user.location = undefined;
+				}
+				if (!user.reallocation.coordinates[0]) {
+					user.reallocation = undefined;
 				}
 				user.save((err) => {
 					if (err) {
@@ -371,6 +381,9 @@ router.post('/reset/:token', (req, res) => {
 						user.passwordResetExpires = undefined;
 						if (!user.hasLocation) {
 							user.location = undefined;
+						}
+						if (!user.reallocation.coordinates[0]) {
+							user.reallocation = undefined;
 						}
 						user.save((err) => {
 							done(err, user);

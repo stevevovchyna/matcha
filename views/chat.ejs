@@ -1,4 +1,16 @@
 <%include partials/header%>
+<div class="modal fade" id="myModal" role="dialog">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-body">
+				<p></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
 <%
 	var userno = 0;
 	if (currentUser._id.toString() === conversation.participants[0]._id.toString()) { userno = 1; }
@@ -41,8 +53,10 @@
 				}%>
 
 		<%var padding = ""; if(message.sentBy._id.toString() !== currentUser._id.toString()){ padding = "padding-left:4%;" } %>
-		<a class="list-group-item <%=newMessageClass%>" style="<%=padding%>">
-				<h4 class="list-group-item-heading"><%=message.sentBy.username%><% if(message.sentBy._id.toString() === currentUser._id.toString()) { %> <small>(me)</small><%}%></h4>
+		<a class="list-group-item <%=newMessageClass%>" style="<%= padding %>">
+			<h4 class="list-group-item-heading">
+				<%=message.sentBy.username%><% if(message.sentBy._id.toString() === currentUser._id.toString()) { %>
+				<small>(me)</small><%}%></h4>
 				<small class="pull-right"><%=moment(message.createdAt).fromNow()%></small>
 				<p class=" list-group-item-text"><%=message.body%></p>
 		</a>
@@ -82,19 +96,28 @@
 				authorId: "<%=currentUser._id%>",
 				recipientID: "<%=conversation.participants[userno]._id%>"
 			}, (ret) => {
-				var a = document.createElement("a");
-				a.setAttribute('class', 'list-group-item newMessage');
-				a.innerHTML =
-					'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
-					$("#message").val() + '</p>';
-				messages.appendChild(a);
-				messages.scrollTo(0, 100000000);
-				$("#message").val("");
-				if (ret) {
-					console.log(ret);
-					setTimeout(() => {
-						$(".newMessage").toggleClass("newMessage");
-					}, 2000);
+				if (ret.isBlocked) {
+					$('div.modal-body > p').text(
+						'You can not send a message to this user as he had blocked you!');
+					$('#myModal').modal('show');
+				} else if (ret.error) {
+					$('div.modal-body > p').text(ret.message);
+					$('#myModal').modal('show');
+				} else {
+					var a = document.createElement("a");
+					a.setAttribute('class', 'list-group-item newMessage');
+					a.innerHTML =
+						'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
+						$("#message").val() + '</p>';
+					messages.appendChild(a);
+					messages.scrollTo(0, 100000000);
+					$("#message").val("");
+					if (ret.onlineToggle) {
+						console.log(ret);
+						setTimeout(() => {
+							$(".newMessage").toggleClass("newMessage");
+						}, 2000);
+					}
 				}
 			});
 			return false;
@@ -114,11 +137,10 @@
 			}, 2000);
 		});
 		socket.on("read", data => {
-			console.log("sosi!");
 			setTimeout(() => {
 				$(".newMessage").removeClass("newMessage");
 			}, 2000);
-		})
+		});
 	})();
 </script>
 <%include partials/footer%>

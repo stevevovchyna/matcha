@@ -155,6 +155,7 @@
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						var resp = JSON.parse(xmlhttp.responseText);
 						if (resp.status === 'success') {
+							console.log(resp.foundNotifications);
 							resp.foundNotifications = resp.foundNotifications.reverse();
 							for (let newNotification of resp.foundNotifications) {
 								var newNotificationElement = document.createElement('li');
@@ -164,9 +165,9 @@
 									var conversationID = "";
 								if (!newNotification.isChecked) {
 									newNotificationElement.setAttribute('class', 'btn-info');
-									newNotificationElement.setAttribute('onclick', 'checkNotification("' +
-										newNotification._id + '", "' + conversationID + '")');
 								}
+								newNotificationElement.setAttribute('onclick', 'checkNotification("' +
+									newNotification._id + '", "' + conversationID + '")');
 								switch (newNotification.n_type) {
 									case 'visit':
 										newNotificationElement.innerHTML = "<a href=\"#\">" + newNotification.from_whom

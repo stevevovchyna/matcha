@@ -17,7 +17,7 @@ const io = require('socket.io')(server);
 const mainFileImport = require('../app.js');
 
 router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req, res) => {
-	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+	User.findById(req.sanitize(req.params.id))
 		.populate('blockedUsers')
 		.exec((err, user) => {
 			if (req.user.pictures.length === 0) {
@@ -84,6 +84,9 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 													if (!user.hasLocation) {
 														user.location = undefined;
 													}
+													if (!user.reallocation.coordinates[0]) {
+														user.reallocation = undefined;
+													}
 													// liked user gets  a new like in the Likes array and new likelog entry in the Likelogs
 													user.save((err) => {
 														if (err) {
@@ -115,57 +118,80 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 																	if (!liker_user.hasLocation) {
 																		liker_user.location = undefined;
 																	}
+																	if (!liker_user.reallocation.coordinates[0]) {
+																		liker_user.reallocation = undefined;
+																	}
 																	// user who liked gets an entry in the 'myLikes' field and in the 'mylikeslog' field
 																	liker_user.save((err) => {
-																		if (err) console.log(err);
-
-																		// CREATING A NEW NOTIFICATION
-
-																		var users_info = {
-																			visitor: req.user._id,
-																			visited_one: req.params.id,
-																			n_type: n_type,
-																		}
-																		Notifications.create({
-																			n_type: users_info.n_type,
-																			for_who: users_info.visited_one,
-																			from_whom: users_info.visitor,
-																		}, (err, newNotification) => {
-																			if (err) console.log(err);
-																			else {
-																				// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
-																				User.findById(users_info.visited_one, (err, foundUser) => {
-																					if (err) console.log(err);
-																					else {
-																						foundUser.notifications.push(newNotification);
-																						if (!foundUser.hasLocation) {
-																							foundUser.location = undefined;
-																						}
-																						foundUser.save((err) => {
-																							if (err) console.log(err);
-																							// EMITING A NOTIFICATION TO THE USER
-																							mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
-																								foundVisitorID: req.user._id,
-																								foundVisitorUsername: req.user.username,
-																								notificationID: newNotification._id,
-																								n_type: users_info.n_type
-																							});
-																							res.send({
-																								status: 'success',
-																								user: user,
-																								message: message
-																							});
-																						});
-																					}
-																				});
+																		if (err) {
+																			console.log(err);
+																			res.send({
+																				status: 'error',
+																				error: err.message
+																			});
+																		} else {
+																			// CREATING A NEW NOTIFICATION
+																			var users_info = {
+																				visitor: req.user._id,
+																				visited_one: req.params.id,
+																				n_type: n_type,
 																			}
-																		});
+																			Notifications.create({
+																				n_type: users_info.n_type,
+																				for_who: users_info.visited_one,
+																				from_whom: users_info.visitor,
+																			}, (err, newNotification) => {
+																				if (err) {
+																					console.log(err);
+																					res.send({
+																						status: 'error',
+																						error: err.message
+																					});
+																				} else {
+																					// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
+																					User.findById(users_info.visited_one, (err, foundUser) => {
+																						if (err) {
+																							console.log(err);
+																							res.send({
+																								status: 'error',
+																								error: err.message
+																							});
+																						} else {
+																							foundUser.notifications.push(newNotification);
+																							if (!foundUser.hasLocation) {
+																								foundUser.location = undefined;
+																							}
+																							if (!foundUser.reallocation.coordinates[0]) {
+																								foundUser.reallocation = undefined;
+																							}
+																							foundUser.save((err) => {
+																								if (err) {
+																									console.log(err);
+																								} else {
+																									// EMITING A NOTIFICATION TO THE USER
+																									mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
+																										foundVisitorID: req.user._id,
+																										foundVisitorUsername: req.user.username,
+																										notificationID: newNotification._id,
+																										n_type: users_info.n_type
+																									});
+																									res.send({
+																										status: 'success',
+																										user: user,
+																										message: message
+																									});
+																								}
+																							});
+																						}
+																					});
+																				}
+																			});
+																		}
 																	});
 																}
 															});
 														}
 													});
-
 												}
 											});
 										}
@@ -186,7 +212,7 @@ router.put("/:id/ajaxlike", middleware.isLoggedIn, middleware.haveLikedMe, (req,
 });
 
 router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected, (req, res) => {
-	User.findByIdAndUpdate(req.sanitize(req.params.id), {})
+	User.findById(req.sanitize(req.params.id))
 		.populate('blockedUsers')
 		.exec((err, user) => {
 			if (err || !user) {
@@ -244,62 +270,122 @@ router.delete("/:id/ajaxdislike", middleware.isLoggedIn, middleware.isConnected,
 												//a new entry in the 'dislikeslog' is being created
 												user.dislikeslog.push(dislikelog);
 												user.likes.pull(id);
+												if (!user.hasLocation) {
+													user.location = undefined;
+												}
+												if (!user.reallocation.coordinates[0]) {
+													user.reallocation = undefined;
+												}
 												// disliked user has a new entry in the 'dislikeslog' field and an old like is being deleted
 												user.save((err) => {
-													if (err) console.log(err);
-													// user that dislikes gets his data updated
-													User.findById(req.user._id, (err, disliking_user) => {
-														if (err) console.log(err);
-														disliking_user.mydislikeslog.push(dislikelog);
-														disliking_user.myLikes.pull(id);
-														// disliking user gets a new entry about the dislike and his like is being deleted from the db
-														disliking_user.save((err) => {
-															if (err) console.log(err);
-															if (res.locals.message === "mutual_dislike") {
-																var users_info = {
-																	visitor: req.user._id,
-																	visited_one: req.params.id,
-																	n_type: 'mutual_dislike',
-																}
-																res.locals.message = "";
-																Notifications.create({
-																	n_type: users_info.n_type,
-																	for_who: users_info.visited_one,
-																	from_whom: users_info.visitor,
-																}, (err, newNotification) => {
-																	if (err) console.log(err);
-																	else {
-																		// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
-																		User.findById(users_info.visited_one, (err, foundUser) => {
-																			if (err) console.log(err);
-																			else {
-																				foundUser.notifications.push(newNotification);
-																				foundUser.save((err) => {
-																					if (err) console.log(err);
-																					// EMITING A NOTIFICATION TO THE USER
-																					mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
-																						foundVisitorID: req.user._id,
-																						foundVisitorUsername: req.user.username,
-																						notificationID: newNotification._id,
-																						n_type: users_info.n_type
-																					});
-																					res.send({
-																						status: 'success',
-																						user: user
-																					});
-																				});
-																			}
-																		});
-																	}
+													if (err) {
+														console.log(err);
+														res.send({
+															status: 'error',
+															error: err.message
+														});
+													} else {
+
+
+														// user that dislikes gets his data updated
+														User.findById(req.user._id, (err, disliking_user) => {
+															if (err) {
+																console.log(err);
+																res.send({
+																	status: 'error',
+																	error: err.message
 																});
 															} else {
-																res.send({
-																	status: 'success',
-																	user: user
+
+
+																disliking_user.mydislikeslog.push(dislikelog);
+																disliking_user.myLikes.pull(id);
+																if (!disliking_user.hasLocation) {
+																	disliking_user.location = undefined;
+																}
+																if (!disliking_user.reallocation.coordinates[0]) {
+																	disliking_user.reallocation = undefined;
+																}
+																// disliking user gets a new entry about the dislike and his like is being deleted from the db
+																disliking_user.save((err) => {
+																	if (err) {
+																		console.log(err);
+																		res.send({
+																			status: 'error',
+																			error: err.message
+																		});
+																	} else {
+																		if (res.locals.message === "mutual_dislike") {
+																			var users_info = {
+																				visitor: req.user._id,
+																				visited_one: req.params.id,
+																				n_type: 'mutual_dislike',
+																			}
+																			res.locals.message = "";
+																			Notifications.create({
+																				n_type: users_info.n_type,
+																				for_who: users_info.visited_one,
+																				from_whom: users_info.visitor,
+																			}, (err, newNotification) => {
+																				if (err) {
+																					console.log(err);
+																					res.send({
+																						status: 'error',
+																						error: err.message
+																					});
+																				} else {
+																					// PUSHING A NEW NOTIFICATION TO THE USER'S PROFILE
+																					User.findById(users_info.visited_one, (err, foundUser) => {
+																						if (err) {
+																							console.log(err);
+																							res.send({
+																								status: 'error',
+																								error: err.message
+																							});
+																						} else {
+																							foundUser.notifications.push(newNotification);
+																							if (!foundUser.hasLocation) {
+																								foundUser.location = undefined;
+																							}
+																							if (!foundUser.reallocation.coordinates[0]) {
+																								foundUser.reallocation = undefined;
+																							}
+																							foundUser.save((err) => {
+																								if (err) {
+																									console.log(err);
+																									res.send({
+																										status: 'error',
+																										error: err.message
+																									});
+																								} else {
+																									// EMITING A NOTIFICATION TO THE USER
+																									mainFileImport.eventSocket.to(req.params.id).emit('new notification', {
+																										foundVisitorID: req.user._id,
+																										foundVisitorUsername: req.user.username,
+																										notificationID: newNotification._id,
+																										n_type: users_info.n_type
+																									});
+																									res.send({
+																										status: 'success',
+																										user: user
+																									});
+																								}
+																							});
+																						}
+																					});
+																				}
+																			});
+																		} else {
+																			res.send({
+																				status: 'success',
+																				user: user
+																			});
+																		}
+																	}
 																});
 															}
 														});
-													});
+													}
 												});
 											}
 										});
@@ -369,9 +455,15 @@ router.get("/:id/activity", middleware.checkProfileOwnership, (req, res) => {
 			}
 		})
 		.exec((err, user) => {
-			res.render("activity", {
-				user: user
-			});
+			if (err || !user) {
+				console.log(err);
+				req.flash('error', "No activity found");
+				res.redirect('back');
+			} else {
+				res.render("activity", {
+					user: user
+				});
+			}
 		});
 });
 
