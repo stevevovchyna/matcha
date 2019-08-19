@@ -1,5 +1,5 @@
-require("dotenv").config();
-
+const dotenv = require("dotenv").config();
+console.log(dotenv.parsed);
 const express = require('express'),
 	app = express(),
 	bodyParser = require("body-parser"),
@@ -42,16 +42,16 @@ const express = require('express'),
 var options = {
 	provider: 'google',
 	httpAdapter: 'https',
-	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
+	apiKey: process.env.GEOCODER_API_KEY,
 	formatter: null
 };
 var geocoder = NodeGeocoder(options);
 
 const sessionStore = new redisStore({
 	host: 'localhost',
-	port: 6379,
+	port: process.env.REDIS_PORT,
 	client: redisClient,
-	ttl: 86400
+	ttl: process.env.REDIS_TTL
 });
 
 redisClient.on('error', (err) => {
@@ -87,14 +87,14 @@ app.use(session({ //session initializer
 	cookie: {
 		secure: false
 	},
-	secret: "I love Kate",
+	secret: process.env.SESSION_SECRET,
 	resave: false,
 	saveUninitialized: true
 }));
 
 io.use(passportSocketIo.authorize({
 	key: 'connect.sid',
-	secret: "I love Kate",
+	secret: process.env.SESSION_SECRET,
 	store: sessionStore,
 	passport: passport,
 	cookieParser: cookieParser
@@ -110,8 +110,8 @@ app.use(methodOverride("_method"));
 
 passport.use(new localStrategy(User.authenticate()));
 passport.use(new FortyTwoStrategy({
-		clientID: '738c8f86020f7a4b67ed7f77a01425d699fd61cb5189339b5f537d777b1c5d63',
-		clientSecret: '57efff68ef25910a11c8af0f3e86fc12d8911f72bae9a58af691d450482122ce',
+		clientID: process.env.ECOLE_42_CLIENT_ID,
+		clientSecret: process.env.ECOLE_42_CLIENT_SECRET,
 		callbackURL: "http://localhost:3000/auth/42/callback"
 	},
 	function (accessToken, refreshToken, profile, cb) {
@@ -183,8 +183,8 @@ passport.use(new FortyTwoStrategy({
 ));
 
 passport.use(new GitHubStrategy({
-		clientID: '80cee925b555c7029656',
-		clientSecret: 'dd9f33503027e4ffe1b0bcf775997975269cf5d5',
+		clientID: process.env.GIT_CLIENT_ID,
+		clientSecret: process.env.GIT_CLIENT_SECRET,
 		callbackURL: "http://localhost:3000/auth/github/callback"
 	},
 	function (accessToken, refreshToken, profile, cb) {

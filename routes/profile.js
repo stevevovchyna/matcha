@@ -19,7 +19,7 @@ const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$"
 var options = {
 	provider: 'google',
 	httpAdapter: 'https',
-	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
+	apiKey: process.env.GEOCODER_API_KEY,
 	formatter: null
 };
 
@@ -46,9 +46,9 @@ var upload = multer({
 
 var cloudinary = require('cloudinary');
 cloudinary.config({
-	cloud_name: 'dstvx12kw',
-	api_key: '362871427717468',
-	api_secret: 'b9OL__XMw1SlZsYtLvFLe6_Cn00'
+	cloud_name: process.env.CLOUDINARY_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 router.get("/:id", middleware.isLoggedIn, middleware.countDistance, (req, res) => {

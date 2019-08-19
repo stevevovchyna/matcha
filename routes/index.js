@@ -19,7 +19,7 @@ const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$"
 var options = {
 	provider: 'google',
 	httpAdapter: 'https',
-	apiKey: 'AIzaSyBxM1Dxy_gcBhgoCKoSAgfCL6TjwGf2dQE',
+	apiKey: process.env.GEOCODER_API_KEY,
 	formatter: null
 };
 var geocoder = NodeGeocoder(options);
@@ -126,7 +126,6 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 				});
 			}
 		}
-
 		User.findOne({
 			email: email
 		}, (err, user) => {
@@ -152,8 +151,8 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 					var transporter = nodemailer.createTransport({
 						service: 'sendgrid',
 						auth: {
-							user: "steve.vovchyna@gmail.com",
-							pass: "omtMovBe7sEwdz_6KCHz"
+							user: process.env.SENDGRID_USER,
+							pass: process.env.SENDGRID_PASS
 						}
 					});
 					var mailOptions = {
@@ -310,8 +309,8 @@ router.post('/forgot', (req, res, next) => {
 			var transporter = nodemailer.createTransport({
 				service: 'sendgrid',
 				auth: {
-					user: "steve.vovchyna@gmail.com",
-					pass: "omtMovBe7sEwdz_6KCHz"
+					user: process.env.SENDGRID_USER,
+					pass: process.env.SENDGRID_PASS
 				}
 			});
 			var mailOptions = {
@@ -397,8 +396,8 @@ router.post('/reset/:token', (req, res) => {
 			var transporter = nodemailer.createTransport({
 				service: 'sendgrid',
 				auth: {
-					user: "steve.vovchyna@gmail.com",
-					pass: "omtMovBe7sEwdz_6KCHz"
+					user: process.env.SENDGRID_USER,
+					pass: process.env.SENDGRID_PASS
 				}
 			});
 			var mailOptions = {
