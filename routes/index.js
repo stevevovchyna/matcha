@@ -13,6 +13,7 @@ const iplocate = require('node-iplocate');
 const mongoose = require('mongoose');
 
 const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
+const nameRegExp = RegExp("^[a-zA-Z0-9 _-]{2,50}$");
 const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
 const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
 
@@ -56,7 +57,7 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 		req.flash("error", "Please fill in all the required fields!");
 		return res.redirect("/register");
 	}
-	if (!loginRegExp.test(req.body.firstname) || !loginRegExp.test(req.body.lastname) || !loginRegExp.test(req.body.username)) {
+	if (!nameRegExp.test(req.body.firstname) || !nameRegExp.test(req.body.lastname) || !loginRegExp.test(req.body.username)) {
 		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
 		return res.redirect("/register");
 	}

@@ -13,8 +13,11 @@ const xss = require("xss");
 const mongoose = require('mongoose');
 const DateOnly = require('mongoose-dateonly')(mongoose);
 const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
+const nameRegExp = RegExp("^[a-zA-Z0-9 _-]{2,50}$");
 const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
 const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
+const bioRegExp = RegExp("^[A-Za-z0-9 .'?!,@$#-_\n\r]{5,300}$");
+const tagRegExp = RegExp("^[A-Za-z0-9 ]{2,300}$");
 
 var options = {
 	provider: 'google',
@@ -260,8 +263,12 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 });
 
 router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIfOAuth, middleware.checkDate, (req, res) => {
-	if (!loginRegExp.test(req.body.user.firstname) || !loginRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
+	if (!nameRegExp.test(req.body.user.firstname) || !nameRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
 		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
+		return res.redirect("back");
+	}
+	if (!bioRegExp.test(req.body.user.bio)) {
+		req.flash("error", "Please make sure there's 5-300 characters in your bio and it doesn't containt symbols apart from '.'?!,@$#-_' ");
 		return res.redirect("back");
 	}
 	if (!res.locals.oauth) {
@@ -497,7 +504,7 @@ router.put("/:id/setpassword", middleware.checkIfLocal, middleware.checkProfileO
 	if (!req.body.password || !req.body.confirm) {
 		req.flash("error", "Empty fields! Please, fill in both fields!");
 		return res.redirect('back');
-	} else if (!passwordRegExp.test(req.body.password) && !passwordRegExp.test(req.body.confirm)) {
+	} else if (!passwordRegExp.test(req.body.password) || !passwordRegExp.test(req.body.confirm)) {
 		req.flash("error", "Please make sure your password contains at least 6 characters, 1 digit and 1 letter of any register");
 		return res.redirect("back");
 	} else {
