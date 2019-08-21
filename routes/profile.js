@@ -153,6 +153,10 @@ router.get("/:id/edit", middleware.checkProfileOwnership, middleware.locationFor
 });
 
 router.put("/:id/edittag", middleware.checkProfileOwnership, (req, res) => {
+	if (!tagRegExp.test(req.body.interests)) {
+		req.flash("error", "Please make sure that you've entered only alpanumericals and spaces");
+		return res.redirect("/profile/" + req.params.id + "/edit");
+	}
 	User.findByIdAndUpdate(req.params.id, {}, (err, user) => {
 		if (err) {
 			req.flash("error", "Something went wrong while editing your data!");
