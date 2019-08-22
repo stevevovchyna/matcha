@@ -75,7 +75,7 @@ mongoose.connect("mongodb://localhost/matcha", {
 	autoIndex: true
 });
 
-// mongoose.set('debug', true);
+mongoose.set('debug', true);
 
 app.set("view engine", "ejs"); //no need to write .ejs in the end of the file name
 app.use(bodyParser.urlencoded({
@@ -112,71 +112,117 @@ passport.use(new localStrategy(User.authenticate()));
 passport.use(new FortyTwoStrategy({
 		clientID: process.env.ECOLE_42_CLIENT_ID,
 		clientSecret: process.env.ECOLE_42_CLIENT_SECRET,
-		callbackURL: "http://localhost:3000/auth/42/callback"
+		callbackURL: "http://" + process.env.PORTIK + "/auth/42/callback"
 	},
 	function (accessToken, refreshToken, profile, cb) {
 		User.find({
-			intra_id: profile._json.id
-		}, (err, user) => {
-			if (err) {
-				console.log(err);
-				return cb(err);
-			}
-			//user is not found
-			if (user.length == 0) {
-				var userLocation = {
-					latitude: "",
-					longitude: "",
-					city: ""
-				};
-				geocoder.geocode(profile._json.campus[0].time_zone, (err, res) => {
-					userLocation = {
-						latitude: res[0].latitude,
-						longitude: res[0].longitude,
-						city: res[0].city
-					}
-					user = new User({
-						intra_id: profile._json.id,
-						isVerified: true,
-						username: profile._json.login,
-						email: profile._json.email,
-						lastname: profile._json.last_name,
-						firstname: profile._json.first_name,
-						pictures: [{
-							url: profile._json.image_url,
-							isProfile: true
-						}],
-						reallocationname: userLocation.city,
-						reallocation: {
-							type: "Point",
-							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
-						},
-						locationname: userLocation.city,
-						location: {
-							type: "Point",
-							coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
-						},
-						hasLocation: true,
-						interests: [{
-								text: "dating"
-							},
-							{
-								text: 'coding'
-							}
-						]
-					});
-					user.save((err) => {
-						if (err) {
-							console.log(err);
-							return cb(err);
-						} else {
-							return cb(err, user)
-						}
-					});
-				});
+			username: profile._json.login,
+			github_id: profile._json.id
+		}, (err, userok) => {
+			if (userok.length > 0) {
+				return cb(err, userok[0]);
 			} else {
-				//user is found!!!
-				return cb(err, user[0]);
+				User.find({
+					username: profile._json.login,
+					intra_id: profile._json.id
+				}, (err, userok) => {
+					if (userok.length > 0) {
+						return cb(err, userok[0]);
+					}
+				});
+				User.find({
+					username: profile._json.login
+				}, (err, foundUser) => {
+					if (err || foundUser.length == 0) {
+						if (profile._json.email) {
+							User.find({
+								email: profile._json.email
+							}, (err, foundemailuser) => {
+								if (err || foundemailuser.length == 0) {
+
+									User.find({
+										intra_id: profile._json.id,
+										username: profile._json.login
+									}, (err, user) => {
+										if (err) {
+											console.log(err);
+											return cb(err);
+										}
+
+										//user is not found
+										if (user.length == 0) {
+											var userLocation = {
+												latitude: "",
+												longitude: "",
+												city: ""
+											};
+											geocoder.geocode(profile._json.campus[0].time_zone, (err, res) => {
+												userLocation = {
+													latitude: res[0].latitude,
+													longitude: res[0].longitude,
+													city: res[0].city
+												}
+												user = new User({
+													intra_id: profile._json.id,
+													isVerified: true,
+													username: profile._json.login,
+													email: profile._json.email,
+													lastname: profile._json.last_name,
+													firstname: profile._json.first_name,
+													pictures: [{
+														url: profile._json.image_url,
+														isProfile: true
+													}],
+													reallocationname: userLocation.city,
+													reallocation: {
+														type: "Point",
+														coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+													},
+													locationname: userLocation.city,
+													location: {
+														type: "Point",
+														coordinates: [Number(userLocation.longitude), Number(userLocation.latitude)]
+													},
+													hasLocation: true,
+													interests: [{
+															text: "dating"
+														},
+														{
+															text: 'coding'
+														}
+													]
+												});
+												user.save((err) => {
+													if (err) {
+														console.log(err);
+														return cb(err);
+													} else {
+														return cb(err, user)
+													}
+												});
+											});
+										} else {
+											//user is found!!!
+											return cb(err, user[0]);
+										}
+									});
+
+
+								} else {
+									console.log("User with this email already exists")
+									return cb(err, {
+										message: "User with this email already exists"
+									});
+								}
+							});
+						}
+					} else {
+						console.log("User with this username already exists");
+						return cb(err, false, {
+							message: "User with this username already exists"
+						});
+					}
+				});
 			}
 		});
 	}
@@ -185,55 +231,89 @@ passport.use(new FortyTwoStrategy({
 passport.use(new GitHubStrategy({
 		clientID: process.env.GIT_CLIENT_ID,
 		clientSecret: process.env.GIT_CLIENT_SECRET,
-		callbackURL: "http://localhost:3000/auth/github/callback"
+		callbackURL: "http://" + process.env.PORTIK + "/auth/github/callback"
 	},
 	function (accessToken, refreshToken, profile, cb) {
 		User.find({
+			username: profile._json.login,
 			github_id: profile._json.id
-		}, (err, user) => {
-			if (err) {
-				console.log(err);
-				return cb(err);
-			}
-			//user is not found
-			if (user.length == 0) {
-				var userLocation = {
-					latitude: "",
-					longitude: "",
-					city: ""
-				};
-				user = new User({
-					github_id: profile.id,
-					isVerified: true,
-					username: profile._json.login,
-					lastname: profile._json.name,
-					firstname: profile._json.name,
-					pictures: [{
-						url: profile._json.avatar_url ? profile._json.avatar_url : "https://image.flaticon.com/icons/svg/25/25231.svg",
-						isProfile: true
-					}],
-					hasLocation: false,
-					interests: [{
-							text: "dating"
-						},
-						{
-							text: 'coding'
+		}, (err, userok) => {
+			if (userok.length > 0) {
+				return cb(err, userok[0]);
+			} else {
+				User.find({
+					username: profile._json.login
+				}, (err, foundUser) => {
+					if (err || foundUser.length == 0) {
+						if (profile._json.email !== "") {
+							User.find({
+								email: profile._json.email
+							}, (err, foundemailuser) => {
+								if (err || foundemailuser.length == 0) {
+									User.find({
+										github_id: profile._json.id
+									}, (err, user) => {
+										if (err) {
+											console.log(err);
+											return cb(err);
+										} else {
+											//user is not found
+											if (user.length == 0) {
+												var userLocation = {
+													latitude: "",
+													longitude: "",
+													city: ""
+												};
+												user = new User({
+													github_id: profile.id,
+													isVerified: true,
+													username: profile._json.login,
+													lastname: profile._json.name,
+													firstname: profile._json.name,
+													pictures: [{
+														url: profile._json.avatar_url ? profile._json.avatar_url : "https://image.flaticon.com/icons/svg/25/25231.svg",
+														isProfile: true
+													}],
+													hasLocation: false,
+													interests: [{
+															text: "dating"
+														},
+														{
+															text: 'coding'
+														}
+													],
+												});
+												user.location = undefined;
+												user.reallocation = undefined;
+												user.save((err) => {
+													if (err) {
+														console.log(err);
+														return cb(err);
+													} else {
+														return cb(err, user)
+													}
+												});
+											} else {
+												//user is found!!!
+												return cb(err, user[0]);
+											}
+										}
+									});
+								} else {
+									console.log("User with this email already exists")
+									return cb(err, false, {
+										message: "User with this email already exists"
+									});
+								}
+							});
 						}
-					],
-				});
-				user.location = undefined;
-				user.reallocation = undefined;
-				user.save((err) => {
-					if (err) {
-						console.log(err);
-						return cb(err);
 					} else {
-						return cb(err, user)
+						console.log("User with this username already exists");
+						return cb(err, false, {
+							message: "User with this username already exists"
+						});
 					}
 				});
-			} else {
-				//user is found!!!
-				return cb(err, user[0]);
 			}
 		});
 	}
@@ -250,6 +330,7 @@ passport.deserializeUser((user, done) => {
 
 // allows using current user data across all the views
 app.use((req, res, next) => {
+	res.locals.portik = process.env.PORTIK;
 	res.locals.oauth = false;
 	res.locals.message = "";
 	res.locals.currentUser = req.user;

@@ -150,7 +150,7 @@
 				});
 
 				xmlhttp = new XMLHttpRequest();
-				xmlhttp.open("GET", "http://localhost:3000/notifications/<%=currentUser._id%>/?_method=GET", true);
+				xmlhttp.open("GET", "http://<%=portik%>/notifications/<%=currentUser._id%>/?_method=GET", true);
 				xmlhttp.onreadystatechange = () => {
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						var resp = JSON.parse(xmlhttp.responseText);
@@ -210,7 +210,7 @@
 
 			function checkNotification(notificationID, conversationID) {
 				xmlhttp = new XMLHttpRequest();
-				xmlhttp.open("POST", "http://localhost:3000/notifications/" + notificationID + "/check?_method=PUT", true);
+				xmlhttp.open("POST", "http://<%=portik%>/notifications/" + notificationID + "/check?_method=PUT", true);
 				xmlhttp.onreadystatechange = () => {
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						var resp = JSON.parse(xmlhttp.responseText);
@@ -250,7 +250,7 @@
 				var notificationsButton = document.getElementById('notifications-button');
 				var flash = document.getElementById('flash');
 				xmlhttp = new XMLHttpRequest();
-				xmlhttp.open("POST", "http://localhost:3000/notifications/" + userID + "/checkall?_method=PUT", true);
+				xmlhttp.open("POST", "http://<%=portik%>/notifications/" + userID + "/checkall?_method=PUT", true);
 				xmlhttp.onreadystatechange = () => {
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						var resp = JSON.parse(xmlhttp.responseText);

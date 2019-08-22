@@ -41,7 +41,7 @@ middlewareObject.countDistance = (req, res, next) => {
 					var lat1 = 50.4501;
 				}
 				// getting user's location - the page we visit
-				if (foundUser.location) {
+				if (foundUser.hasLocation) {
 					var lon2 = foundUser.location.coordinates[0];
 					var lat2 = foundUser.location.coordinates[1];
 				} else if (foundUser.reallocation) {
@@ -84,6 +84,17 @@ middlewareObject.checkSortInput = (req, res, next) => {
 			err++;
 		}
 	}
+	if (parseInt(req.body.userparams['agemin']) < 0 ||
+		parseInt(req.body.userparams['agemax']) > 100 ||
+		parseInt(req.body.userparams['locmin']) < 0 ||
+		parseInt(req.body.userparams['locmax']) > 20000 ||
+		parseInt(req.body.userparams['famemin']) < 0 ||
+		parseInt(req.body.userparams['famemax']) > 1000 ||
+		parseInt(req.body.userparams['tagmin']) < 0 ||
+		parseInt(req.body.userparams['tagmax']) > 100) {
+		err++;
+	}
+
 	if (parseInt(params[0]) > parseInt(params[1]) ||
 		parseInt(params[2]) > parseInt(params[3]) ||
 		parseInt(params[4]) > parseInt(params[5]) ||
@@ -108,7 +119,7 @@ middlewareObject.checkDate = (req, res, next) => {
 		if (!moment(birthDate.toDate(), "YYYY-MM-DD HH:mm Z").isValid()) {
 			req.flash("error", "Invalid date! Please double-check your input");
 			res.redirect("back");
-		} else if ((now.year - birthDate.year < 16 && now.year - birthDate.year < 100) || (now.year - birthDate.year) < 0) {
+		} else if (now.year - birthDate.year < 16 || now.year - birthDate.year > 100 || (now.year - birthDate.year) < 0) {
 			req.flash("error", "Seems like you are too young or too old, sweetie. Come back when you are at least 16 y.o. or younger than 100 years");
 			res.redirect("back");
 		} else {
@@ -339,9 +350,9 @@ middlewareObject.haveFilled = (req, res, next) => {
 				if (!user.hasLocation) {
 					user.location = undefined;
 				}
-				if (!user.reallocation.coordinates[0]) {
-					user.reallocation = undefined;
-				}
+				// if (!user.reallocation || !user.reallocation.coordinates[0]) {
+				// 	user.reallocation = undefined;
+				// }
 				user.save((err) => {
 					if (err) {
 						console.log(err);

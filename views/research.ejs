@@ -36,10 +36,9 @@
 					<span class="label label-default">Famerate</span>
 					<input class="form-control" type="number" name="userparams[famemin]"
 						value="<% if(locals.userparams){%><%=userparams.famemin%><% } else { %>0<% } %>"
-						id="userparams[famemin]" minlength="0" maxlength="200">
-					<input class="form-control" type="number" name="userparams[famemax]"
-						value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>200<% } %>"
-						id="userparams[famemax]" minlength="0" maxlength="200">
+						id="userparams[famemin]" minlength="0" maxlength="1000">
+					<input class="form-control" type="number" name="userparams[famemax]" value="<% if(locals.userparams){%><%=userparams.famemax%><% } else { %>1000<% } %>"
+						id="userparams[famemax]" minlength="0" maxlength="1000">
 
 					<span class="label label-default">Common Tags</span>
 					<input class="form-control" type="number" name="userparams[tagmin]"
@@ -80,7 +79,7 @@
 			<div class="col-lg-12 form-group">
 
 				<button class="btn btn-danger btn-block"
-					onclick="window.location.href='http:\/\/localhost:3000/feed/research'">Reset</button>
+					onclick="window.location.href='http://<%=portik%>/feed/research'">Reset</button>
 			</div>
 		</div>
 

@@ -1,8 +1,10 @@
+const portik = "e1r1p16:3000";
+
 const deleteTag = (user_id, tag_id) => {
 	var stringUserID = user_id.toString();
 	var stringTagID = tag_id.toString();
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("POST", "http://localhost:3000/profile/"+stringUserID+"/"+stringTagID+"/tagdel?_method=DELETE", true);
+	xmlhttp.open("POST", "http://"+portik+"/profile/"+stringUserID+"/"+stringTagID+"/tagdel?_method=DELETE", true);
 	xmlhttp.onreadystatechange = function () {
 		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var resp = JSON.parse(xmlhttp.responseText);
@@ -30,6 +32,8 @@ function filterBy(min, max, param) {
 		f_max *= 365;
 		maxRange = 36500;
 	}
+	if (param == 'famerate') maxRange = 1000;
+	if (param == 'commontags' || param == 'age') maxRange = 100;
 	if ((f_min < 0) || (f_max > maxRange) || (f_min > f_max)) {
 		$('div.modal-body > p').text('Incorrect filter parameters');
 		$('#myModal').modal('show');
@@ -81,7 +85,7 @@ window.onload = function () {
 function likeUser(id, profile = "no") {
 	userid = id.toString();
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("POST", "http://localhost:3000/likes/" + userid + "/ajaxlike?_method=PUT", true);
+	xmlhttp.open("POST", "http://"+portik+"/likes/" + userid + "/ajaxlike?_method=PUT", true);
 	xmlhttp.onreadystatechange = function () {
 		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var resp = JSON.parse(xmlhttp.responseText);
@@ -107,7 +111,7 @@ function likeUser(id, profile = "no") {
 function dislikeUser(id, profile = "no") {
 	userid = id.toString();
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("POST", "http://localhost:3000/likes/" + userid + "/ajaxdislike?_method=DELETE", true);
+	xmlhttp.open("POST", "http://"+portik+"/likes/" + userid + "/ajaxdislike?_method=DELETE", true);
 	xmlhttp.onreadystatechange = function () {
 		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var resp = JSON.parse(xmlhttp.responseText);
@@ -132,7 +136,7 @@ function dislikeUser(id, profile = "no") {
 const fake = (id) => {
 	userid = id.toString();
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("POST", "http://localhost:3000/fakenblock/" + userid + "/ajaxfakeaccount?_method=PUT", true);
+	xmlhttp.open("POST", "http://"+portik+"/fakenblock/" + userid + "/ajaxfakeaccount?_method=PUT", true);
 	xmlhttp.onreadystatechange = function () {
 		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var resp = JSON.parse(xmlhttp.responseText);
@@ -152,7 +156,7 @@ const fake = (id) => {
 const block = (id) => {
 	userid = id.toString();
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("POST", "http://localhost:3000/fakenblock/" + userid + "/ajaxblockaccount?_method=PUT", true);
+	xmlhttp.open("POST", "http://"+portik+"/fakenblock/" + userid + "/ajaxblockaccount?_method=PUT", true);
 	xmlhttp.onreadystatechange = function () {
 		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var resp = JSON.parse(xmlhttp.responseText);

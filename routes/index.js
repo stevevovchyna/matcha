@@ -27,6 +27,7 @@ var geocoder = NodeGeocoder(options);
 
 //LANDING PAGE
 router.get("/", (req, res) => {
+	console.log(process.env.PORTIK);
 	res.render("landing");
 });
 
@@ -58,8 +59,14 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 		return res.redirect("/register");
 	}
 	if (!nameRegExp.test(req.body.firstname) || !nameRegExp.test(req.body.lastname) || !loginRegExp.test(req.body.username)) {
-		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
+		req.flash("error", "Please make sure you've entered a correct username, First Name or Last Name");
 		return res.redirect("/register");
+	}
+	if (req.body.location !== "") {
+		if (!nameRegExp.test(req.body.location)) {
+			req.flash("error", "Please make sure you've entered a correct location data. It can only be 2-50 characters long and can have '-' or '_' signs");
+			return res.redirect("/register");
+		}
 	}
 	if (!emailRegExp.test(req.body.email)) {
 		req.flash("error", "Please make sure you've entered a correct email address!");
@@ -73,67 +80,64 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 	var username = req.sanitize(req.body.username);
 	var firstname = req.sanitize(req.body.firstname);
 	var lastname = req.sanitize(req.body.lastname);
+	var userlocation = req.sanitize(req.body.location);
 	var reallocationname = "Kyiv";
 	var reallatitude = 50.4501;
 	var reallongitude = 30.5234;
-
 	var coords = {};
-	geocoder.geocode(req.body.location, (err, data) => {
-		if (!data) {
-			var newUser = new User({
-				username: username,
-				email: email,
-				lastname: lastname,
-				firstname: firstname,
-				reallocationname: reallocationname,
-				reallocation: {
-					type: "Point",
-					coordinates: [reallongitude, reallatitude]
-				},
-				interests: [{
-					text: "dating"
-				}],
-				hasLocation: false
+	async.waterfall([
+		(done) => {
+			User.findOne({
+				email: email
+			}, (err, user) => {
+				if (user) {
+					req.flash("error", "User with this email already exists! Please provide a different email address.");
+					return res.redirect("/register");
+				} else {
+					var newUser = new User({
+						username: username,
+						email: email,
+						lastname: lastname,
+						firstname: firstname,
+						reallocationname: reallocationname,
+						reallocation: {
+							type: "Point",
+							coordinates: [reallongitude, reallatitude]
+						},
+						interests: [{
+							text: "dating"
+						}],
+						hasLocation: false
+					});
+					newUser.location = undefined;
+					console.log("zhopa");
+					done(err, newUser);
+				}
 			});
-			newUser.location = undefined;
-		} else {
-			if (err) {
-				console.log(err);
-				req.flash("error", "Invalid address");
-				return res.redirect("back");
-			} else {
-				coords.lat = data[0].latitude;
-				coords.lng = data[0].longitude;
-				coords.location = data[0].city;
-				var newUser = new User({
-					username: username,
-					email: email,
-					lastname: lastname,
-					firstname: firstname,
-					reallocationname: reallocationname,
-					reallocation: {
-						type: "Point",
-						coordinates: [reallongitude, reallatitude]
-					},
-					locationname: coords.location,
-					location: {
-						type: "Point",
-						coordinates: [coords.lng, coords.lat]
-					},
-					interests: [{
-						text: "dating"
-					}],
-					hasLocation: true
+		}, (newUser, done) => {
+			if (req.body.location !== "") {
+				geocoder.geocode(req.body.location, (err, data) => {
+					if (err || data.length == 0) {
+						console.log(err);
+						req.flash("error", "Invalid address");
+						return res.redirect("back");
+					} else {
+						coords.lat = data[0].latitude;
+						coords.lng = data[0].longitude;
+						coords.location = data[0].city;
+						newUser.location.type = "Point";
+						newUser.location.coordinates = [coords.lng, coords.lat];
+						newUser.locationname = coords.location;
+						newUser.hasLocation = true;
+						done(err, newUser);
+					}
 				});
+			} else {
+				console.log('anus');
+				done(null, newUser);
 			}
-		}
-		User.findOne({
-			email: email
-		}, (err, user) => {
-			if (user) {
-				req.flash("error", "User with this email already exists! Please provide a different email address.");
-				return res.redirect("/register");
-			}
+		}, (newUser, done) => {
+			console.log('creteeeeee')
 			User.register(newUser, req.body.password, (err, user) => {
 				if (err) {
 					console.log(err);
@@ -160,20 +164,17 @@ router.post("/register", middleware.checkIfLogged, (req, res) => {
 						from: 'matcha.42.svovchyn@gmail.com',
 						to: req.sanitize(user.email),
 						subject: 'Account Verification Token',
-						text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/localhost:3000\/verification\/' + token.token + '.\n'
+						text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + process.env.PORTIK + '\/verification\/' + token.token + '.\n'
 					};
 					transporter.sendMail(mailOptions, (err) => {
-						if (err) {
-							req.flash("error", err.message);
-							return res.redirect("/register");
-						} else {
-							req.flash('success', 'A verification email has been sent to ' + newUser.email + '.');
-							return res.redirect("/login");
-						}
+						req.flash('success', 'A verification email has been sent to ' + newUser.email + '.');
+						done(err);
 					});
 				});
 			});
-		});
+		}
+	], (err) => {
+		res.redirect('/login');
 	});
 });
 
@@ -219,7 +220,12 @@ router.get("/verification/:token", middleware.checkIfLogged, (req, res) => {
 
 //LOGIN PAGE ROUTE
 router.get("/login", middleware.checkIfLogged, (req, res) => {
-	mongoose.connect("mongodb://localhost/matcha", {useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, autoIndex: true});
+	mongoose.connect("mongodb://localhost/matcha", {
+		useNewUrlParser: true,
+		useFindAndModify: false,
+		useCreateIndex: true,
+		autoIndex: true
+	});
 	res.render("login");
 });
 
@@ -228,7 +234,8 @@ router.get('/auth/42', middleware.checkIfLogged, passport.authenticate('42'));
 
 router.get('/auth/42/callback',
 	passport.authenticate('42', {
-		failureRedirect: '/login'
+		failureRedirect: '/login',
+		failureFlash: true,
 	}), (req, res) => {
 		// Successful authentication, redirect home.
 		res.redirect('/feed/research');
@@ -238,10 +245,13 @@ router.get('/auth/42/callback',
 router.get('/auth/github', middleware.checkIfLogged, passport.authenticate('github'));
 
 router.get('/auth/github/callback',
-	passport.authenticate('github', { failureRedirect: '/login' }), (req, res) => {
-	// Successful authentication, redirect home.
+	passport.authenticate('github', {
+		failureRedirect: '/login',
+		failureFlash: true
+	}), (req, res) => {
+		// Successful authentication, redirect home.
 		res.redirect('/feed/research');
-});
+	});
 
 
 //AUTH ROUTE
@@ -320,7 +330,7 @@ router.post('/forgot', (req, res, next) => {
 				subject: 'Password Reset',
 				text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
 					'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-					'http://localhost:3000/reset/' + token + '\n\n' +
+					'http://' + process.env.PORTIK + '/reset/' + token + '\n\n' +
 					'If you did not request this, please ignore this email and your password will remain unchanged.\n'
 			};
 			transporter.sendMail(mailOptions, (err) => {
