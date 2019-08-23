@@ -192,6 +192,7 @@ middlewareObject.locationForChosen = (req, res, next) => {
 			if (foundUser.intra_id || foundUser.github_id) {
 				let ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 				iplocate(ip).then((results) => {
+					// console.log(result); 
 					if (results.latitude == null) {
 						var latitude = 0;
 						var longitude = 0;
