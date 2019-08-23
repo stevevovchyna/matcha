@@ -452,6 +452,8 @@ eventSocket.on('connection', (socket) => {
 	});
 });
 
+//
+
 var chatSocket = io.of('/chat');
 var currentRoom = "";
 chatSocket.on('connection', socket => {
@@ -476,145 +478,139 @@ chatSocket.on('connection', socket => {
 			onlineToggle: onlineToggle,
 			isBlocked: false,
 			error: false,
-			erorrMessage: ""
+			erorrMessage: "",
+			usermessage: message
 		}
-		if (message == "") {
-			console.log("empty message!");
-			onlineNBlockedToggle.error = true;
-			onlineNBlockedToggle.message = "Empty message!";
-			fn(onlineNBlockedToggle);
-		} else {
-			console.log("message: " + message);
-			User.findById(recipientID)
-				.populate('blockedUsers')
-				.exec((err, recipientUser) => {
-					if (err || !recipientUser) {
-						console.log(err);
-						onlineNBlockedToggle.error = true;
-						onlineNBlockedToggle.message = err.message;
+		console.log("message: " + message);
+		User.findById(recipientID)
+			.populate('blockedUsers')
+			.exec((err, recipientUser) => {
+				if (err || !recipientUser) {
+					console.log(err);
+					onlineNBlockedToggle.error = true;
+					onlineNBlockedToggle.message = err.message;
+					fn(onlineNBlockedToggle);
+				} else {
+					// checking if we are not blocked by the recipient of the message
+					var filteredUsers = recipientUser.blockedUsers.filter(blockedUser => blockedUser.id.toString() === authorId.toString());
+					if (filteredUsers.length > 0) {
+						console.log("You are blocked!");
+						onlineNBlockedToggle.isBlocked = true;
 						fn(onlineNBlockedToggle);
 					} else {
-						// checking if we are not blocked by the recipient of the message
-						var filteredUsers = recipientUser.blockedUsers.filter(blockedUser => blockedUser.id.toString() === authorId.toString());
-						if (filteredUsers.length > 0) {
-							console.log("You are blocked!");
-							onlineNBlockedToggle.isBlocked = true;
-							fn(onlineNBlockedToggle);
-						} else {
-							// everything's fine, procceding!
-							fn(onlineNBlockedToggle); //returning toggle so the message is drawn in the chat or not. chat is open -> drawing the message; chat is not open -> not drawing
-							//broadcast message to everyone in the room
-							socket.broadcast.to(room).emit("received", {
-								message: message,
-								user: authorName,
-								conversationId: currentRoom,
-								isOnline: onlineToggle
-							});
-							// creating and emiting of a new notification!!!
-							if (!onlineToggle && authorId !== recipientID) {
-								var users_info = {
-									visitor: authorId,
-									visited_one: recipientID,
-									n_type: 'message',
-									conversationID: currentRoom
-								}
-								Notifications.create({
-									n_type: users_info.n_type,
-									for_who: users_info.visited_one,
-									from_whom: users_info.visitor,
-									conversationID: users_info.conversationID
-								}, (err, newNotification) => {
-									if (err || !newNotification) {
-										console.log(err);
-										onlineNBlockedToggle.error = true;
-										onlineNBlockedToggle.message = err.message;
-										fn(onlineNBlockedToggle);
-									} else {
-										// console.log("Notification created!!! Adding it to the user's profile!!");
-										User.findById(users_info.visited_one, (err, foundUser) => {
-											if (err || !foundUser) {
-												console.log(err);
-												onlineNBlockedToggle.error = true;
-												onlineNBlockedToggle.message = err.message;
-												fn(onlineNBlockedToggle);
-											} else {
-												foundUser.notifications.push(newNotification);
-												if (!foundUser.hasLocation) {
-													foundUser.location = undefined;
-												}
-												if (!foundUser.reallocation.coordinates[0]) {
-													foundUser.reallocation = undefined;
-												}
-												foundUser.save((err) => {
-													if (err) {
-														console.log(err);
-														onlineNBlockedToggle.error = true;
-														onlineNBlockedToggle.message = err.message;
-														fn(onlineNBlockedToggle);
-													} else {
-														// console.log("everything's fine! emiting notification with a socket!!!");
-														User.findById(users_info.visitor, (err, foundVisitor) => {
-															if (err) {
-																console.log(err);
-																onlineNBlockedToggle.error = true;
-																onlineNBlockedToggle.message = err.message;
-																fn(onlineNBlockedToggle);
-															} else {
-																io.of('/events').to(recipientID).emit('new notification', {
-																	foundVisitorID: foundVisitor._id,
-																	foundVisitorUsername: foundVisitor.username,
-																	notificationID: newNotification._id,
-																	conversationID: users_info.conversationID,
-																	n_type: 'message'
-																});
-															}
-														});
-													}
-												});
-											}
-										});
-									}
-								});
+						// everything's fine, procceding!
+						fn(onlineNBlockedToggle); //returning toggle so the message is drawn in the chat or not. chat is open -> drawing the message; chat is not open -> not drawing
+						//broadcast message to everyone in the room
+						socket.broadcast.to(room).emit("received", {
+							message: message,
+							user: authorName,
+							conversationId: currentRoom,
+							isOnline: onlineToggle
+						});
+						// creating and emiting of a new notification!!!
+						if (!onlineToggle && authorId !== recipientID) {
+							var users_info = {
+								visitor: authorId,
+								visited_one: recipientID,
+								n_type: 'message',
+								conversationID: currentRoom
 							}
-							socket.broadcast.emit('new message notification', {
-								message: message,
-								user: authorName,
-								conversationId: currentRoom,
-								userId: authorId
-							});
-							//save chat to the database
-							Messages.create({
-									conversationId: currentRoom,
-									body: message,
-									sentBy: authorId,
-									isRead: onlineToggle
-								},
-								err => {
-									if (err) {
-										console.log(err);
-										onlineNBlockedToggle.error = true;
-										onlineNBlockedToggle.message = err.message;
-										fn(onlineNBlockedToggle);
-									} else {
-										// SAVING LAST MESSAGE AUTHOR AND THE MESAGE ITSELF RO THE CONVERSATION TO DISPLAY IT ON THE CONVERSATIONS PAGE
-										Conversations.findByIdAndUpdate(currentRoom, {
-												lastMessage: message,
-												lastMessageAuthor: authorId
-											},
-											err => {
+							Notifications.create({
+								n_type: users_info.n_type,
+								for_who: users_info.visited_one,
+								from_whom: users_info.visitor,
+								conversationID: users_info.conversationID
+							}, (err, newNotification) => {
+								if (err || !newNotification) {
+									console.log(err);
+									onlineNBlockedToggle.error = true;
+									onlineNBlockedToggle.message = err.message;
+									fn(onlineNBlockedToggle);
+								} else {
+									// console.log("Notification created!!! Adding it to the user's profile!!");
+									User.findById(users_info.visited_one, (err, foundUser) => {
+										if (err || !foundUser) {
+											console.log(err);
+											onlineNBlockedToggle.error = true;
+											onlineNBlockedToggle.message = err.message;
+											fn(onlineNBlockedToggle);
+										} else {
+											foundUser.notifications.push(newNotification);
+											if (!foundUser.hasLocation) {
+												foundUser.location = undefined;
+											}
+											if (!foundUser.reallocation.coordinates[0]) {
+												foundUser.reallocation = undefined;
+											}
+											foundUser.save((err) => {
 												if (err) {
 													console.log(err);
 													onlineNBlockedToggle.error = true;
 													onlineNBlockedToggle.message = err.message;
 													fn(onlineNBlockedToggle);
+												} else {
+													// console.log("everything's fine! emiting notification with a socket!!!");
+													User.findById(users_info.visitor, (err, foundVisitor) => {
+														if (err) {
+															console.log(err);
+															onlineNBlockedToggle.error = true;
+															onlineNBlockedToggle.message = err.message;
+															fn(onlineNBlockedToggle);
+														} else {
+															io.of('/events').to(recipientID).emit('new notification', {
+																foundVisitorID: foundVisitor._id,
+																foundVisitorUsername: foundVisitor.username,
+																notificationID: newNotification._id,
+																conversationID: users_info.conversationID,
+																n_type: 'message'
+															});
+														}
+													});
 												}
 											});
-									}
-								});
+										}
+									});
+								}
+							});
 						}
+						socket.broadcast.emit('new message notification', {
+							message: message,
+							user: authorName,
+							conversationId: currentRoom,
+							userId: authorId
+						});
+						//save chat to the database
+						Messages.create({
+								conversationId: currentRoom,
+								body: message,
+								sentBy: authorId,
+								isRead: onlineToggle
+							},
+							err => {
+								if (err) {
+									console.log(err);
+									onlineNBlockedToggle.error = true;
+									onlineNBlockedToggle.message = err.message;
+									fn(onlineNBlockedToggle);
+								} else {
+									// SAVING LAST MESSAGE AUTHOR AND THE MESAGE ITSELF RO THE CONVERSATION TO DISPLAY IT ON THE CONVERSATIONS PAGE
+									Conversations.findByIdAndUpdate(currentRoom, {
+											lastMessage: message,
+											lastMessageAuthor: authorId
+										},
+										err => {
+											if (err) {
+												console.log(err);
+												onlineNBlockedToggle.error = true;
+												onlineNBlockedToggle.message = err.message;
+												fn(onlineNBlockedToggle);
+											}
+										});
+								}
+							});
 					}
-				});
-		}
+				}
+			});
 	});
 });
 

@@ -121,13 +121,15 @@ middlewareObject.countDistance = (req, res, next) => {
 
 middlewareObject.checkSortInput = (req, res, next) => {
 	var params = Object.values(req.body.userparams);
+	console.log(params);
+	console.log(req.body.userparams);
 	var err = 0;
 	for (var i = 0; i < 8; i++) {
 		if (parseInt(params[i]) < 0 || parseInt(params[i]) > 36500) {
 			err++;
 		}
 	}
-	if (parseInt(req.body.userparams['agemin']) < 0 ||
+	if (parseInt(req.body.userparams['agemin']) < 16 ||
 		parseInt(req.body.userparams['agemax']) > 100 ||
 		parseInt(req.body.userparams['locmin']) < 0 ||
 		parseInt(req.body.userparams['locmax']) > 20000 ||
@@ -138,6 +140,16 @@ middlewareObject.checkSortInput = (req, res, next) => {
 		err++;
 	}
 
+	if (req.body.userparams['agemin'] === '' ||
+		req.body.userparams['agemax'] === '' ||
+		req.body.userparams['locmin'] === '' ||
+		req.body.userparams['locmax'] === '' ||
+		req.body.userparams['famemin'] === '' ||
+		req.body.userparams['famemax'] === '' ||
+		req.body.userparams['tagmin'] === '' ||
+		req.body.userparams['tagmax'] === '') {
+			err++;
+		}
 	if (parseInt(params[0]) > parseInt(params[1]) ||
 		parseInt(params[2]) > parseInt(params[3]) ||
 		parseInt(params[4]) > parseInt(params[5]) ||

@@ -108,8 +108,8 @@
 						var a = document.createElement("a");
 						a.setAttribute('class', 'list-group-item newMessage');
 						a.innerHTML =
-							'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
-							$("#message").val() + '</p>';
+							'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text"></p>';
+						a.children[2].innerText = ret.usermessage;
 						messages.appendChild(a);
 						messages.scrollTo(0, 100000000);
 						$("#message").val("");
@@ -131,8 +131,8 @@
 			a.setAttribute('class', 'list-group-item newMessage');
 			a.setAttribute('style', 'padding-left:4%');
 			a.innerHTML = '<h4 class="list-group-item-heading">' + data.user +
-				'</h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' + data
-				.message + '</p>';
+				'</h4><small class="pull-right">a moment ago</small><p class="list-group-item-text"></p>';
+			a.children[2].innerText = data.message;
 			messages.appendChild(a);
 			messages.scrollTo(0, 100000000);
 			setTimeout(() => {

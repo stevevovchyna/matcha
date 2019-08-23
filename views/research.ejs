@@ -19,11 +19,11 @@
 				<form action="/feed/research/result?_method=PUT" method="POST" id="userparamsform">
 					<span class="label label-default">Age</span>
 					<input class="form-control" type="number" name="userparams[agemin]"
-						value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>0<% } %>"
-						id="userparams[agemin]" minlength="0" maxlength="100">
+						value="<% if(locals.userparams){%><%=userparams.agemin%><% } else { %>16<% } %>"
+						id="userparams[agemin]" minlength="16" maxlength="100">
 					<input class="form-control" type="number" name="userparams[agemax]"
 						value="<% if(locals.userparams){%><%=userparams.agemax%><% } else { %>100<% } %>"
-						id="userparams[agemax]" minlength="0" maxlength="100">
+						id="userparams[agemax]" minlength="16" maxlength="100">
 
 					<span class="label label-default">Location</span>
 					<input class="form-control" type="number" name="userparams[locmin]"

@@ -62,9 +62,9 @@
 				<div class=" form-group">
 					<form action="javascript:filterBy(distancefrom.value, distanceto.value, 'distance')">
 						<div class="button-group-vertical">
-							<input class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
+							<input required class="form-control" type="number" name="distancefrom" value="0" id="distancefrom"
 								minlength="0" maxlength="20000">
-							<input class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
+							<input required class="form-control" type="number" name="distanceto" value="20000" id="distanceto"
 								minlength="0" maxlength="20000">
 							<button class="btn btn-default btn-block" type="submit">Filter by Distance</button>
 						</div>
@@ -73,9 +73,9 @@
 				<div class=" form-group">
 					<form action="javascript:filterBy(minfame.value, maxfame.value, 'famerate')">
 						<div class="button-group-vertical">
-							<input class="form-control" type="number" name="minfame" value="0" id="minfame"
+							<input required class="form-control" type="number" name="minfame" value="0" id="minfame"
 								minlength="0" maxlength="20000">
-							<input class="form-control" type="number" name="maxfame" value="1000" id="maxfame"
+							<input required class="form-control" type="number" name="maxfame" value="1000" id="maxfame"
 								minlength="0" maxlength="20000">
 							<button class="btn btn-default btn-block" type="submit">Filter by Famerate</button>
 						</div>
@@ -84,9 +84,9 @@
 				<div class=" form-group">
 					<form action="javascript:filterBy(mincommontags.value, maxcommontags.value, 'commontags')">
 						<div class="button-group-vertical">
-							<input class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
+							<input required class="form-control" type="number" name="mincommontags" value="0" id="mincommontags"
 								minlength="0" maxlength="20000">
-							<input class="form-control" type="number" name="maxcommontags" value="100"
+							<input required class="form-control" type="number" name="maxcommontags" value="100"
 								id="maxcommontags" minlength="0" maxlength="20000">
 							<button class="btn btn-default btn-block" type="submit">Filter by Common Tags</button>
 						</div>
@@ -95,9 +95,9 @@
 				<div class=" form-group">
 					<form action="javascript:filterBy(minage.value, maxage.value, 'age')">
 						<div class="button-group-vertical">
-							<input class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
+							<input required class="form-control" type="number" name="minage" value="0" id="minage" minlength="0"
 								maxlength="100">
-							<input class="form-control" type="number" name="maxage" value="100" id="maxage"
+							<input required class="form-control" type="number" name="maxage" value="100" id="maxage"
 								minlength="0" maxlength="100">
 							<button class="btn btn-default btn-block" type="submit">Filter by Age</button>
 						</div>
