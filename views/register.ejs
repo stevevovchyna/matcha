@@ -6,26 +6,26 @@
 		<form action="/register" method="post">
 			<div class="form-group input-group">
 				<span class="input-group-addon" id="basic-addon1">Email</span>
-				<input aria-describedby="basic-addon1" class="form-control" type="email" name="email" placeholder="email" autocomplete="off" pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Please enter a valid email address">
+				<input required aria-describedby="basic-addon1" class="form-control" type="email" name="email" placeholder="email" autocomplete="off" pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Please enter a valid email address">
 			</div>
 			<div class="form-group input-group">
 				<span class="input-group-addon" id="basic-addon1">Username</span>
-				<input aria-describedby="basic-addon1" type="text" class="form-control" name="username" placeholder="username" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your username should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
+				<input required aria-describedby="basic-addon1" type="text" class="form-control" name="username" placeholder="username" autocomplete="off" pattern="^[a-zA-Z0-9_-]{3,20}$" title="Your username should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
 			<div class="form-group input-group">
 				<span class="input-group-addon" id="basic-addon1">First Name</span>
-				<input aria-describedby="basic-addon1" type="text" class="form-control" name="firstname" placeholder="firstname" autocomplete="off" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your first name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
+				<input required aria-describedby="basic-addon1" type="text" class="form-control" name="firstname" placeholder="firstname" autocomplete="off" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your first name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
 			<div class="form-group input-group">
 				<span class="input-group-addon" id="basic-addon1">Last Name</span>
-				<input aria-describedby="basic-addon1" type="text" class="form-control" name="lastname" placeholder="lastname" autocomplete="off" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your last name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
+				<input required aria-describedby="basic-addon1" type="text" class="form-control" name="lastname" placeholder="lastname" autocomplete="off" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your last name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
 			<div class="form-group input-group">
 				<span class="input-group-addon" id="basic-addon1">Location</span>
 				<input aria-describedby="basic-addon1" type="text" class="form-control" name="location" placeholder="location" autocomplete="off" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your last name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
 			</div>
 			<div class="form-group input-group">
-				<span class="input-group-addon" id="basic-addon1">Password</span>
+				<span required class="input-group-addon" id="basic-addon1">Password</span>
 				<input aria-describedby="basic-addon1" class="form-control" type="password" name="password" placeholder="password" autocomplete="off" pattern="(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$" title="Your password should be at least 6 symbols long and contain letters and numbers">
 			</div>
 			<div class="form-group">

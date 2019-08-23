@@ -266,22 +266,7 @@ router.delete("/:id/:tag_id/tagdel", middleware.checkProfileOwnership, (req, res
 	});
 });
 
-router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIfOAuth, middleware.checkDate, (req, res) => {
-	if (!nameRegExp.test(req.body.user.firstname) || !nameRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
-		req.flash("error", "Please make sure you've entered a correct username, First Name of Last Name");
-		return res.redirect("back");
-	}
-	if (!bioRegExp.test(req.body.user.bio)) {
-		req.flash("error", "Please make sure there's 5-300 characters in your bio and it doesn't containt symbols apart from '.'?!,@$#-_' ");
-		return res.redirect("back");
-	}
-	if (!res.locals.oauth) {
-		if (!emailRegExp.test(req.body.user.email)) {
-			req.flash("error", "Please make sure you've entered a correct email address!");
-			return res.redirect("back");
-		}
-		var email = req.sanitize(req.body.user.email);
-	}
+router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIfOAuth, middleware.checkDate, middleware.checkDuplicateInputData, (req, res) => {
 	var username = req.sanitize(req.body.user.username);
 	var firstname = req.sanitize(req.body.user.firstname);
 	var lastname = req.sanitize(req.body.user.lastname);
@@ -289,6 +274,7 @@ router.put("/:id/editinfo", middleware.checkProfileOwnership, middleware.checkIf
 	var gender = req.sanitize(req.body.user.gender);
 	var sexPreferences = req.sanitize(req.body.user.sexPreferences);
 	var birthDate = new DateOnly(xss(req.body.user.birthdate));
+	var email = req.sanitize(req.body.user.email);
 	if (req.body.location !== "") {
 		var location = req.sanitize(req.body.location);
 	} else {

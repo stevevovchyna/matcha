@@ -8,6 +8,13 @@ const xss = require("xss");
 const mongoose = require('mongoose');
 const DateOnly = require('mongoose-dateonly')(mongoose);
 const moment = require('moment');
+const loginRegExp = RegExp("^[a-zA-Z0-9_-]{3,20}$");
+const nameRegExp = RegExp("^[a-zA-Z0-9 _-]{2,50}$");
+const emailRegExp = RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$");
+const passwordRegExp = RegExp("(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,15})$");
+const bioRegExp = RegExp("^[A-Za-z0-9 .'?!,@$#-_\n\r]{5,300}$");
+const tagRegExp = RegExp("^[A-Za-z0-9 ]{2,300}$");
+
 
 var middlewareObject = {};
 
@@ -18,6 +25,42 @@ middlewareObject.pictureIsPresent = (req, res, next) => {
 	} else {
 		next();
 	}
+}
+
+middlewareObject.checkDuplicateInputData = (req, res, next) => {
+	if (!nameRegExp.test(req.body.user.firstname) || !nameRegExp.test(req.body.user.lastname) || !loginRegExp.test(req.body.user.username)) {
+		req.flash("error", "Please make sure you've entered a correct username, First Name or Last Name");
+		return res.redirect("back");
+	} else if (!bioRegExp.test(req.body.user.bio)) {
+		req.flash("error", "Please make sure there's 5-300 characters in your bio and it doesn't containt symbols apart from '.'?!,@$#-_' ");
+		return res.redirect("back");
+	} else if (!res.locals.oauth) {
+		if (!emailRegExp.test(req.body.user.email)) {
+			req.flash("error", "Please make sure you've entered a correct email address!");
+			return res.redirect("back");
+		}
+	}
+	var username = req.sanitize(req.body.user.username);
+	var email = req.sanitize(req.body.user.email);
+	User.findOne({username: username}, (err, usernamecheck) => {
+		if (usernamecheck && usernamecheck._id.toString() !== req.user._id.toString()) {
+			req.flash("error", "There's already a user with username " + username);
+			return res.redirect("back");
+		} else {
+			if (!res.locals.oauth) {
+				User.findOne({email: email}, (err, emailcheck) => {
+					if (emailcheck && emailcheck._id.toString() !== req.user._id.toString()) {
+						req.flash("error", "There's already a user with email address " + email);
+						return res.redirect("back");
+					} else {
+						next();
+					}
+				});
+			} else {
+				next();
+			}
+		}
+	});
 }
 
 middlewareObject.countDistance = (req, res, next) => {

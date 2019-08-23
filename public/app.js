@@ -1,4 +1,4 @@
-const portik = "e1r1p16:3000";
+const portik = "e1r1p14:3000";
 
 const deleteTag = (user_id, tag_id) => {
 	var stringUserID = user_id.toString();

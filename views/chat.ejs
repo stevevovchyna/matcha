@@ -90,35 +90,39 @@
 		}, 3000);
 		$("form").submit(e => {
 			e.preventDefault(); // prevents page reloading
-			socket.emit("chat message", room, {
-				message: $("#message").val(),
-				authorName: "<%=currentUser.username%>",
-				authorId: "<%=currentUser._id%>",
-				recipientID: "<%=conversation.participants[userno]._id%>"
-			}, (ret) => {
-				if (ret.isBlocked) {
-					$('div.modal-body > p').text(
-						'You can not send a message to this user as he had blocked you!');
-					$('#myModal').modal('show');
-				} else if (ret.error) {
-					$('div.modal-body > p').text(ret.message);
-					$('#myModal').modal('show');
-				} else {
-					var a = document.createElement("a");
-					a.setAttribute('class', 'list-group-item newMessage');
-					a.innerHTML =
-						'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
-						$("#message").val() + '</p>';
-					messages.appendChild(a);
-					messages.scrollTo(0, 100000000);
-					$("#message").val("");
-					if (ret.onlineToggle) {
-						setTimeout(() => {
-							$(".newMessage").toggleClass("newMessage");
-						}, 2000);
+			if ($("#message").val() !== "") {
+				socket.emit("chat message", room, {
+					message: $("#message").val(),
+					authorName: "<%=currentUser.username%>",
+					authorId: "<%=currentUser._id%>",
+					recipientID: "<%=conversation.participants[userno]._id%>"
+				}, (ret) => {
+					if (ret.isBlocked) {
+						$('div.modal-body > p').text(
+							'You can not send a message to this user as he had blocked you!');
+						$('#myModal').modal('show');
+					} else if (ret.error) {
+						$('div.modal-body > p').text(ret.message);
+						$('#myModal').modal('show');
+					} else {
+						var a = document.createElement("a");
+						a.setAttribute('class', 'list-group-item newMessage');
+						a.innerHTML =
+							'<h4 class="list-group-item-heading"><%=currentUser.username%> <small>(me)</small></h4><small class="pull-right">a moment ago</small><p class="list-group-item-text">' +
+							$("#message").val() + '</p>';
+						messages.appendChild(a);
+						messages.scrollTo(0, 100000000);
+						$("#message").val("");
+						if (ret.onlineToggle) {
+							setTimeout(() => {
+								$(".newMessage").toggleClass("newMessage");
+							}, 2000);
+						}
 					}
-				}
-			});
+				});
+			} else {
+				return false;
+			}
 			return false;
 		});
 		socket.on("received", data => {

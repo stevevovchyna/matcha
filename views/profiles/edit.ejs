@@ -28,32 +28,30 @@
 			<form action="/profile/<%=user._id%>/editinfo?_method=PUT" method="POST">
 				<div class="form-group input-group">
 					<span class="input-group-addon" id="basic-addon1">Username</span>
-					<input class="form-control " type="text" value="<%=user.username%>" aria-describedby="basic-addon1"
+					<input required class="form-control " type="text" value="<%=user.username%>" aria-describedby="basic-addon1"
 						name="user[username]" placeholder="username" pattern="^[a-zA-Z0-9_-]{3,20}$"
 						title="Your username should be 3-20 characters long and can contain letters, numbers and '-', '_' signs">
 				</div>
 				<div class="form-group input-group">
 					<span class="input-group-addon" id="basic-addon1">First Name</span>
-					<input aria-describedby="basic-addon1" class="form-control " type="text" name="user[firstname]"
-						value="<%=user.firstname%>" placeholder="firstname" pattern="^[a-zA-Z0-9 _-]{2,50}$"
-						title="Your first name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
+					<input required aria-describedby="basic-addon1" class="form-control " type="text" name="user[firstname]" value="<%=user.firstname%>" placeholder="firstname" pattern="^[a-zA-Z0-9 _-]{2,50}$" title="Your first name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
 				</div>
 				<div class="form-group input-group">
 					<span class="input-group-addon" id="basic-addon1">Last Name</span>
-					<input aria-describedby="basic-addon1" class="form-control " type="text" value="<%=user.lastname%>"
+					<input required aria-describedby="basic-addon1" class="form-control " type="text" value="<%=user.lastname%>"
 						name="user[lastname]" placeholder="lastname" pattern="^[a-zA-Z0-9 _-]{2,50}$"
 						title="Your last name should be 2-50 characters long and can contain letters, numbers and '-', '_' signs">
 				</div>
 				<div class="form-group input-group">
 					<span class="input-group-addon" id="basic-addon1">Birth Date</span>
-					<input aria-describedby="basic-addon1" class="form-control" autocomplete="off" type="text"
+					<input required aria-describedby="basic-addon1" class="form-control" autocomplete="off" type="text"
 						name="user[birthdate]" id="datepicker" value="<%= moment(user.birthday).format("L")%> "
 						placeholder="Choose your birth date">
 				</div>
 				<% if (!user.intra_id && !user.github_id) { %>
 				<div class="form-group input-group">
 					<span class="input-group-addon" id="basic-addon1">Email</span>
-					<input aria-describedby="basic-addon1" class="form-control " type="text" name="user[email]"
+					<input required aria-describedby="basic-addon1" class="form-control " type="text" name="user[email]"
 						value="<%= user.email %>" placeholder="email" pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
 						title="Please enter a valid email address">
 				</div>
@@ -158,7 +156,6 @@
 							src="https://res.cloudinary.com/dstvx12kw/image/upload/v1562740604/236090_xpw3z3.jpg">
 						<% } else { %>
 						<img style="margin:auto;" src="<%= url %>" alt="">
-						<!-- <div class="carousel-caption"> -->
 						<form action="/profile/<%= user._id %>/<%= id %>/picdel?_method=delete" method="post">
 							<button class="btn btn-danger btn-block">Delete</button>
 						</form>
@@ -199,8 +196,21 @@
 						<input class="" type="file" id="image" name="image" accept="image/*">
 					</div>
 					<div class="form-group">
-						<button class="btn btn-info btn-block ">Submit</button>
+						<button id="picture-upload-button" class="btn btn-info btn-block ">Submit</button>
 					</div>
+					<script>
+						(() => {
+							var image = document.getElementById('image');
+							image.addEventListener('change', () => {
+								document.getElementById('picture-upload-button').toggleAttribute('disabled');
+							})
+							if (image.value == "") {
+								document.getElementById('picture-upload-button').setAttribute('disabled', 'disabled');
+							}
+
+						})();
+						document.getElementById('picture-upload-button')
+						</script>
 				</form>
 			</div>
 		</div>
